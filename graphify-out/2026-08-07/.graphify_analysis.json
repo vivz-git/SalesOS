@@ -1,0 +1,416 @@
+{
+  "communities": {
+    "0": [
+      "eslint",
+      "eslint_config_next",
+      "eslint_eslintrc",
+      "frontend_package_devdependencies",
+      "frontend_package_devdependencies_eslint",
+      "frontend_package_devdependencies_eslint_config_next",
+      "frontend_package_devdependencies_eslint_eslintrc",
+      "frontend_package_devdependencies_jsdom",
+      "frontend_package_devdependencies_prettier",
+      "frontend_package_devdependencies_prettier_plugin_tailwindcss",
+      "frontend_package_devdependencies_tailwindcss",
+      "frontend_package_devdependencies_tailwindcss_postcss",
+      "frontend_package_devdependencies_testing_library_jest_dom",
+      "frontend_package_devdependencies_testing_library_react",
+      "frontend_package_devdependencies_types_node",
+      "frontend_package_devdependencies_types_react",
+      "frontend_package_devdependencies_types_react_dom",
+      "frontend_package_devdependencies_typescript",
+      "frontend_package_devdependencies_vitejs_plugin_react",
+      "frontend_package_devdependencies_vitest",
+      "jsdom",
+      "prettier",
+      "prettier_plugin_tailwindcss",
+      "tailwindcss",
+      "tailwindcss_postcss",
+      "testing_library_jest_dom",
+      "testing_library_react",
+      "types_node",
+      "types_react",
+      "types_react_dom",
+      "typescript",
+      "vitejs_plugin_react",
+      "vitest"
+    ],
+    "1": [
+      "backend_app_api_health",
+      "backend_app_api_health_health_check",
+      "backend_app_api_health_healthresponse",
+      "backend_app_api_health_py_basemodel",
+      "backend_app_api_me",
+      "backend_app_api_me_get_me",
+      "backend_app_auth",
+      "backend_app_auth_clients",
+      "backend_app_auth_get_current_principal",
+      "backend_app_auth_principal",
+      "backend_app_auth_py_basemodel",
+      "backend_app_auth_require_role",
+      "backend_app_core_config",
+      "backend_app_core_config_get_settings",
+      "backend_app_core_config_settings",
+      "backend_app_core_logging",
+      "backend_app_core_logging_configure_logging",
+      "backend_app_main",
+      "backend_app_main_lifespan",
+      "backend_tests_test_auth",
+      "backend_tests_test_auth_test_role_guard_allows_matching_role",
+      "backend_tests_test_auth_test_role_guard_rejects_non_matching_role",
+      "backend_tests_test_health",
+      "backend_tests_test_health_test_health_check_returns_ok",
+      "basesettings",
+      "client",
+      "fastapi",
+      "httpauthorizationcredentials",
+      "role",
+      "uuid"
+    ],
+    "2": [
+      "frontend_tsconfig",
+      "frontend_tsconfig_compileroptions",
+      "frontend_tsconfig_compileroptions_allowjs",
+      "frontend_tsconfig_compileroptions_esmoduleinterop",
+      "frontend_tsconfig_compileroptions_incremental",
+      "frontend_tsconfig_compileroptions_isolatedmodules",
+      "frontend_tsconfig_compileroptions_jsx",
+      "frontend_tsconfig_compileroptions_lib",
+      "frontend_tsconfig_compileroptions_module",
+      "frontend_tsconfig_compileroptions_moduleresolution",
+      "frontend_tsconfig_compileroptions_noemit",
+      "frontend_tsconfig_compileroptions_paths",
+      "frontend_tsconfig_compileroptions_plugins",
+      "frontend_tsconfig_compileroptions_resolvejsonmodule",
+      "frontend_tsconfig_compileroptions_skiplibcheck",
+      "frontend_tsconfig_compileroptions_strict",
+      "frontend_tsconfig_compileroptions_target",
+      "frontend_tsconfig_exclude",
+      "frontend_tsconfig_include",
+      "ref_dom",
+      "ref_dom_iterable",
+      "ref_es2022",
+      "ref_next_env_d_ts",
+      "ref_next_types_ts",
+      "ref_node_modules",
+      "ref_ts",
+      "ref_tsx"
+    ],
+    "3": [
+      "class_variance_authority",
+      "clsx",
+      "frontend_package_dependencies",
+      "frontend_package_dependencies_class_variance_authority",
+      "frontend_package_dependencies_clsx",
+      "frontend_package_dependencies_lucide_react",
+      "frontend_package_dependencies_next",
+      "frontend_package_dependencies_radix_ui_react_slot",
+      "frontend_package_dependencies_react",
+      "frontend_package_dependencies_react_dom",
+      "frontend_package_dependencies_supabase_ssr",
+      "frontend_package_dependencies_supabase_supabase_js",
+      "frontend_package_dependencies_tailwind_merge",
+      "lucide_react",
+      "next",
+      "radix_ui_react_slot",
+      "react",
+      "react_dom",
+      "supabase_ssr",
+      "supabase_supabase_js",
+      "tailwind_merge"
+    ],
+    "4": [
+      "frontend_components",
+      "frontend_components_aliases",
+      "frontend_components_aliases_components",
+      "frontend_components_aliases_hooks",
+      "frontend_components_aliases_lib",
+      "frontend_components_aliases_ui",
+      "frontend_components_aliases_utils",
+      "frontend_components_iconlibrary",
+      "frontend_components_rsc",
+      "frontend_components_schema",
+      "frontend_components_style",
+      "frontend_components_tailwind",
+      "frontend_components_tailwind_basecolor",
+      "frontend_components_tailwind_config",
+      "frontend_components_tailwind_css",
+      "frontend_components_tailwind_cssvariables",
+      "frontend_components_tailwind_prefix",
+      "frontend_components_tsx"
+    ],
+    "5": [
+      "frontend_src_app_login_page",
+      "frontend_src_app_login_page_loginpage",
+      "frontend_src_app_page",
+      "frontend_src_app_page_homepage",
+      "frontend_src_components_auth_sign_out_button",
+      "frontend_src_components_auth_sign_out_button_signoutbutton",
+      "frontend_src_components_ui_button",
+      "frontend_src_components_ui_button_button",
+      "frontend_src_components_ui_button_buttonprops",
+      "frontend_src_components_ui_button_buttonvariants",
+      "frontend_src_components_ui_button_test",
+      "frontend_src_lib_supabase_client",
+      "frontend_src_lib_supabase_client_createclient",
+      "frontend_src_lib_utils",
+      "frontend_src_lib_utils_cn"
+    ],
+    "6": [
+      "frontend_package",
+      "frontend_package_name",
+      "frontend_package_private",
+      "frontend_package_scripts",
+      "frontend_package_scripts_build",
+      "frontend_package_scripts_dev",
+      "frontend_package_scripts_format",
+      "frontend_package_scripts_format_check",
+      "frontend_package_scripts_lint",
+      "frontend_package_scripts_start",
+      "frontend_package_scripts_test",
+      "frontend_package_scripts_test_watch",
+      "frontend_package_scripts_typecheck",
+      "frontend_package_version"
+    ],
+    "7": [
+      "package",
+      "package_name",
+      "package_packagemanager",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_format",
+      "package_scripts_format_check",
+      "package_scripts_lint",
+      "package_scripts_test",
+      "package_scripts_typecheck"
+    ],
+    "8": [
+      "agents",
+      "api_spec",
+      "architecture",
+      "database",
+      "gpt_4_1_mini",
+      "langgraph_workers",
+      "prd",
+      "supabase_postgres"
+    ],
+    "9": [
+      "frontend_src_lib_supabase_middleware",
+      "frontend_src_lib_supabase_middleware_updatesession",
+      "frontend_src_middleware",
+      "frontend_src_middleware_config",
+      "frontend_src_middleware_middleware",
+      "frontend_src_middleware_public_paths"
+    ],
+    "10": [
+      "frontend_eslint_config",
+      "frontend_eslint_config_basedirectory",
+      "frontend_eslint_config_compat",
+      "frontend_eslint_config_config"
+    ],
+    "11": [
+      "frontend_src_app_auth_callback_route",
+      "frontend_src_app_auth_callback_route_get",
+      "frontend_src_lib_supabase_server",
+      "frontend_src_lib_supabase_server_createclient"
+    ],
+    "12": [
+      "frontend_vercel",
+      "frontend_vercel_buildcommand",
+      "frontend_vercel_framework",
+      "frontend_vercel_installcommand"
+    ],
+    "13": [
+      "frontend_src_app_layout",
+      "frontend_src_app_layout_metadata",
+      "frontend_src_app_layout_rootlayout"
+    ],
+    "14": [
+      "backend_app_api_init",
+      "backend_app_api_init_rationale_1"
+    ],
+    "15": [
+      "backend_app_core_init",
+      "backend_app_core_init_rationale_1"
+    ],
+    "16": [
+      "backend_app_init",
+      "backend_app_init_rationale_1"
+    ],
+    "17": [
+      "frontend_next_config",
+      "frontend_next_config_nextconfig"
+    ],
+    "18": [
+      "frontend_next_env_d",
+      "frontend_next_env_d_rationale_5"
+    ],
+    "19": [
+      "frontend_postcss_config",
+      "frontend_postcss_config_config"
+    ],
+    "20": [
+      "frontend_prettier_config",
+      "frontend_prettier_config_config"
+    ],
+    "21": [
+      "frontend_vitest_config",
+      "frontend_vitest_config_directory"
+    ],
+    "22": [
+      "frontend_src_test_setup"
+    ],
+    "23": [
+      "hubspot_adapter"
+    ],
+    "24": [
+      "pkg_salesos_backend"
+    ],
+    "25": [
+      "resend_adapter"
+    ]
+  },
+  "cohesion": {
+    "0": 0.06060606060606061,
+    "1": 0.13793103448275862,
+    "2": 0.07407407407407407,
+    "3": 0.09523809523809523,
+    "4": 0.1111111111111111,
+    "5": 0.20952380952380953,
+    "6": 0.14285714285714285,
+    "7": 0.16666666666666666,
+    "8": 0.32142857142857145,
+    "9": 0.4666666666666667,
+    "10": 0.5,
+    "11": 0.8333333333333334,
+    "12": 0.5,
+    "13": 0.6666666666666666,
+    "14": 1.0,
+    "15": 1.0,
+    "16": 1.0,
+    "17": 1.0,
+    "18": 1.0,
+    "19": 1.0,
+    "20": 1.0,
+    "21": 1.0,
+    "22": 1.0,
+    "23": 1.0,
+    "24": 1.0,
+    "25": 1.0
+  },
+  "gods": [
+    {
+      "id": "frontend_tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 16
+    },
+    {
+      "id": "backend_app_auth_principal",
+      "label": "Principal",
+      "degree": 10
+    },
+    {
+      "id": "frontend_package_scripts",
+      "label": "scripts",
+      "degree": 10
+    },
+    {
+      "id": "package_scripts",
+      "label": "scripts",
+      "degree": 8
+    },
+    {
+      "id": "backend_app_auth_get_current_principal",
+      "label": "get_current_principal()",
+      "degree": 7
+    },
+    {
+      "id": "backend_app_core_config_settings",
+      "label": "Settings",
+      "degree": 7
+    },
+    {
+      "id": "backend_app_auth_require_role",
+      "label": "require_role()",
+      "degree": 6
+    },
+    {
+      "id": "frontend_components_tailwind",
+      "label": "tailwind",
+      "degree": 6
+    },
+    {
+      "id": "frontend_components_aliases",
+      "label": "aliases",
+      "degree": 6
+    },
+    {
+      "id": "backend_app_core_config_get_settings",
+      "label": "get_settings()",
+      "degree": 5
+    }
+  ],
+  "surprises": [
+    {
+      "source": "SalesOS Product Requirements Document",
+      "target": "SalesOS Architecture",
+      "source_files": [
+        "PRD.md",
+        "ARCHITECTURE.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "SalesOS Agent Guide",
+      "target": "SalesOS API Specification",
+      "source_files": [
+        "AGENTS.md",
+        "API_SPEC.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "SalesOS Agent Guide",
+      "target": "SalesOS Architecture",
+      "source_files": [
+        "AGENTS.md",
+        "ARCHITECTURE.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "SalesOS Agent Guide",
+      "target": "SalesOS Database Architecture",
+      "source_files": [
+        "AGENTS.md",
+        "DATABASE.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "SalesOS Agent Guide",
+      "target": "SalesOS Product Requirements Document",
+      "source_files": [
+        "AGENTS.md",
+        "PRD.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    }
+  ],
+  "tokens": {
+    "input": 20291,
+    "output": 1036
+  }
+}

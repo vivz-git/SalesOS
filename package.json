@@ -1,0 +1,14 @@
+{
+  "name": "salesos",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "build": "pnpm --dir frontend build",
+    "dev": "pnpm --dir frontend dev",
+    "format": "pnpm --dir frontend format",
+    "format:check": "pnpm --dir frontend format:check",
+    "lint": "pnpm --dir frontend lint",
+    "test": "pnpm --dir frontend test",
+    "typecheck": "pnpm --dir frontend typecheck"
+  }
+}

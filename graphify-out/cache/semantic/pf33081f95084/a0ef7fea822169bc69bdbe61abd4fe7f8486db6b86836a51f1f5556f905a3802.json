@@ -1,0 +1,1 @@
+{"nodes": [{"id": "prd", "label": "SalesOS Product Requirements Document", "file_type": "document", "source_file": "PRD.md"}], "edges": [{"source": "prd", "target": "architecture", "relation": "conceptually_related_to", "confidence": "INFERRED", "confidence_score": 0.9, "source_file": "PRD.md"}], "hyperedges": []}

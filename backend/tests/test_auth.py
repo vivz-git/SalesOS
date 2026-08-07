@@ -29,7 +29,7 @@ def test_get_current_principal_missing_credentials() -> None:
         supabase_service_role_key="service-key",
     )
     with pytest.raises(HTTPException) as exc_info:
-        get_current_principal(credentials=None, workspace_id=None, settings=settings)
+        get_current_principal(credentials=None, requested_workspace_id=None, settings=settings)
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "authentication_required"
 
@@ -38,7 +38,7 @@ def test_get_current_principal_missing_settings() -> None:
     settings = Settings(supabase_url=None, supabase_publishable_key=None, supabase_service_role_key=None)
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid-token")
     with pytest.raises(HTTPException) as exc_info:
-        get_current_principal(credentials=creds, workspace_id=None, settings=settings)
+        get_current_principal(credentials=creds, requested_workspace_id=None, settings=settings)
     assert exc_info.value.status_code == 503
     assert exc_info.value.detail == "auth_unavailable"
 
@@ -58,7 +58,7 @@ def test_get_current_principal_invalid_session(mock_clients: MagicMock) -> None:
     mock_clients.return_value = (mock_auth, mock_admin)
 
     with pytest.raises(HTTPException) as exc_info:
-        get_current_principal(credentials=creds, workspace_id=None, settings=settings)
+        get_current_principal(credentials=creds, requested_workspace_id=None, settings=settings)
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "invalid_session"
 
@@ -86,7 +86,7 @@ def test_get_current_principal_no_memberships(mock_clients: MagicMock) -> None:
     mock_clients.return_value = (mock_auth, mock_admin)
 
     with pytest.raises(HTTPException) as exc_info:
-        get_current_principal(credentials=creds, workspace_id=None, settings=settings)
+        get_current_principal(credentials=creds, requested_workspace_id=None, settings=settings)
     assert exc_info.value.status_code == 403
     assert exc_info.value.detail == "workspace_membership_required"
 
@@ -116,7 +116,7 @@ def test_get_current_principal_single_membership_success(mock_clients: MagicMock
 
     mock_clients.return_value = (mock_auth, mock_admin)
 
-    principal = get_current_principal(credentials=creds, workspace_id=None, settings=settings)
+    principal = get_current_principal(credentials=creds, requested_workspace_id=None, settings=settings)
     assert principal.user_id == user_id
     assert principal.email == "user@example.com"
     assert principal.workspace_id == workspace_id
@@ -151,7 +151,7 @@ def test_get_current_principal_header_workspace_match(mock_clients: MagicMock) -
 
     mock_clients.return_value = (mock_auth, mock_admin)
 
-    principal = get_current_principal(credentials=creds, workspace_id=target_workspace, settings=settings)
+    principal = get_current_principal(credentials=creds, requested_workspace_id=target_workspace, settings=settings)
     assert principal.workspace_id == target_workspace
     assert principal.role == "admin"
 

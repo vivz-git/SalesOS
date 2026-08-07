@@ -13,6 +13,11 @@ bearer_scheme = HTTPBearer(auto_error=False)
 Role = Literal["owner", "admin", "manager", "contributor", "viewer"]
 
 
+class AuthUser(BaseModel):
+    user_id: UUID
+    email: str | None
+
+
 class Principal(BaseModel):
     user_id: UUID
     email: str | None
@@ -34,15 +39,14 @@ def _clients(settings: Settings) -> tuple[Client, Client]:
     )
 
 
-def get_current_principal(
+def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-    workspace_id: UUID | None = Header(default=None, alias="X-SalesOS-Workspace-Id"),
     settings: Settings = Depends(get_settings),
-) -> Principal:
+) -> AuthUser:
     if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="authentication_required")
 
-    auth_client, admin_client = _clients(settings)
+    auth_client, _ = _clients(settings)
     try:
         user_response = auth_client.auth.get_user(credentials.credentials)
         user = user_response.user if user_response else None
@@ -51,10 +55,20 @@ def get_current_principal(
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_session")
 
+    return AuthUser(user_id=UUID(user.id), email=user.email)
+
+
+def get_current_principal(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    requested_workspace_id: UUID | None = Header(default=None, alias="X-SalesOS-Workspace-Id"),
+    settings: Settings = Depends(get_settings),
+) -> Principal:
+    user = get_current_user(credentials=credentials, settings=settings)
+    _, admin_client = _clients(settings)
     memberships = cast(list[dict[str, str]], (
         admin_client.table("memberships")
         .select("workspace_id,role")
-        .eq("user_id", str(user.id))
+        .eq("user_id", str(user.user_id))
         .execute()
         .data
     ) or [])
@@ -62,14 +76,14 @@ def get_current_principal(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="workspace_membership_required")
 
     active_membership = next(
-        (membership for membership in memberships if workspace_id and membership["workspace_id"] == str(workspace_id)),
-        memberships[0] if workspace_id is None and len(memberships) == 1 else None,
+        (membership for membership in memberships if requested_workspace_id and membership["workspace_id"] == str(requested_workspace_id)),
+        memberships[0] if requested_workspace_id is None and len(memberships) == 1 else None,
     )
     if active_membership is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="workspace_access_denied")
 
     return Principal(
-        user_id=UUID(user.id),
+        user_id=user.user_id,
         email=user.email,
         workspace_id=UUID(active_membership["workspace_id"]),
         role=cast(Role, active_membership["role"]),

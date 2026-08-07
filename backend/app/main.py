@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from app.api.health import router as health_router
 from app.api.me import router as me_router
+from app.api.workspaces import router as workspaces_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 
@@ -26,3 +27,4 @@ app = FastAPI(
 )
 app.include_router(health_router)
 app.include_router(me_router)
+app.include_router(workspaces_router)

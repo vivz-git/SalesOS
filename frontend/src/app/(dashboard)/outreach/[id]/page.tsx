@@ -17,6 +17,7 @@ import { fetchResearchBrief, type ResearchBrief } from "@/lib/api/research";
 import { DraftStatusBadge } from "@/components/outreach/draft-status-badge";
 import { DraftVersionHistory } from "@/components/outreach/draft-version-history";
 import { ResearchContextCard } from "@/components/outreach/research-context-card";
+import { GenerateDraftButton } from "@/components/outreach/generate-draft-button";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -214,8 +215,19 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
             </div>
           </div>
 
-          {/* Governed Action Buttons */}
+          {/* Governed Action Buttons & AI Trigger */}
           <div className="flex items-center gap-2 flex-wrap shrink-0">
+            {!isArchived && !isApproved && (
+              <GenerateDraftButton
+                draftId={draft.id}
+                onSuccess={(updated) => {
+                  setDraft(updated);
+                  setActionMessage(`Generated AI Outreach Draft (v${updated.current_version_number})`);
+                  setTimeout(() => setActionMessage(null), 4000);
+                }}
+              />
+            )}
+
             {(draft.status === "draft" || draft.status === "rejected") && (
               <button
                 type="button"

@@ -4,6 +4,7 @@ import {
   createOutreachDraft,
   fetchOutreachDraft,
   fetchOutreachDrafts,
+  generateOutreachDraft,
   rejectDraft,
   reviseOutreachDraft,
   submitDraftForReview,
@@ -37,6 +38,34 @@ describe("outreach API client", () => {
       "/api/v1/outreach/drafts?status=draft",
       expect.objectContaining({
         headers: expect.any(Headers),
+      })
+    );
+  });
+
+  it("triggers AI outreach draft generation action", async () => {
+    const mockGenerated = {
+      id: "d-1",
+      workspace_id: workspaceId,
+      campaign_id: "c-1",
+      contact_id: "ct-1",
+      current_subject: "AI Generated Subject",
+      current_body: "AI Generated Body Content",
+      status: "draft",
+      current_version_number: 2,
+    };
+
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockGenerated,
+    });
+
+    const res = await generateOutreachDraft(workspaceId, "d-1");
+    expect(res.current_version_number).toBe(2);
+    expect(res.current_subject).toBe("AI Generated Subject");
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/v1/outreach/drafts/d-1/actions/generate",
+      expect.objectContaining({
+        method: "POST",
       })
     );
   });

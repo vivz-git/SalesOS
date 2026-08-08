@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     supabase_url: str | None = None
     supabase_publishable_key: str | None = None
     supabase_service_role_key: str | None = None
+    gemini_api_key: str | None = None
+    google_api_key: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

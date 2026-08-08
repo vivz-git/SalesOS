@@ -188,3 +188,12 @@ export async function deleteDraft(
     method: "DELETE",
   });
 }
+
+export async function generateOutreachDraft(
+  workspaceId: string,
+  draftId: string
+): Promise<OutreachDraft> {
+  return request<OutreachDraft>(`/api/v1/outreach/drafts/${draftId}/actions/generate`, workspaceId, {
+    method: "POST",
+  });
+}

@@ -5,6 +5,8 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from app.adapters.gemini_provider import GeminiLLMProvider
+from app.adapters.llm_provider import LLMGenerationRequest, LLMProviderInterface
 from app.auth import Principal, _clients, get_current_principal
 from app.core.config import Settings, get_settings
 
@@ -409,3 +411,180 @@ def delete_outreach_draft(
     settings: Settings = Depends(get_settings),
 ) -> OutreachDraft:
     return archive_draft(draft_id, principal=principal, settings=settings)
+
+
+class OutreachGenerationJob(BaseModel):
+    id: UUID
+    workspace_id: UUID
+    draft_id: UUID
+    status: Literal["queued", "running", "completed", "failed"] = "queued"
+    created_at: datetime
+    completed_at: datetime | None = None
+    error_message: str | None = None
+    generated_version_number: int | None = None
+    draft: OutreachDraft | None = None
+
+
+def get_llm_provider(settings: Settings = Depends(get_settings)) -> LLMProviderInterface:
+    api_key = settings.gemini_api_key or settings.google_api_key
+    return GeminiLLMProvider(api_key=api_key)
+
+
+@router.post("/outreach/drafts/{draft_id}/actions/generate", response_model=OutreachDraft)
+def generate_outreach_draft_action(
+    draft_id: UUID,
+    principal: Principal = Depends(get_current_principal),
+    settings: Settings = Depends(get_settings),
+    llm_provider: LLMProviderInterface = Depends(get_llm_provider),
+) -> OutreachDraft:
+    existing = get_outreach_draft(draft_id, principal=principal, settings=settings)
+    if existing.status in ("archived", "approved"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"cannot_generate_draft_in_{existing.status}_state",
+        )
+
+    _, admin_client = _clients(settings)
+
+    # 1. Load Campaign Context
+    campaign_rows = cast(
+        list[dict[str, Any]],
+        admin_client.table("campaigns")
+        .select("*")
+        .eq("id", str(existing.campaign_id))
+        .eq("workspace_id", str(principal.workspace_id))
+        .execute()
+        .data
+        or [],
+    )
+    campaign = campaign_rows[0] if campaign_rows else {}
+
+    # 2. Load Contact Context
+    contact_rows = cast(
+        list[dict[str, Any]],
+        admin_client.table("contacts")
+        .select("*")
+        .eq("id", str(existing.contact_id))
+        .eq("workspace_id", str(principal.workspace_id))
+        .execute()
+        .data
+        or [],
+    )
+    contact = contact_rows[0] if contact_rows else {}
+
+    # 3. Load Account Context if available
+    account: dict[str, Any] = {}
+    account_id = contact.get("account_id")
+    if account_id:
+        account_rows = cast(
+            list[dict[str, Any]],
+            admin_client.table("accounts")
+            .select("*")
+            .eq("id", str(account_id))
+            .eq("workspace_id", str(principal.workspace_id))
+            .execute()
+            .data
+            or [],
+        )
+        if account_rows:
+            account = account_rows[0]
+
+    # 4. Load Research Brief & Sources if available
+    brief_data: dict[str, Any] = {}
+    sources_data: list[dict[str, Any]] = []
+    if existing.research_brief_id:
+        brief_rows = cast(
+            list[dict[str, Any]],
+            admin_client.table("research_briefs")
+            .select("*")
+            .eq("id", str(existing.research_brief_id))
+            .eq("workspace_id", str(principal.workspace_id))
+            .execute()
+            .data
+            or [],
+        )
+        if brief_rows:
+            brief_data = brief_rows[0]
+
+        source_rows = cast(
+            list[dict[str, Any]],
+            admin_client.table("research_sources")
+            .select("*")
+            .eq("brief_id", str(existing.research_brief_id))
+            .eq("workspace_id", str(principal.workspace_id))
+            .execute()
+            .data
+            or [],
+        )
+        sources_data = source_rows
+
+    key_findings_raw = brief_data.get("key_findings")
+    key_findings: list[str] = []
+    if isinstance(key_findings_raw, list):
+        key_findings = [str(k) for k in key_findings_raw]
+
+    gen_request = LLMGenerationRequest(
+        campaign_name=str(campaign.get("name", "Outreach Campaign")),
+        campaign_description=cast(str | None, campaign.get("description")),
+        target_segment=cast(str | None, campaign.get("target_segment")),
+        icp_definition=cast(str | None, campaign.get("icp_definition")),
+        contact_name=f"{contact.get('first_name', '')} {contact.get('last_name', '')}".strip() or "Prospect",
+        contact_title=cast(str | None, contact.get("title")),
+        contact_department=cast(str | None, contact.get("department")),
+        account_name=cast(str | None, account.get("name")),
+        account_domain=cast(str | None, account.get("domain")),
+        research_summary=cast(str | None, brief_data.get("summary")),
+        research_key_findings=key_findings,
+        research_sources=sources_data,
+        prompt_version="v1.0.0",
+    )
+
+    try:
+        gen_result = llm_provider.generate_outreach_draft(gen_request)
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"ai_draft_generation_failed: {error}",
+        ) from error
+
+    # 6. Append new immutable DraftVersion (v+1)
+    version_id = uuid4()
+    next_version_num = existing.current_version_number + 1
+    now_iso = datetime.now(UTC).isoformat()
+
+    version_row = {
+        "id": str(version_id),
+        "workspace_id": str(principal.workspace_id),
+        "draft_id": str(draft_id),
+        "version_number": next_version_num,
+        "subject": gen_result.subject,
+        "body": gen_result.body,
+        "generation_source": gen_result.generation_source,
+        "provider": gen_result.provider,
+        "model": gen_result.model,
+        "prompt_version": gen_result.prompt_version,
+        "research_brief_id": str(existing.research_brief_id) if existing.research_brief_id else None,
+        "research_brief_version": 1 if existing.research_brief_id else None,
+        "evidence_references": gen_result.evidence_references,
+        "created_by": str(principal.user_id),
+        "created_at": now_iso,
+    }
+
+    draft_updates = {
+        "current_version_id": str(version_id),
+        "current_version_number": next_version_num,
+        "current_subject": gen_result.subject,
+        "current_body": gen_result.body,
+        "updated_at": now_iso,
+    }
+
+    try:
+        admin_client.table("draft_versions").insert(cast(Any, version_row)).execute()
+        admin_client.table("outreach_drafts").update(cast(Any, draft_updates)).eq("id", str(draft_id)).execute()
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="draft_revision_failed"
+        ) from error
+
+    return get_outreach_draft(draft_id, principal=principal, settings=settings)
+

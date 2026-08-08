@@ -28,6 +28,12 @@ import {
 } from "@/lib/api/campaigns";
 import { useWorkspace } from "@/lib/workspace-context";
 
+import { SequenceBuilder } from "@/components/sequences/sequence-builder";
+import {
+  fetchCampaignSequence,
+  type SequenceDefinition,
+} from "@/lib/api/sequences";
+
 interface CampaignDetailsProps {
   params: Promise<{ id: string }>;
 }
@@ -38,6 +44,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
   const { activeWorkspace } = useWorkspace();
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [sequence, setSequence] = useState<SequenceDefinition | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -50,6 +57,12 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
       setError(null);
       const data = await fetchCampaign(activeWorkspace.id, id);
       setCampaign(data);
+      try {
+        const seqData = await fetchCampaignSequence(activeWorkspace.id, id);
+        setSequence(seqData);
+      } catch {
+        // Fallback silently if sequence loading fails
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load campaign details.");
     } finally {
@@ -233,6 +246,16 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
             <span className="font-semibold capitalize text-zinc-900">{campaign.status}</span>. External outreach dispatch is protected by human approval gates.
           </p>
         </div>
+
+        {/* Sequence Builder & Step Touchpoint Configuration */}
+        {activeWorkspace && sequence && (
+          <SequenceBuilder
+            workspaceId={activeWorkspace.id}
+            campaignId={campaign.id}
+            initialSequence={sequence}
+            onSaved={(updated) => setSequence(updated)}
+          />
+        )}
       </div>
 
       {isEditing && (

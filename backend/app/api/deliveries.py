@@ -333,6 +333,19 @@ async def resend_webhook_handler(
         text_body = str(data.get("text") or data.get("html") or "")
         in_reply_to = str(data.get("headers", {}).get("in-reply-to") or data.get("in_reply_to") or "")
 
+        # If body is missing from webhook metadata, fetch content via Resend EmailsReceiving API
+        if not text_body and provider_msg_id and settings.resend_api_key:
+            try:
+                import resend
+                resend.api_key = settings.resend_api_key
+                recv_detail = resend.EmailsReceiving.get(provider_msg_id)
+                if isinstance(recv_detail, dict):
+                    text_body = str(recv_detail.get("text") or recv_detail.get("html") or "")
+                elif hasattr(recv_detail, "text"):
+                    text_body = str(getattr(recv_detail, "text", "") or getattr(recv_detail, "html", ""))
+            except Exception:
+                pass
+
         if sender and recipient:
             ingest_inbound_reply(
                 InboundReplyPayload(

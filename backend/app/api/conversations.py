@@ -270,10 +270,20 @@ def ingest_inbound_reply(
 
     if classification_result.reply_state == "unsubscribe":
         existing_conv["status"] = "opt_out"
+        stop_reason = "unsubscribed"
     elif classification_result.needs_human_action:
         existing_conv["status"] = "needs_human_action"
+        stop_reason = "prospect_replied"
     else:
         existing_conv["status"] = "active"
+        stop_reason = "prospect_replied"
+
+    # 7. Evaluate and halt active sequence enrollments for this contact
+    try:
+        from app.api.sequences import evaluate_sequence_stop_conditions_for_contact
+        evaluate_sequence_stop_conditions_for_contact(resolved_ws_id, resolved_contact_id, stop_reason)
+    except Exception:
+        pass
 
     return _row_to_conversation(existing_conv)
 

@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     supabase_service_role_key: str | None = None
     gemini_api_key: str | None = None
     google_api_key: str | None = None
+    resend_api_key: str | None = None
+    resend_from_email: str = "onboarding@resend.dev"
+    resend_webhook_secret: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

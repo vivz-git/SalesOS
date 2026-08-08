@@ -7,6 +7,7 @@ from app.api.accounts import router as accounts_router
 from app.api.approvals import router as approvals_router
 from app.api.campaigns import router as campaigns_router
 from app.api.contacts import router as contacts_router
+from app.api.deliveries import router as deliveries_router
 from app.api.health import router as health_router
 from app.api.me import router as me_router
 from app.api.outreach import router as outreach_router
@@ -40,4 +41,5 @@ app.include_router(contacts_router)
 app.include_router(research_router)
 app.include_router(outreach_router)
 app.include_router(approvals_router)
+app.include_router(deliveries_router)
 

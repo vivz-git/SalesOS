@@ -29,6 +29,7 @@ import {
   X,
   AlertCircle,
   FileText,
+  Send,
 } from "lucide-react";
 
 interface DraftDetailPageProps {
@@ -258,6 +259,27 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
                   Reject
                 </button>
               </>
+            )}
+
+            {isApproved && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!activeWorkspace) return;
+                  try {
+                    const { createDelivery } = await import("@/lib/api/deliveries");
+                    const delivery = await createDelivery(activeWorkspace.id, draft.id);
+                    setActionMessage(`Email delivery initiated (${delivery.status})! View in Deliveries log.`);
+                    setTimeout(() => setActionMessage(null), 5000);
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : "Delivery failed");
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 shadow-2xs transition-colors"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>Send Outbound Email</span>
+              </button>
             )}
 
             {!isArchived && (

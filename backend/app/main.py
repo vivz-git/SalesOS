@@ -19,6 +19,7 @@ from app.api.sequences import router as sequences_router
 from app.api.workspaces import router as workspaces_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.db import engine
 
 
 @asynccontextmanager
@@ -26,6 +27,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     configure_logging(settings.log_level)
     yield
+    await engine.dispose()
 
 
 app = FastAPI(

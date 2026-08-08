@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     resend_api_key: str | None = None
     resend_from_email: str = "onboarding@resend.dev"
     resend_webhook_secret: str | None = None
+    hubspot_client_id: str | None = None
+    hubspot_client_secret: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

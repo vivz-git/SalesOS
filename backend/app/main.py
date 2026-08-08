@@ -13,6 +13,7 @@ from app.api.health import router as health_router
 from app.api.hubspot import router as hubspot_router
 from app.api.me import router as me_router
 from app.api.outreach import router as outreach_router
+from app.api.reports import router as reports_router
 from app.api.research import router as research_router
 from app.api.sequences import router as sequences_router
 from app.api.workspaces import router as workspaces_router
@@ -48,4 +49,5 @@ app.include_router(deliveries_router)
 app.include_router(conversations_router)
 app.include_router(sequences_router)
 app.include_router(hubspot_router)
+app.include_router(reports_router)
 

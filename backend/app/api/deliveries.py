@@ -322,6 +322,32 @@ async def resend_webhook_handler(
     data = payload_json.get("data", {})
     provider_msg_id = str(data.get("email_id") or data.get("id") or "")
 
+    # Handle Inbound Email Received Webhook Event
+    if event_type == "email.received":
+        from app.adapters.reply_classifier import DeterministicReplyClassifier
+        from app.api.conversations import InboundReplyPayload, ingest_inbound_reply
+
+        sender = str(data.get("from") or data.get("sender") or "")
+        recipient = str(data.get("to") or data.get("recipient") or "")
+        subject = str(data.get("subject") or "")
+        text_body = str(data.get("text") or data.get("html") or "")
+        in_reply_to = str(data.get("headers", {}).get("in-reply-to") or data.get("in_reply_to") or "")
+
+        if sender and recipient:
+            ingest_inbound_reply(
+                InboundReplyPayload(
+                    sender_email=sender,
+                    recipient_email=recipient,
+                    subject=subject,
+                    body=text_body,
+                    provider_message_id=provider_msg_id,
+                    in_reply_to_provider_message_id=in_reply_to or None,
+                ),
+                classifier=DeterministicReplyClassifier(),
+                settings=settings,
+            )
+        return {"received": True, "event": event_type, "status": "ingested"}
+
     status_mapping: dict[str, DeliveryStatus] = {
         "email.delivered": "delivered",
         "email.bounced": "bounced",

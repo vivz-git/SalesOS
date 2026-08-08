@@ -1,9 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
+import { fetchApprovalQueue } from "@/lib/api/approvals";
 
 export default function DashboardHomePage() {
   const { activeWorkspace } = useWorkspace();
+  const [pendingCount, setPendingCount] = useState<number>(0);
+
+  useEffect(() => {
+    async function loadPending() {
+      if (!activeWorkspace) return;
+      try {
+        const queue = await fetchApprovalQueue(activeWorkspace.id, { status: "ready_for_review" });
+        setPendingCount(queue.length);
+      } catch {
+        // Fallback gracefully
+      }
+    }
+    loadPending();
+  }, [activeWorkspace]);
 
   return (
     <div className="space-y-6">
@@ -37,13 +54,13 @@ export default function DashboardHomePage() {
           <p className="mt-2 text-2xl font-bold text-zinc-900">0</p>
           <p className="mt-1 text-xs text-zinc-500">Campaign brief placeholder</p>
         </div>
-        <div className="rounded-xl border bg-white p-5 shadow-sm">
+        <Link href="/approvals" className="rounded-xl border bg-white p-5 shadow-sm hover:border-purple-300 transition-colors block">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Pending Approvals
           </p>
-          <p className="mt-2 text-2xl font-bold text-zinc-900">0</p>
-          <p className="mt-1 text-xs text-zinc-500">Approval queue placeholder</p>
-        </div>
+          <p className="mt-2 text-2xl font-bold text-purple-600">{pendingCount}</p>
+          <p className="mt-1 text-xs font-medium text-purple-700 hover:underline">View Approval Queue &rarr;</p>
+        </Link>
         <div className="rounded-xl border bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Target Accounts

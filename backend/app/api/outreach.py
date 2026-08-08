@@ -357,7 +357,7 @@ def approve_draft(
     settings: Settings = Depends(get_settings),
 ) -> OutreachDraft:
     existing = get_outreach_draft(draft_id, principal=principal, settings=settings)
-    if existing.status not in ("ready_for_review", "draft"):
+    if existing.status != "ready_for_review":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"cannot_approve_draft_in_{existing.status}_state",
@@ -376,7 +376,7 @@ def reject_draft(
     settings: Settings = Depends(get_settings),
 ) -> OutreachDraft:
     existing = get_outreach_draft(draft_id, principal=principal, settings=settings)
-    if existing.status in ("archived", "superseded"):
+    if existing.status != "ready_for_review":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"cannot_reject_draft_in_{existing.status}_state",
@@ -384,6 +384,25 @@ def reject_draft(
 
     _, admin_client = _clients(settings)
     updates = {"status": "rejected", "updated_at": datetime.now(UTC).isoformat()}
+    admin_client.table("outreach_drafts").update(updates).eq("id", str(draft_id)).execute()
+    return get_outreach_draft(draft_id, principal=principal, settings=settings)
+
+
+@router.post("/outreach/drafts/{draft_id}/actions/return-to-draft", response_model=OutreachDraft)
+def return_draft_to_draft(
+    draft_id: UUID,
+    principal: Principal = Depends(get_current_principal),
+    settings: Settings = Depends(get_settings),
+) -> OutreachDraft:
+    existing = get_outreach_draft(draft_id, principal=principal, settings=settings)
+    if existing.status not in ("ready_for_review", "rejected"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"cannot_return_draft_to_draft_in_{existing.status}_state",
+        )
+
+    _, admin_client = _clients(settings)
+    updates = {"status": "draft", "updated_at": datetime.now(UTC).isoformat()}
     admin_client.table("outreach_drafts").update(updates).eq("id", str(draft_id)).execute()
     return get_outreach_draft(draft_id, principal=principal, settings=settings)
 

@@ -226,36 +226,55 @@ def test_draft_status_lifecycle_actions() -> None:
         "deleted_at": None,
     }
 
+    current_draft = dict(sample_draft)
+
+    def mock_execute():
+        return MagicMock(data=[current_draft])
+
+    def mock_update(updates):
+        if "status" in updates:
+            current_draft["status"] = updates["status"]
+        m = MagicMock()
+        m.eq.return_value.execute.return_value = MagicMock(data=[current_draft])
+        return m
+
     mock_admin = MagicMock()
     mock_select = mock_admin.table.return_value.select.return_value
-    mock_select.eq.return_value.eq.return_value.execute.return_value.data = [sample_draft]
-    mock_admin.table.return_value.update.return_value.eq.return_value.execute.return_value.data = []
+    mock_select.eq.return_value.eq.return_value.execute.side_effect = mock_execute
+    mock_admin.table.return_value.update.side_effect = mock_update
 
     with patch("app.api.outreach._clients", return_value=(MagicMock(), mock_admin)):
         client = TestClient(app)
 
-        # 1. Submit for review
+        # 1. Submit for review (draft -> ready_for_review)
         sub_res = client.post(
             f"/v1/outreach/drafts/{draft_id}/actions/submit-review",
             headers={"Authorization": "Bearer fake-token"},
         )
         assert sub_res.status_code == 200
 
-        # 2. Approve
-        app_res = client.post(
-            f"/v1/outreach/drafts/{draft_id}/actions/approve",
-            headers={"Authorization": "Bearer fake-token"},
-        )
-        assert app_res.status_code == 200
-
-        # 3. Reject
+        # 2. Reject (ready_for_review -> rejected)
         rej_res = client.post(
             f"/v1/outreach/drafts/{draft_id}/actions/reject",
             headers={"Authorization": "Bearer fake-token"},
         )
         assert rej_res.status_code == 200
 
-        # 4. Archive
+        # 3. Resubmit for review (rejected -> ready_for_review)
+        sub_res2 = client.post(
+            f"/v1/outreach/drafts/{draft_id}/actions/submit-review",
+            headers={"Authorization": "Bearer fake-token"},
+        )
+        assert sub_res2.status_code == 200
+
+        # 4. Approve (ready_for_review -> approved)
+        app_res = client.post(
+            f"/v1/outreach/drafts/{draft_id}/actions/approve",
+            headers={"Authorization": "Bearer fake-token"},
+        )
+        assert app_res.status_code == 200
+
+        # 5. Archive
         arc_res = client.post(
             f"/v1/outreach/drafts/{draft_id}/actions/archive",
             headers={"Authorization": "Bearer fake-token"},

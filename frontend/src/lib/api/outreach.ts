@@ -76,7 +76,7 @@ export interface OutreachDraftFilterParams {
   offset?: number;
 }
 
-async function request<T>(
+export async function request<T>(
   url: string,
   workspaceId: string,
   options: RequestInit = {}

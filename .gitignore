@@ -23,3 +23,13 @@ htmlcov/
 .DS_Store
 Thumbs.db
 *.log
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+
+# Local development/debug scripts
+backend/run_tests.py
+backend/test_conn.py
+backend/tests/test_simple.py
+verify_schema.py

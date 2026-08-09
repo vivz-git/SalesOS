@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -20,13 +21,25 @@ from app.api.workspaces import router as workspaces_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.db import engine
+from app.worker import process_jobs
 
+
+import os
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     configure_logging(settings.log_level)
+    worker_task = None
+    if os.environ.get("TESTING") != "1":
+        worker_task = asyncio.create_task(process_jobs())
     yield
+    if worker_task:
+        worker_task.cancel()
+        try:
+            await worker_task
+        except asyncio.CancelledError:
+            pass
     await engine.dispose()
 
 

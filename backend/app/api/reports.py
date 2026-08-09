@@ -4,19 +4,18 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.accounts import list_accounts
 from app.api.campaigns import list_campaigns
 from app.api.contacts import list_contacts
 from app.api.conversations import _CONVERSATIONS_STORE
-from app.api.deliveries import _DELIVERIES_STORE
-from app.api.hubspot import _HUBSPOT_SYNC_RUNS_STORE
 from app.api.outreach import list_outreach_drafts
-from app.api.sequences import _SEQUENCE_ENROLLMENTS_STORE
 from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
 from app.db import get_db_session
+from app.models import DeliveryModel, SequenceEnrollmentModel
 
 router = APIRouter(prefix="/v1", tags=["reports"])
 
@@ -82,7 +81,7 @@ async def compute_workspace_metrics(principal: Principal, settings: Settings, se
     except Exception:
         pass
 
-    contacts_enrolled = sum(1 for e in _SEQUENCE_ENROLLMENTS_STORE if str(e.get("workspace_id")) == ws_str)
+    contacts_enrolled = (await session.scalar(select(func.count()).select_from(SequenceEnrollmentModel).filter_by(workspace_id=principal.workspace_id))) or 0
     if contacts_enrolled == 0:
         contacts_enrolled = contacts_cnt
 
@@ -100,11 +99,10 @@ async def compute_workspace_metrics(principal: Principal, settings: Settings, se
     app_rate = round((approved_cnt / submitted_cnt) * 100.0, 1) if submitted_cnt > 0 else 0.0
 
     # 3. Deliveries & Delivery Rate
-    ws_deliveries = [d for d in _DELIVERIES_STORE if str(d.get("workspace_id")) == ws_str]
-    sent_cnt = sum(1 for d in ws_deliveries if d.get("status") != "cancelled")
-    delivered_cnt = sum(1 for d in ws_deliveries if d.get("status") == "delivered")
-    bounced_cnt = sum(1 for d in ws_deliveries if d.get("status") == "bounced")
-    complained_cnt = sum(1 for d in ws_deliveries if d.get("status") == "complained")
+    sent_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id).filter(DeliveryModel.status != "cancelled"))) or 0
+    delivered_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="delivered"))) or 0
+    bounced_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="bounced"))) or 0
+    complained_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="complained"))) or 0
     deliv_rate = round((delivered_cnt / sent_cnt) * 100.0, 1) if sent_cnt > 0 else 0.0
 
     # 4. Conversations & Reply Rates
@@ -119,11 +117,16 @@ async def compute_workspace_metrics(principal: Principal, settings: Settings, se
     opt_rate = round((opt_out_cnt / replies_cnt) * 100.0, 1) if replies_cnt > 0 else 0.0
 
     # 5. CRM Sync
-    crm_synced_cnt = sum(
-        int(r.get("records_processed", 0))
-        for r in _HUBSPOT_SYNC_RUNS_STORE
-        if str(r.get("workspace_id")) == ws_str
-    )
+    crm_synced_cnt = 0
+    try:
+        from app.api.hubspot import _HUBSPOT_SYNC_RUNS_STORE
+        crm_synced_cnt = sum(
+            int(r.get("records_processed", 0))
+            for r in _HUBSPOT_SYNC_RUNS_STORE
+            if str(r.get("workspace_id")) == ws_str
+        )
+    except Exception:
+        pass
 
     return ReportMetricsSnapshot(
         campaigns_count=campaigns_cnt,

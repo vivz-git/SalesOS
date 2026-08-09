@@ -4,11 +4,13 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.gemini_provider import GeminiLLMProvider
 from app.adapters.llm_provider import LLMGenerationRequest, LLMProviderInterface
 from app.auth import Principal, _clients, get_current_principal
 from app.core.config import Settings, get_settings
+from app.models import DraftVersionModel, OutreachDraftModel
 
 router = APIRouter(prefix="/v1", tags=["outreach"])
 
@@ -39,6 +41,8 @@ class OutreachDraft(BaseModel):
     workspace_id: UUID
     campaign_id: UUID
     contact_id: UUID
+    sequence_enrollment_id: UUID | None = None
+    sequence_step_number: int | None = None
     research_brief_id: UUID | None = None
     current_version_id: UUID | None = None
     current_version_number: int = 1
@@ -55,6 +59,8 @@ class OutreachDraft(BaseModel):
 class OutreachDraftCreate(BaseModel):
     campaign_id: UUID
     contact_id: UUID
+    sequence_enrollment_id: UUID | None = None
+    sequence_step_number: int | None = None
     research_brief_id: UUID | None = None
     subject: str | None = Field(default=None, max_length=255)
     body: str = Field(..., min_length=1, max_length=10000)
@@ -607,3 +613,90 @@ def generate_outreach_draft_action(
 
     return get_outreach_draft(draft_id, principal=principal, settings=settings)
 
+
+async def create_outreach_draft_orm(
+    session: AsyncSession,
+    payload: OutreachDraftCreate,
+    principal: Principal,
+) -> OutreachDraft:
+    draft_id = uuid4()
+    version_id = uuid4()
+    now_dt = datetime.now(UTC)
+
+    draft_model = OutreachDraftModel(
+        id=draft_id,
+        workspace_id=principal.workspace_id,
+        campaign_id=payload.campaign_id,
+        contact_id=payload.contact_id,
+        sequence_enrollment_id=payload.sequence_enrollment_id,
+        sequence_step_number=payload.sequence_step_number,
+        research_brief_id=payload.research_brief_id,
+        current_version_id=None,  # Set to None initially to avoid circular dependency
+        current_version_number=1,
+        current_subject=payload.subject.strip() if payload.subject else None,
+        current_body=payload.body.strip(),
+        status="draft",
+        created_by=principal.user_id,
+        created_at=now_dt,
+        updated_at=now_dt,
+    )
+    session.add(draft_model)
+    await session.flush()
+
+    version_model = DraftVersionModel(
+        id=version_id,
+        workspace_id=principal.workspace_id,
+        draft_id=draft_id,
+        version_number=1,
+        subject=payload.subject.strip() if payload.subject else None,
+        body=payload.body.strip(),
+        generation_source=payload.generation_source,
+        provider=payload.provider,
+        model=payload.model,
+        prompt_version=payload.prompt_version,
+        research_brief_id=payload.research_brief_id,
+        research_brief_version=1 if payload.research_brief_id else None,
+        evidence_references=payload.evidence_references or [],
+        created_by=principal.user_id,
+        created_at=now_dt,
+    )
+    session.add(version_model)
+    await session.flush()
+
+    draft_model.current_version_id = version_id
+    
+    return OutreachDraft(
+        id=draft_model.id,
+        workspace_id=draft_model.workspace_id,
+        campaign_id=draft_model.campaign_id,
+        contact_id=draft_model.contact_id,
+        sequence_enrollment_id=draft_model.sequence_enrollment_id,
+        sequence_step_number=draft_model.sequence_step_number,
+        research_brief_id=draft_model.research_brief_id,
+        current_version_id=draft_model.current_version_id,
+        current_version_number=draft_model.current_version_number,
+        current_subject=draft_model.current_subject,
+        current_body=draft_model.current_body,
+        status="draft",
+        created_by=draft_model.created_by,
+        created_at=draft_model.created_at,
+        updated_at=draft_model.updated_at,
+        deleted_at=draft_model.deleted_at,
+        versions=[DraftVersion(
+            id=version_model.id,
+            workspace_id=version_model.workspace_id,
+            draft_id=version_model.draft_id,
+            version_number=version_model.version_number,
+            subject=version_model.subject,
+            body=version_model.body,
+            generation_source=cast(GenerationSource, version_model.generation_source),
+            provider=version_model.provider,
+            model=version_model.model,
+            prompt_version=version_model.prompt_version,
+            research_brief_id=version_model.research_brief_id,
+            research_brief_version=version_model.research_brief_version,
+            evidence_references=version_model.evidence_references,
+            created_by=version_model.created_by,
+            created_at=version_model.created_at,
+        )]
+    )

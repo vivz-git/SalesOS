@@ -4,6 +4,8 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.reply_classifier import (
     ClassificationResult,
@@ -11,9 +13,10 @@ from app.adapters.reply_classifier import (
     ReplyClassifierInterface,
     ReplyState,
 )
-from app.api.deliveries import _DELIVERIES_STORE
 from app.auth import Principal, _clients, get_current_principal
 from app.core.config import Settings, get_settings
+from app.db import get_db_session
+from app.models import DeliveryModel
 
 router = APIRouter(prefix="/v1", tags=["conversations"])
 
@@ -151,18 +154,20 @@ def _row_to_conversation(conv_dict: dict[str, Any]) -> Conversation:
 
 
 @router.post("/conversations/inbound", response_model=Conversation)
-def ingest_inbound_reply(
+async def ingest_inbound_reply(
     payload: InboundReplyPayload,
     classifier: ReplyClassifierInterface = Depends(get_reply_classifier),
     settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Conversation:
     # 1. Match referenced outbound delivery or recipient contact
-    matched_delivery: dict[str, Any] | None = None
+    matched_delivery = None
     if payload.in_reply_to_provider_message_id:
-        for del_row in _DELIVERIES_STORE:
-            if del_row.get("provider_message_id") == payload.in_reply_to_provider_message_id:
-                matched_delivery = del_row
-                break
+        matched_delivery = await session.scalar(
+            select(DeliveryModel)
+            .filter_by(provider_message_id=payload.in_reply_to_provider_message_id)
+            .limit(1)
+        )
 
     resolved_ws_id: str | None = None
     resolved_contact_id: str | None = None
@@ -170,30 +175,26 @@ def ingest_inbound_reply(
     resolved_delivery_id: str | None = None
 
     if matched_delivery:
-        resolved_ws_id = str(matched_delivery["workspace_id"])
-        resolved_contact_id = str(matched_delivery["contact_id"])
-        resolved_delivery_id = str(matched_delivery["id"])
+        resolved_ws_id = str(matched_delivery.workspace_id)
+        resolved_contact_id = str(matched_delivery.contact_id)
+        resolved_delivery_id = str(matched_delivery.id)
     elif payload.workspace_id:
         resolved_ws_id = str(payload.workspace_id)
 
     # 2. Query contact by email if not resolved via delivery
     if not resolved_contact_id and resolved_ws_id:
-        if settings.supabase_url and settings.supabase_publishable_key and settings.supabase_service_role_key:
-            try:
-                _, admin_client = _clients(settings)
-                contacts = (
-                    admin_client.table("contacts")
-                    .select("*")
-                    .eq("workspace_id", resolved_ws_id)
-                    .eq("email", payload.sender_email)
-                    .execute()
-                    .data
-                )
-                if contacts and isinstance(contacts, list) and len(contacts) > 0:
-                    first_c = cast(dict[str, Any], contacts[0])
-                    resolved_contact_id = str(first_c.get("id", ""))
-            except Exception:
-                pass
+        try:
+            from app.models import ContactModel
+            from sqlalchemy import select
+            c_model = await session.scalar(
+                select(ContactModel)
+                .filter_by(workspace_id=resolved_ws_id, email=payload.sender_email)
+                .limit(1)
+            )
+            if c_model:
+                resolved_contact_id = str(c_model.id)
+        except Exception:
+            pass
 
     if not resolved_ws_id:
         resolved_ws_id = str(uuid4())
@@ -281,8 +282,9 @@ def ingest_inbound_reply(
     # 7. Evaluate and halt active sequence enrollments for this contact
     try:
         from app.api.sequences import evaluate_sequence_stop_conditions_for_contact
-        evaluate_sequence_stop_conditions_for_contact(resolved_ws_id, resolved_contact_id, stop_reason)
-    except Exception:
+        await evaluate_sequence_stop_conditions_for_contact(str(resolved_ws_id), str(resolved_contact_id), stop_reason, session)
+    except Exception as e:
+        print(f"FAILED TO EVALUATE SEQUENCE STOP CONDITIONS: {e}")
         pass
 
     return _row_to_conversation(existing_conv)

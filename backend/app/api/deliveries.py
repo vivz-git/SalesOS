@@ -1,9 +1,12 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, cast
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.email_provider import (
     DeliveryStatus,
@@ -14,11 +17,10 @@ from app.adapters.resend_provider import ResendEmailProvider
 from app.api.outreach import get_outreach_draft
 from app.auth import Principal, _clients, get_current_principal
 from app.core.config import Settings, get_settings
+from app.db import get_db_session
+from app.models import DeliveryModel, JobModel, SequenceEnrollmentModel, SequenceStepModel
 
 router = APIRouter(prefix="/v1", tags=["deliveries"])
-
-# In-memory store for deliveries when database table is unavailable
-_DELIVERIES_STORE: list[dict[str, Any]] = []
 
 
 class DeliveryCreatePayload(BaseModel):
@@ -61,49 +63,41 @@ def get_email_provider(settings: Settings = Depends(get_settings)) -> EmailProvi
     return ResendEmailProvider(api_key=settings.resend_api_key)
 
 
-def _row_to_delivery(row: dict[str, Any]) -> EmailDelivery:
-    created_at_val = str(row.get("created_at", datetime.now(UTC).isoformat()))
-    updated_at_val = str(row.get("updated_at", created_at_val))
-
+def _model_to_delivery(model: DeliveryModel) -> EmailDelivery:
     return EmailDelivery(
-        id=UUID(str(row["id"])),
-        workspace_id=UUID(str(row["workspace_id"])),
-        draft_id=UUID(str(row["draft_id"])),
-        version_id=UUID(str(row["version_id"])),
-        version_number=int(row.get("version_number", 1)),
-        contact_id=UUID(str(row["contact_id"])),
-        recipient_email=str(row.get("recipient_email", "")),
-        subject=str(row.get("subject", "")),
-        body=str(row.get("body", "")),
-        provider=str(row.get("provider", "resend")),
-        provider_message_id=cast(str | None, row.get("provider_message_id")),
-        status=cast(DeliveryStatus, row.get("status", "queued")),
-        idempotency_key=str(row.get("idempotency_key", "")),
-        created_by=UUID(str(row.get("created_by", uuid4()))),
-        created_at=datetime.fromisoformat(created_at_val),
-        updated_at=datetime.fromisoformat(updated_at_val),
-        error_message=cast(str | None, row.get("error_message")),
+        id=model.id,
+        workspace_id=model.workspace_id,
+        draft_id=model.draft_id,
+        version_id=model.version_id or uuid4(),  # Type hint safety fallback
+        version_number=model.version_number,
+        contact_id=model.contact_id,
+        recipient_email=model.recipient_email,
+        subject=model.subject or "(No Subject)",
+        body=model.body or "",
+        provider=model.provider,
+        provider_message_id=model.provider_message_id,
+        status=cast(DeliveryStatus, model.status),
+        idempotency_key=model.idempotency_key,
+        created_by=model.created_by or uuid4(),  # Type hint safety fallback
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+        error_message=model.error_message,
     )
 
 
-def _find_delivery_by_idempotency(workspace_id: UUID, idempotency_key: str) -> EmailDelivery | None:
-    for row in _DELIVERIES_STORE:
-        if str(row.get("workspace_id")) == str(workspace_id) and row.get("idempotency_key") == idempotency_key:
-            return _row_to_delivery(row)
-    return None
-
-
 @router.post("/deliveries", response_model=EmailDelivery)
-def create_delivery(
+async def create_delivery(
     payload: DeliveryCreatePayload,
     principal: Principal = Depends(get_current_principal),
     settings: Settings = Depends(get_settings),
     email_provider: EmailProviderInterface = Depends(get_email_provider),
+    session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+
     # 1. Fetch Draft & Validate Workspace Membership
     draft = get_outreach_draft(payload.draft_id, principal=principal, settings=settings)
 
-    # 2. CRITICAL APPROVAL SAFETY GATE: Status MUST be 'approved'
     if draft.status != "approved":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -142,44 +136,43 @@ def create_delivery(
             detail="contact_has_no_email_address",
         )
 
-    # 4. Generate Stable Idempotency Key
     idempotency_key = f"{principal.workspace_id}:{draft.id}:{draft.current_version_number}"
 
-    # 5. Check Idempotency to prevent duplicate external sends
-    existing_delivery = _find_delivery_by_idempotency(principal.workspace_id, idempotency_key)
+    # TRANSACTION 1 (Prepare)
+    existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
     if existing_delivery and existing_delivery.status in ("sent", "delivered", "running", "queued"):
-        return existing_delivery
+        return _model_to_delivery(existing_delivery)
 
     delivery_id = uuid4()
-    now_iso = datetime.now(UTC).isoformat()
+    now_dt = datetime.now(UTC)
+    
+    delivery_model = DeliveryModel(
+        id=delivery_id,
+        workspace_id=principal.workspace_id,
+        draft_id=draft.id,
+        version_id=draft.current_version_id,
+        version_number=draft.current_version_number,
+        contact_id=draft.contact_id,
+        recipient_email=recipient_email,
+        subject=draft.current_subject or "(No Subject)",
+        body=draft.current_body or "",
+        provider="resend",
+        status="queued",
+        idempotency_key=idempotency_key,
+        created_by=principal.user_id,
+        created_at=now_dt,
+        updated_at=now_dt
+    )
 
-    delivery_dict: dict[str, Any] = {
-        "id": str(delivery_id),
-        "workspace_id": str(principal.workspace_id),
-        "draft_id": str(draft.id),
-        "version_id": str(draft.current_version_id),
-        "version_number": draft.current_version_number,
-        "contact_id": str(draft.contact_id),
-        "recipient_email": recipient_email,
-        "subject": draft.current_subject or "(No Subject)",
-        "body": draft.current_body or "",
-        "provider": "resend",
-        "provider_message_id": None,
-        "status": "queued",
-        "idempotency_key": idempotency_key,
-        "created_by": str(principal.user_id),
-        "created_at": now_iso,
-        "updated_at": now_iso,
-        "error_message": None,
-    }
-
-    _DELIVERIES_STORE.append(delivery_dict)
-
-    # Attempt database persist if available
     try:
-        admin_client.table("deliveries").insert(cast(Any, delivery_dict)).execute()
-    except Exception:
-        pass
+        session.add(delivery_model)
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
+        if existing_delivery and existing_delivery.status in ("sent", "delivered", "running", "queued"):
+            return _model_to_delivery(existing_delivery)
+        delivery_model = existing_delivery
 
     # 6. Execute Provider Send Operation
     send_req = EmailDeliverySendRequest(
@@ -192,81 +185,109 @@ def create_delivery(
 
     try:
         send_result = email_provider.send_email(send_req)
-        delivery_dict["status"] = send_result.status
-        delivery_dict["provider_message_id"] = send_result.provider_message_id
-        delivery_dict["updated_at"] = datetime.now(UTC).isoformat()
+        new_status = send_result.status
+        provider_message_id = send_result.provider_message_id
+        error_message = None
     except Exception as err:
-        delivery_dict["status"] = "failed"
-        delivery_dict["error_message"] = str(err)
-        delivery_dict["updated_at"] = datetime.now(UTC).isoformat()
+        new_status = "failed"
+        provider_message_id = None
+        error_message = str(err)
 
-    # Update database record if available
-    try:
-        admin_client.table("deliveries").update({
-            "status": delivery_dict["status"],
-            "provider_message_id": delivery_dict["provider_message_id"],
-            "error_message": delivery_dict["error_message"],
-            "updated_at": delivery_dict["updated_at"],
-        }).eq("id", str(delivery_id)).execute()
-    except Exception:
-        pass
+    # TRANSACTION 2 (Finalize)
+    delivery_model.status = new_status
+    delivery_model.provider_message_id = provider_message_id
+    delivery_model.error_message = error_message
+    delivery_model.updated_at = datetime.now(UTC)
 
-    return _row_to_delivery(delivery_dict)
+    if new_status == "sent" and draft.sequence_enrollment_id:
+        enrollment = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=draft.sequence_enrollment_id))
+        if enrollment and enrollment.status == "active":
+            enrollment.current_step_number += 1
+            next_step = await session.scalar(select(SequenceStepModel).filter_by(sequence_id=enrollment.sequence_id, step_number=enrollment.current_step_number))
+            
+            if next_step:
+                enrollment.next_step_due_at = datetime.now(UTC) + timedelta(days=next_step.delay_days)
+                job = JobModel(
+                    id=uuid4(),
+                    workspace_id=principal.workspace_id,
+                    job_type="execute_sequence_step",
+                    payload={"enrollment_id": str(enrollment.id), "step_number": enrollment.current_step_number},
+                    status="pending",
+                    available_at=enrollment.next_step_due_at,
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC)
+                )
+                session.add(job)
+            else:
+                enrollment.status = "completed"
+
+    await session.commit()
+    return _model_to_delivery(delivery_model)
 
 
 @router.get("/deliveries", response_model=list[EmailDelivery])
-def list_deliveries(
+async def list_deliveries(
     status_filter: str = Query("all", alias="status"),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     principal: Principal = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_db_session),
 ) -> list[EmailDelivery]:
-    results: list[EmailDelivery] = []
-    for row in _DELIVERIES_STORE:
-        if str(row.get("workspace_id")) == str(principal.workspace_id):
-            if status_filter == "all" or row.get("status") == status_filter:
-                results.append(_row_to_delivery(row))
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
 
-    results.sort(key=lambda d: d.created_at, reverse=True)
-    return results[offset : offset + limit]
+    q = select(DeliveryModel).filter_by(workspace_id=principal.workspace_id)
+    if status_filter != "all":
+        q = q.filter_by(status=status_filter)
+    
+    q = q.order_by(DeliveryModel.created_at.desc()).offset(offset).limit(limit)
+    
+    result = await session.scalars(q)
+    return [_model_to_delivery(d) for d in result]
 
 
 @router.get("/deliveries/{delivery_id}", response_model=EmailDelivery)
-def get_delivery_detail(
+async def get_delivery_detail(
     delivery_id: UUID,
     principal: Principal = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
-    for row in _DELIVERIES_STORE:
-        if str(row.get("id")) == str(delivery_id) and str(row.get("workspace_id")) == str(principal.workspace_id):
-            return _row_to_delivery(row)
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="delivery_record_not_found",
-    )
+    delivery = await session.scalar(select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id))
+    if not delivery:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="delivery_record_not_found",
+        )
+    return _model_to_delivery(delivery)
 
 
 @router.post("/deliveries/{delivery_id}/actions/cancel", response_model=EmailDelivery)
-def cancel_delivery(
+async def cancel_delivery(
     delivery_id: UUID,
     principal: Principal = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
-    for row in _DELIVERIES_STORE:
-        if str(row.get("id")) == str(delivery_id) and str(row.get("workspace_id")) == str(principal.workspace_id):
-            current_status = row.get("status")
-            if current_status not in ("queued", "running"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"cannot_cancel_delivery_in_{current_status}_state",
-                )
-            row["status"] = "cancelled"
-            row["updated_at"] = datetime.now(UTC).isoformat()
-            return _row_to_delivery(row)
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="delivery_record_not_found",
-    )
+    delivery = await session.scalar(select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id))
+    if not delivery:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="delivery_record_not_found",
+        )
+    
+    if delivery.status not in ("queued", "running"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"cannot_cancel_delivery_in_{delivery.status}_state",
+        )
+
+    delivery.status = "cancelled"
+    delivery.updated_at = datetime.now(UTC)
+    await session.commit()
+
+    return _model_to_delivery(delivery)
 
 
 @router.post("/deliveries/webhooks/resend")
@@ -276,11 +297,11 @@ async def resend_webhook_handler(
     svix_timestamp: str | None = Header(default=None, alias="svix-timestamp"),
     svix_signature: str | None = Header(default=None, alias="svix-signature"),
     settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> dict[str, Any]:
     raw_body = await request.body()
     body_str = raw_body.decode("utf-8")
 
-    # Verify webhook signature if secret is configured
     if settings.resend_webhook_secret:
         if not svix_id or not svix_timestamp or not svix_signature:
             raise HTTPException(
@@ -311,7 +332,6 @@ async def resend_webhook_handler(
                 detail=f"invalid_webhook_signature: {err}",
             ) from err
 
-    # Parse JSON payload
     try:
         import json
         payload_json = json.loads(body_str)
@@ -322,7 +342,6 @@ async def resend_webhook_handler(
     data = payload_json.get("data", {})
     provider_msg_id = str(data.get("email_id") or data.get("id") or "")
 
-    # Handle Inbound Email Received Webhook Event
     if event_type == "email.received":
         from app.adapters.reply_classifier import DeterministicReplyClassifier
         from app.api.conversations import InboundReplyPayload, ingest_inbound_reply
@@ -333,7 +352,6 @@ async def resend_webhook_handler(
         text_body = str(data.get("text") or data.get("html") or "")
         in_reply_to = str(data.get("headers", {}).get("in-reply-to") or data.get("in_reply_to") or "")
 
-        # If body is missing from webhook metadata, fetch content via Resend EmailsReceiving API
         if not text_body and provider_msg_id and settings.resend_api_key:
             try:
                 import resend
@@ -347,7 +365,7 @@ async def resend_webhook_handler(
                 pass
 
         if sender and recipient:
-            ingest_inbound_reply(
+            await ingest_inbound_reply(
                 InboundReplyPayload(
                     sender_email=sender,
                     recipient_email=recipient,
@@ -358,6 +376,7 @@ async def resend_webhook_handler(
                 ),
                 classifier=DeterministicReplyClassifier(),
                 settings=settings,
+                session=session,
             )
         return {"received": True, "event": event_type, "status": "ingested"}
 
@@ -370,9 +389,11 @@ async def resend_webhook_handler(
 
     new_status = status_mapping.get(event_type)
     if new_status and provider_msg_id:
-        for row in _DELIVERIES_STORE:
-            if row.get("provider_message_id") == provider_msg_id:
-                row["status"] = new_status
-                row["updated_at"] = datetime.now(UTC).isoformat()
+        # Cannot easily enforce RLS here without workspace_id, so query by provider_message_id globally
+        delivery = await session.scalar(select(DeliveryModel).filter_by(provider_message_id=provider_msg_id))
+        if delivery:
+            delivery.status = new_status
+            delivery.updated_at = datetime.now(UTC)
+            await session.commit()
 
     return {"received": True, "event": event_type, "status": "processed"}

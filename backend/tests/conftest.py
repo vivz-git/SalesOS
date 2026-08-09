@@ -1,3 +1,5 @@
+import os
+os.environ["TESTING"] = "1"
 import sys
 import asyncio
 import pytest
@@ -8,12 +10,20 @@ from sqlalchemy import text
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+@pytest.fixture(scope="session")
+def event_loop():
+    policy = asyncio.get_event_loop_policy()
+    loop = policy.new_event_loop()
+    yield loop
+    loop.close()
+
 @pytest_asyncio.fixture
 async def seeded_workspace():
     from sqlalchemy.ext.asyncio import create_async_engine
     
     workspace_id = uuid4()
     user_id = uuid4()
+    campaign_id = uuid4()
     
     # Use superuser to bypass RLS and cross-schema restrictions for test setup
     admin_engine = create_async_engine("postgresql+psycopg://postgres:postgres@127.0.0.1:54322/postgres", pool_size=1)
@@ -29,6 +39,11 @@ async def seeded_workspace():
                 text("INSERT INTO workspaces (id, name, slug) VALUES (:wid, 'Integration Workspace', :slug)"),
                 {"wid": str(workspace_id), "slug": f"test-workspace-{workspace_id}"}
             )
+            await conn.execute(
+            text("INSERT INTO campaigns (id, workspace_id, name, status, created_by, target_segment, icp_definition) "
+                 "VALUES (:cid, :wid, 'Test Campaign', 'active', :uid, 'segment', 'icp')"),
+            {"cid": str(campaign_id), "wid": str(workspace_id), "uid": str(user_id)}
+        )
             await conn.execute(
                 text("INSERT INTO memberships (id, workspace_id, user_id, role, created_at, updated_at) VALUES (:mid, :wid, :uid, 'owner', now(), now())"),
                 {"mid": str(uuid4()), "wid": str(workspace_id), "uid": str(user_id)}

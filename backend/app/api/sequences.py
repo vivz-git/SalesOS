@@ -1,16 +1,18 @@
 from datetime import UTC, datetime
-from typing import Any, Literal, cast
+from typing import Literal, cast
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.campaigns import get_campaign
-from app.api.outreach import OutreachDraftCreate, create_outreach_draft
 from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
 from app.db import get_db_session
+from app.models import CampaignModel, JobModel, SequenceDefinitionModel, SequenceEnrollmentModel, SequenceStepModel
 
 router = APIRouter(prefix="/v1", tags=["sequences"])
 
@@ -78,58 +80,47 @@ class StatusActionPayload(BaseModel):
     reason: str | None = Field(default=None, max_length=255)
 
 
-_SEQUENCES_STORE: list[dict[str, Any]] = []
-_SEQUENCE_STEPS_STORE: list[dict[str, Any]] = []
-_SEQUENCE_ENROLLMENTS_STORE: list[dict[str, Any]] = []
-
-
-def _row_to_sequence(seq_row: dict[str, Any]) -> SequenceDefinition:
-    seq_id = UUID(str(seq_row["id"]))
-    ws_id = UUID(str(seq_row["workspace_id"]))
-
-    steps: list[SequenceStep] = []
-    for step_row in _SEQUENCE_STEPS_STORE:
-        if str(step_row.get("sequence_id")) == str(seq_id):
-            steps.append(
-                SequenceStep(
-                    id=UUID(str(step_row["id"])),
-                    sequence_id=seq_id,
-                    step_number=int(step_row["step_number"]),
-                    delay_days=int(step_row.get("delay_days", 0)),
-                    channel=str(step_row.get("channel", "email")),
-                    step_type=cast(StepType, step_row.get("step_type", "first_touch")),
-                    template_subject=cast(str | None, step_row.get("template_subject")),
-                    template_body=cast(str | None, step_row.get("template_body")),
-                )
-            )
-    steps.sort(key=lambda s: s.step_number)
-
-    return SequenceDefinition(
-        id=seq_id,
-        workspace_id=ws_id,
-        campaign_id=UUID(str(seq_row["campaign_id"])),
-        name=str(seq_row.get("name", "Outreach Sequence")),
-        version_number=int(seq_row.get("version_number", 1)),
-        is_active=bool(seq_row.get("is_active", True)),
-        steps=steps,
-        created_at=datetime.fromisoformat(str(seq_row["created_at"])),
-        updated_at=datetime.fromisoformat(str(seq_row["updated_at"])),
+def _model_to_step(model: SequenceStepModel) -> SequenceStep:
+    return SequenceStep(
+        id=model.id,
+        sequence_id=model.sequence_id,
+        step_number=model.step_number,
+        delay_days=model.delay_days,
+        channel=model.channel,
+        step_type=cast(StepType, model.step_type),
+        template_subject=model.template_subject,
+        template_body=model.template_body
     )
 
 
-def _row_to_enrollment(enr_row: dict[str, Any]) -> SequenceEnrollment:
+def _model_to_sequence(model: SequenceDefinitionModel, steps: list[SequenceStepModel]) -> SequenceDefinition:
+    sorted_steps = sorted(steps, key=lambda s: s.step_number)
+    return SequenceDefinition(
+        id=model.id,
+        workspace_id=model.workspace_id,
+        campaign_id=model.campaign_id,
+        name=model.name,
+        version_number=model.version_number,
+        is_active=model.is_active,
+        steps=[_model_to_step(s) for s in sorted_steps],
+        created_at=model.created_at,
+        updated_at=model.updated_at
+    )
+
+
+def _model_to_enrollment(model: SequenceEnrollmentModel) -> SequenceEnrollment:
     return SequenceEnrollment(
-        id=UUID(str(enr_row["id"])),
-        workspace_id=UUID(str(enr_row["workspace_id"])),
-        campaign_id=UUID(str(enr_row["campaign_id"])),
-        sequence_id=UUID(str(enr_row["sequence_id"])),
-        contact_id=UUID(str(enr_row["contact_id"])),
-        current_step_number=int(enr_row.get("current_step_number", 1)),
-        status=cast(EnrollmentStatus, enr_row.get("status", "pending_approval")),
-        stop_reason=cast(str | None, enr_row.get("stop_reason")),
-        enrolled_by=UUID(str(enr_row.get("enrolled_by", uuid4()))),
-        enrolled_at=datetime.fromisoformat(str(enr_row["enrolled_at"])),
-        updated_at=datetime.fromisoformat(str(enr_row["updated_at"])),
+        id=model.id,
+        workspace_id=model.workspace_id,
+        campaign_id=model.campaign_id,
+        sequence_id=model.sequence_id,
+        contact_id=model.contact_id,
+        current_step_number=model.current_step_number,
+        status=cast(EnrollmentStatus, model.status),
+        stop_reason=model.stop_reason,
+        enrolled_by=model.enrolled_by or uuid4(),  # type hint fallback
+        enrolled_at=model.enrolled_at,
+        updated_at=model.updated_at
     )
 
 
@@ -140,42 +131,46 @@ async def create_or_update_sequence(
     principal: Principal = Depends(get_current_principal),
     session: AsyncSession = Depends(get_db_session),
 ) -> SequenceDefinition:
-    # Verify campaign exists & workspace authorization
-    campaign = await get_campaign(campaign_id, principal=principal, session=session)
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    campaign = await session.scalar(select(CampaignModel).filter_by(id=campaign_id, workspace_id=principal.workspace_id))
+    if not campaign:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
 
-    now_iso = datetime.now(UTC).isoformat()
-    existing_seq: dict[str, Any] | None = None
-
-    for s in _SEQUENCES_STORE:
-        if str(s.get("campaign_id")) == str(campaign.id) and str(s.get("workspace_id")) == str(principal.workspace_id):
-            existing_seq = s
-            break
+    now_dt = datetime.now(UTC)
+    existing_seq = await session.scalar(
+        select(SequenceDefinitionModel)
+        .filter_by(campaign_id=campaign.id, workspace_id=principal.workspace_id)
+        .order_by(SequenceDefinitionModel.version_number.desc())
+        .limit(1)
+    )
 
     if existing_seq:
-        seq_id = str(existing_seq["id"])
-        version_num = int(existing_seq.get("version_number", 1)) + 1
-        existing_seq["version_number"] = version_num
-        existing_seq["name"] = payload.name
-        existing_seq["updated_at"] = now_iso
-        # Remove old steps
-        global _SEQUENCE_STEPS_STORE
-        _SEQUENCE_STEPS_STORE = [st for st in _SEQUENCE_STEPS_STORE if str(st.get("sequence_id")) != seq_id]
+        # Instead of updating the old one in place, we should ideally version it. 
+        # But for simplicity in Phase 3, we'll follow the exact previous behavior: bump version_number.
+        existing_seq.version_number += 1
+        existing_seq.name = payload.name
+        existing_seq.updated_at = now_dt
+        seq_id = existing_seq.id
+        
+        # Delete old steps
+        await session.execute(
+            text("DELETE FROM sequence_steps WHERE sequence_id = :sid"), 
+            {"sid": str(seq_id)}
+        )
     else:
-        seq_id = str(uuid4())
-        version_num = 1
-        existing_seq = {
-            "id": seq_id,
-            "workspace_id": str(principal.workspace_id),
-            "campaign_id": str(campaign.id),
-            "name": payload.name,
-            "version_number": version_num,
-            "is_active": True,
-            "created_at": now_iso,
-            "updated_at": now_iso,
-        }
-        _SEQUENCES_STORE.append(existing_seq)
+        seq_id = uuid4()
+        existing_seq = SequenceDefinitionModel(
+            id=seq_id,
+            workspace_id=principal.workspace_id,
+            campaign_id=campaign.id,
+            name=payload.name,
+            version_number=1,
+            is_active=True,
+            created_at=now_dt,
+            updated_at=now_dt
+        )
+        session.add(existing_seq)
 
-    # Insert steps
     default_steps = payload.steps or [
         SequenceStepPayload(
             step_number=1,
@@ -195,20 +190,25 @@ async def create_or_update_sequence(
         ),
     ]
 
+    new_steps: list[SequenceStepModel] = []
     for st_payload in default_steps:
-        step_id = str(uuid4())
-        _SEQUENCE_STEPS_STORE.append({
-            "id": step_id,
-            "sequence_id": seq_id,
-            "step_number": st_payload.step_number,
-            "delay_days": st_payload.delay_days,
-            "channel": st_payload.channel,
-            "step_type": st_payload.step_type,
-            "template_subject": st_payload.template_subject,
-            "template_body": st_payload.template_body,
-        })
+        step_model = SequenceStepModel(
+            id=uuid4(),
+            sequence_id=seq_id,
+            step_number=st_payload.step_number,
+            delay_days=st_payload.delay_days,
+            channel=st_payload.channel,
+            step_type=st_payload.step_type,
+            template_subject=st_payload.template_subject,
+            template_body=st_payload.template_body,
+            created_at=now_dt,
+            updated_at=now_dt
+        )
+        session.add(step_model)
+        new_steps.append(step_model)
 
-    return _row_to_sequence(existing_seq)
+    await session.commit()
+    return _model_to_sequence(existing_seq, new_steps)
 
 
 @router.get("/campaigns/{campaign_id}/sequences", response_model=SequenceDefinition)
@@ -217,51 +217,54 @@ async def get_campaign_sequence(
     principal: Principal = Depends(get_current_principal),
     session: AsyncSession = Depends(get_db_session),
 ) -> SequenceDefinition:
-    campaign = await get_campaign(campaign_id, principal=principal, session=session)
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    campaign = await session.scalar(select(CampaignModel).filter_by(id=campaign_id, workspace_id=principal.workspace_id))
+    if not campaign:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
 
-    for s in _SEQUENCES_STORE:
-        if str(s.get("campaign_id")) == str(campaign.id) and str(s.get("workspace_id")) == str(principal.workspace_id):
-            return _row_to_sequence(s)
+    existing_seq = await session.scalar(
+        select(SequenceDefinitionModel)
+        .filter_by(campaign_id=campaign.id, workspace_id=principal.workspace_id)
+        .order_by(SequenceDefinitionModel.version_number.desc())
+        .limit(1)
+    )
 
-    # Create default sequence definition if none exists yet
-    now_iso = datetime.now(UTC).isoformat()
-    seq_id = str(uuid4())
-    default_seq: dict[str, Any] = {
-        "id": seq_id,
-        "workspace_id": str(principal.workspace_id),
-        "campaign_id": str(campaign.id),
-        "name": f"{campaign.name} Sequence",
-        "version_number": 1,
-        "is_active": True,
-        "created_at": now_iso,
-        "updated_at": now_iso,
-    }
-    _SEQUENCES_STORE.append(default_seq)
+    if existing_seq:
+        steps = await session.scalars(select(SequenceStepModel).filter_by(sequence_id=existing_seq.id))
+        return _model_to_sequence(existing_seq, list(steps))
 
-    _SEQUENCE_STEPS_STORE.extend([
-        {
-            "id": str(uuid4()),
-            "sequence_id": seq_id,
-            "step_number": 1,
-            "delay_days": 0,
-            "channel": "email",
-            "step_type": "first_touch",
-            "template_subject": "Introductory Outreach",
-            "template_body": "Hi, I wanted to reach out regarding our solution...",
-        },
-        {
-            "id": str(uuid4()),
-            "sequence_id": seq_id,
-            "step_number": 2,
-            "delay_days": 3,
-            "channel": "email",
-            "step_type": "follow_up",
-            "template_subject": "Quick Follow-Up",
-            "template_body": "Hi, following up on my previous note...",
-        },
-    ])
-
-    return _row_to_sequence(default_seq)
+    # Create default
+    now_dt = datetime.now(UTC)
+    seq_id = uuid4()
+    default_seq = SequenceDefinitionModel(
+        id=seq_id,
+        workspace_id=principal.workspace_id,
+        campaign_id=campaign.id,
+        name=f"{campaign.name} Sequence",
+        version_number=1,
+        is_active=True,
+        created_at=now_dt,
+        updated_at=now_dt
+    )
+    session.add(default_seq)
+    
+    new_steps = [
+        SequenceStepModel(
+            id=uuid4(), sequence_id=seq_id, step_number=1, delay_days=0, channel="email", step_type="first_touch",
+            template_subject="Introductory Outreach", template_body="Hi, I wanted to reach out regarding our solution...",
+            created_at=now_dt, updated_at=now_dt
+        ),
+        SequenceStepModel(
+            id=uuid4(), sequence_id=seq_id, step_number=2, delay_days=3, channel="email", step_type="follow_up",
+            template_subject="Quick Follow-Up", template_body="Hi, following up on my previous note...",
+            created_at=now_dt, updated_at=now_dt
+        )
+    ]
+    for s in new_steps:
+        session.add(s)
+        
+    await session.commit()
+    return _model_to_sequence(default_seq, new_steps)
 
 
 @router.post("/sequence-enrollments", response_model=SequenceEnrollment)
@@ -271,164 +274,177 @@ async def enroll_contact_in_sequence(
     settings: Settings = Depends(get_settings),
     session: AsyncSession = Depends(get_db_session),
 ) -> SequenceEnrollment:
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+
     # 1. Fetch Campaign & Active Sequence Definition
     sequence = await get_campaign_sequence(payload.campaign_id, principal=principal, session=session)
 
     # 2. Check if active enrollment already exists
-    for enr in _SEQUENCE_ENROLLMENTS_STORE:
-        if (
-            str(enr.get("workspace_id")) == str(principal.workspace_id)
-            and str(enr.get("campaign_id")) == str(payload.campaign_id)
-            and str(enr.get("contact_id")) == str(payload.contact_id)
-            and enr.get("status") in ("pending_approval", "active", "paused")
-        ):
-            return _row_to_enrollment(enr)
-
-    now_iso = datetime.now(UTC).isoformat()
-    enr_id = str(uuid4())
-
-    enr_dict: dict[str, Any] = {
-        "id": enr_id,
-        "workspace_id": str(principal.workspace_id),
-        "campaign_id": str(payload.campaign_id),
-        "sequence_id": str(sequence.id),
-        "contact_id": str(payload.contact_id),
-        "current_step_number": 1,
-        "status": "pending_approval",
-        "stop_reason": None,
-        "enrolled_by": str(principal.user_id),
-        "enrolled_at": now_iso,
-        "updated_at": now_iso,
-    }
-    _SEQUENCE_ENROLLMENTS_STORE.append(enr_dict)
-
-    # 3. Create Step 1 OutreachDraft in 'draft' state (Approval-Gated, Zero Auto-Send)
-    step1 = sequence.steps[0] if sequence.steps else None
-    subject_text = step1.template_subject if (step1 and step1.template_subject) else "Outreach Message"
-    body_text = step1.template_body if (step1 and step1.template_body) else "Hi, reaching out regarding our solution..."
-
-    draft_req = OutreachDraftCreate(
-        campaign_id=payload.campaign_id,
-        contact_id=payload.contact_id,
-        subject=subject_text,
-        body=body_text,
+    existing_enr = await session.scalar(
+        select(SequenceEnrollmentModel)
+        .filter_by(workspace_id=principal.workspace_id, campaign_id=payload.campaign_id, contact_id=payload.contact_id)
+        .filter(SequenceEnrollmentModel.status.in_(["pending_approval", "active", "paused"]))
+        .limit(1)
     )
-    create_outreach_draft(draft_req, principal=principal, settings=settings)
+    if existing_enr:
+        return _model_to_enrollment(existing_enr)
 
-    return _row_to_enrollment(enr_dict)
+    now_dt = datetime.now(UTC)
+    enr_id = uuid4()
+
+    enr_model = SequenceEnrollmentModel(
+        id=enr_id,
+        workspace_id=principal.workspace_id,
+        campaign_id=payload.campaign_id,
+        sequence_id=sequence.id,
+        contact_id=payload.contact_id,
+        current_step_number=1,
+        status="pending_approval",
+        stop_reason=None,
+        enrolled_by=principal.user_id,
+        enrolled_at=now_dt,
+        updated_at=now_dt
+    )
+    
+    # 3. Insert Job (instead of draft)
+    job_model = JobModel(
+        id=uuid4(),
+        workspace_id=principal.workspace_id,
+        job_type="execute_sequence_step",
+        payload={"enrollment_id": str(enr_id), "step_number": 1},
+        status="pending",
+        available_at=now_dt,
+        created_at=now_dt,
+        updated_at=now_dt
+    )
+
+    try:
+        session.add(enr_model)
+        session.add(job_model)
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        existing_enr = await session.scalar(
+            select(SequenceEnrollmentModel)
+            .filter_by(workspace_id=principal.workspace_id, campaign_id=payload.campaign_id, contact_id=payload.contact_id)
+        )
+        if existing_enr:
+            return _model_to_enrollment(existing_enr)
+        raise HTTPException(status_code=400, detail="enrollment_creation_failed_integrity") from None
+
+    return _model_to_enrollment(enr_model)
 
 
 @router.get("/sequence-enrollments", response_model=list[SequenceEnrollment])
-def list_sequence_enrollments(
+async def list_sequence_enrollments(
     campaign_id: UUID | None = Query(default=None),
     status_filter: str = Query("all", alias="status"),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     principal: Principal = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_db_session),
 ) -> list[SequenceEnrollment]:
-    results: list[SequenceEnrollment] = []
-    for enr in _SEQUENCE_ENROLLMENTS_STORE:
-        if str(enr.get("workspace_id")) == str(principal.workspace_id):
-            if campaign_id and str(enr.get("campaign_id")) != str(campaign_id):
-                continue
-            if status_filter != "all" and enr.get("status") != status_filter:
-                continue
-
-            results.append(_row_to_enrollment(enr))
-
-    results.sort(key=lambda e: e.enrolled_at, reverse=True)
-    return results[offset : offset + limit]
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    
+    q = select(SequenceEnrollmentModel).filter_by(workspace_id=principal.workspace_id)
+    if campaign_id:
+        q = q.filter_by(campaign_id=campaign_id)
+    if status_filter != "all":
+        q = q.filter_by(status=status_filter)
+        
+    q = q.order_by(SequenceEnrollmentModel.enrolled_at.desc()).offset(offset).limit(limit)
+    result = await session.scalars(q)
+    return [_model_to_enrollment(e) for e in result]
 
 
 @router.get("/sequence-enrollments/{enrollment_id}", response_model=SequenceEnrollment)
-def get_sequence_enrollment_detail(
+async def get_sequence_enrollment_detail(
     enrollment_id: UUID,
     principal: Principal = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_db_session),
 ) -> SequenceEnrollment:
-    for enr in _SEQUENCE_ENROLLMENTS_STORE:
-        if str(enr.get("id")) == str(enrollment_id) and str(enr.get("workspace_id")) == str(principal.workspace_id):
-            return _row_to_enrollment(enr)
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="sequence_enrollment_not_found",
-    )
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    
+    enr = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=enrollment_id, workspace_id=principal.workspace_id))
+    if not enr:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="sequence_enrollment_not_found")
+    return _model_to_enrollment(enr)
 
 
 @router.post("/sequence-enrollments/{enrollment_id}/actions/pause", response_model=SequenceEnrollment)
-def pause_enrollment(
+async def pause_enrollment(
     enrollment_id: UUID,
     principal: Principal = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_db_session),
 ) -> SequenceEnrollment:
-    for enr in _SEQUENCE_ENROLLMENTS_STORE:
-        if str(enr.get("id")) == str(enrollment_id) and str(enr.get("workspace_id")) == str(principal.workspace_id):
-            curr_status = enr.get("status")
-            if curr_status not in ("active", "pending_approval"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"cannot_pause_enrollment_in_{curr_status}_state",
-                )
-            enr["status"] = "paused"
-            enr["updated_at"] = datetime.now(UTC).isoformat()
-            return _row_to_enrollment(enr)
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="sequence_enrollment_not_found",
-    )
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    enr = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=enrollment_id, workspace_id=principal.workspace_id))
+    if not enr:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="sequence_enrollment_not_found")
+        
+    if enr.status not in ("active", "pending_approval"):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"cannot_pause_enrollment_in_{enr.status}_state")
+        
+    enr.status = "paused"
+    enr.updated_at = datetime.now(UTC)
+    await session.commit()
+    return _model_to_enrollment(enr)
 
 
 @router.post("/sequence-enrollments/{enrollment_id}/actions/resume", response_model=SequenceEnrollment)
-def resume_enrollment(
+async def resume_enrollment(
     enrollment_id: UUID,
     principal: Principal = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_db_session),
 ) -> SequenceEnrollment:
-    for enr in _SEQUENCE_ENROLLMENTS_STORE:
-        if str(enr.get("id")) == str(enrollment_id) and str(enr.get("workspace_id")) == str(principal.workspace_id):
-            if enr.get("status") != "paused":
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="cannot_resume_non_paused_enrollment",
-                )
-            enr["status"] = "active"
-            enr["updated_at"] = datetime.now(UTC).isoformat()
-            return _row_to_enrollment(enr)
-
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="sequence_enrollment_not_found",
-    )
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    enr = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=enrollment_id, workspace_id=principal.workspace_id))
+    if not enr:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="sequence_enrollment_not_found")
+        
+    if enr.status != "paused":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="cannot_resume_non_paused_enrollment")
+        
+    enr.status = "active"
+    enr.updated_at = datetime.now(UTC)
+    
+    # Optional: we could check if a job needs to be re-awakened here, but the worker will just pick up jobs where enrollment=active
+    await session.commit()
+    return _model_to_enrollment(enr)
 
 
 @router.post("/sequence-enrollments/{enrollment_id}/actions/stop", response_model=SequenceEnrollment)
-def stop_enrollment(
+async def stop_enrollment(
     enrollment_id: UUID,
     payload: StatusActionPayload,
     principal: Principal = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_db_session),
 ) -> SequenceEnrollment:
-    for enr in _SEQUENCE_ENROLLMENTS_STORE:
-        if str(enr.get("id")) == str(enrollment_id) and str(enr.get("workspace_id")) == str(principal.workspace_id):
-            enr["status"] = "stopped"
-            enr["stop_reason"] = payload.reason or "user_stopped"
-            enr["updated_at"] = datetime.now(UTC).isoformat()
-            return _row_to_enrollment(enr)
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    enr = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=enrollment_id, workspace_id=principal.workspace_id))
+    if not enr:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="sequence_enrollment_not_found")
+        
+    enr.status = "stopped"
+    enr.stop_reason = payload.reason or "user_stopped"
+    enr.updated_at = datetime.now(UTC)
+    await session.commit()
+    return _model_to_enrollment(enr)
 
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail="sequence_enrollment_not_found",
-    )
 
-
-def evaluate_sequence_stop_conditions_for_contact(
-    workspace_id: str, contact_id: str, reason: str
+async def evaluate_sequence_stop_conditions_for_contact(
+    workspace_id: str, contact_id: str, reason: str, session: AsyncSession
 ) -> None:
-    """Evaluates and halts active sequence enrollments when a prospect replies or opts out."""
-    now_iso = datetime.now(UTC).isoformat()
-    for enr in _SEQUENCE_ENROLLMENTS_STORE:
-        enr_ws = str(enr.get("workspace_id"))
-        enr_contact = str(enr.get("contact_id"))
-        if enr_ws == workspace_id and (enr_contact == contact_id or not contact_id or enr_contact):
-            if enr.get("status") in ("pending_approval", "active", "paused"):
-                enr["status"] = "stopped"
-                enr["stop_reason"] = reason
-                enr["updated_at"] = now_iso
+    '''Evaluates and halts active sequence enrollments when a prospect replies or opts out.'''
+    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": workspace_id})
+    
+    q = select(SequenceEnrollmentModel).filter_by(workspace_id=workspace_id, contact_id=contact_id).filter(SequenceEnrollmentModel.status.in_(["pending_approval", "active", "paused"]))
+    enrollments = await session.scalars(q)
+    
+    now_dt = datetime.now(UTC)
+    for enr in enrollments:
+        enr.status = "stopped"
+        enr.stop_reason = reason
+        enr.updated_at = now_dt
+        
+    await session.commit()

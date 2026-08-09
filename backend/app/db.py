@@ -3,18 +3,28 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 from sqlalchemy import text
+import os
+
+from sqlalchemy import text, NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import get_settings
 
 settings = get_settings()
 
+engine_kwargs = {
+    "pool_pre_ping": True,
+    "echo": False,
+}
+if os.environ.get("TESTING") == "1":
+    engine_kwargs["poolclass"] = NullPool
+else:
+    engine_kwargs["pool_size"] = 5
+    engine_kwargs["max_overflow"] = 20
+
 engine = create_async_engine(
     settings.database_url,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-    echo=False,
+    **engine_kwargs
 )
 
 AsyncSessionLocal = async_sessionmaker(

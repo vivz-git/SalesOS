@@ -10,5 +10,8 @@
     "lint": "pnpm --dir frontend lint",
     "test": "pnpm --dir frontend test",
     "typecheck": "pnpm --dir frontend typecheck"
+  },
+  "devDependencies": {
+    "supabase": "^2.113.0"
   }
 }

@@ -4,9 +4,12 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import Principal, _clients, get_current_principal
-from app.core.config import Settings, get_settings
+from app.auth import Principal, get_current_principal
+from app.db import get_db_session, tenant_transaction_context
+from app.models import CampaignModel
 
 router = APIRouter(prefix="/v1", tags=["campaigns"])
 
@@ -41,197 +44,250 @@ class CampaignUpdate(BaseModel):
     icp_definition: str | None = Field(default=None, max_length=2000)
 
 
-def _row_to_campaign(row: dict[str, str | None]) -> Campaign:
-    created_at_val = row.get("created_at")
-    updated_at_val = row.get("updated_at")
-    deleted_at_val = row.get("deleted_at")
+def _model_to_campaign(model: CampaignModel) -> Campaign:
     return Campaign(
-        id=UUID(str(row["id"])),
-        workspace_id=UUID(str(row["workspace_id"])),
-        name=str(row["name"]),
-        description=row.get("description"),
-        target_segment=row.get("target_segment"),
-        icp_definition=row.get("icp_definition"),
-        status=cast(CampaignStatus, row.get("status", "draft")),
-        created_by=UUID(str(row["created_by"])) if row.get("created_by") else None,
-        created_at=datetime.fromisoformat(created_at_val) if created_at_val else None,
-        updated_at=datetime.fromisoformat(updated_at_val) if updated_at_val else None,
-        deleted_at=datetime.fromisoformat(deleted_at_val) if deleted_at_val else None,
+        id=model.id,
+        workspace_id=model.workspace_id,
+        name=model.name,
+        description=model.description,
+        target_segment=model.target_segment,
+        icp_definition=model.icp_definition,
+        status=cast(CampaignStatus, model.status),
+        created_by=model.created_by,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+        deleted_at=model.deleted_at,
     )
 
 
 @router.post("/campaigns", response_model=Campaign, status_code=status.HTTP_201_CREATED)
-def create_campaign(
+async def create_campaign(
     payload: CampaignCreate,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Campaign:
-    _, admin_client = _clients(settings)
+    now_utc = datetime.now(UTC)
     campaign_id = uuid4()
-    now_iso = datetime.now(UTC).isoformat()
+    
+    new_campaign = CampaignModel(
+        id=campaign_id,
+        workspace_id=principal.workspace_id,
+        name=payload.name.strip(),
+        description=payload.description.strip() if payload.description else None,
+        target_segment=payload.target_segment.strip() if payload.target_segment else None,
+        icp_definition=payload.icp_definition.strip() if payload.icp_definition else None,
+        status="draft",
+        created_by=principal.user_id,
+        created_at=now_utc,
+        updated_at=now_utc,
+        deleted_at=None,
+    )
 
-    row = {
-        "id": str(campaign_id),
-        "workspace_id": str(principal.workspace_id),
-        "name": payload.name.strip(),
-        "description": payload.description.strip() if payload.description else None,
-        "target_segment": payload.target_segment.strip() if payload.target_segment else None,
-        "icp_definition": payload.icp_definition.strip() if payload.icp_definition else None,
-        "status": "draft",
-        "created_by": str(principal.user_id),
-        "created_at": now_iso,
-        "updated_at": now_iso,
-        "deleted_at": None,
-    }
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id) as ctx:
+        try:
+            ctx.add(new_campaign)
+            await ctx.flush()
+            await ctx.refresh(new_campaign)
+        except Exception as error:
+            
+            print(f"CAMPAIGN INSERT ERROR: {error}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="campaign_creation_failed"
+            ) from error
 
-    try:
-        admin_client.table("campaigns").insert(row).execute()
-    except Exception as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="campaign_creation_failed"
-        ) from error
-
-    return _row_to_campaign(row)
+    return _model_to_campaign(new_campaign)
 
 
 @router.get("/campaigns", response_model=list[Campaign])
-def list_campaigns(
+async def list_campaigns(
     status_filter: str | None = Query(default=None, alias="status"),
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> list[Campaign]:
-    _, admin_client = _clients(settings)
-
-    query = admin_client.table("campaigns").select("*").eq("workspace_id", str(principal.workspace_id))
-    if status_filter:
-        query = query.eq("status", status_filter)
-
-    rows = cast(list[dict[str, str | None]], query.execute().data or [])
-
-    campaigns: list[Campaign] = []
-    for r in rows:
-        if status_filter != "archived" and r.get("deleted_at") is not None:
-            continue
-        campaigns.append(_row_to_campaign(r))
-
-    return campaigns
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id) as ctx:
+        stmt = select(CampaignModel).where(CampaignModel.workspace_id == principal.workspace_id)
+        if status_filter:
+            stmt = stmt.where(CampaignModel.status == status_filter)
+        
+        result = await ctx.execute(stmt)
+        models = result.scalars().all()
+        
+        campaigns = []
+        for m in models:
+            if status_filter != "archived" and m.deleted_at is not None:
+                continue
+            campaigns.append(_model_to_campaign(m))
+            
+        return campaigns
 
 
 @router.get("/campaigns/{campaign_id}", response_model=Campaign)
-def get_campaign(
+async def get_campaign(
     campaign_id: UUID,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Campaign:
-    _, admin_client = _clients(settings)
-    rows = cast(
-        list[dict[str, str | None]],
-        admin_client.table("campaigns")
-        .select("*")
-        .eq("id", str(campaign_id))
-        .eq("workspace_id", str(principal.workspace_id))
-        .execute()
-        .data
-        or [],
-    )
-    if not rows:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
-
-    return _row_to_campaign(rows[0])
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id) as ctx:
+        stmt = select(CampaignModel).where(
+            CampaignModel.id == campaign_id,
+            CampaignModel.workspace_id == principal.workspace_id
+        )
+        result = await ctx.execute(stmt)
+        model = result.scalar_one_or_none()
+        
+        if not model:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
+            
+        return _model_to_campaign(model)
 
 
 @router.patch("/campaigns/{campaign_id}", response_model=Campaign)
-def update_campaign(
+async def update_campaign(
     campaign_id: UUID,
     payload: CampaignUpdate,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Campaign:
-    get_campaign(campaign_id, principal=principal, settings=settings)
-    _, admin_client = _clients(settings)
-
-    updates: dict[str, str | None] = {"updated_at": datetime.now(UTC).isoformat()}
-    if payload.name is not None:
-        updates["name"] = payload.name.strip()
-    if payload.description is not None:
-        updates["description"] = payload.description.strip() if payload.description else None
-    if payload.target_segment is not None:
-        updates["target_segment"] = payload.target_segment.strip() if payload.target_segment else None
-    if payload.icp_definition is not None:
-        updates["icp_definition"] = payload.icp_definition.strip() if payload.icp_definition else None
-
-    try:
-        admin_client.table("campaigns").update(updates).eq("id", str(campaign_id)).execute()
-    except Exception as error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="campaign_update_failed"
-        ) from error
-
-    return get_campaign(campaign_id, principal=principal, settings=settings)
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id) as ctx:
+        stmt = select(CampaignModel).where(
+            CampaignModel.id == campaign_id,
+            CampaignModel.workspace_id == principal.workspace_id
+        )
+        result = await ctx.execute(stmt)
+        model = result.scalar_one_or_none()
+        
+        if not model:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
+            
+        model.updated_at = datetime.now(UTC)
+        if payload.name is not None:
+            model.name = payload.name.strip()
+        if payload.description is not None:
+            model.description = payload.description.strip() if payload.description else None
+        if payload.target_segment is not None:
+            model.target_segment = payload.target_segment.strip() if payload.target_segment else None
+        if payload.icp_definition is not None:
+            model.icp_definition = payload.icp_definition.strip() if payload.icp_definition else None
+            
+        try:
+            await ctx.flush()
+            await ctx.refresh(model)
+        except Exception as error:
+            
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="campaign_update_failed"
+            ) from error
+            
+        return _model_to_campaign(model)
 
 
 @router.delete("/campaigns/{campaign_id}", response_model=Campaign)
-def delete_campaign(
+async def delete_campaign(
     campaign_id: UUID,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Campaign:
-    get_campaign(campaign_id, principal=principal, settings=settings)
-    _, admin_client = _clients(settings)
-
-    now_iso = datetime.now(UTC).isoformat()
-    updates = {"status": "archived", "deleted_at": now_iso, "updated_at": now_iso}
-
-    admin_client.table("campaigns").update(updates).eq("id", str(campaign_id)).execute()
-    return get_campaign(campaign_id, principal=principal, settings=settings)
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id) as ctx:
+        stmt = select(CampaignModel).where(
+            CampaignModel.id == campaign_id,
+            CampaignModel.workspace_id == principal.workspace_id
+        )
+        result = await ctx.execute(stmt)
+        model = result.scalar_one_or_none()
+        
+        if not model:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
+            
+        now_utc = datetime.now(UTC)
+        model.status = "archived"
+        model.deleted_at = now_utc
+        model.updated_at = now_utc
+        
+        await ctx.flush()
+        await ctx.refresh(model)
+        return _model_to_campaign(model)
 
 
 @router.post("/campaigns/{campaign_id}/actions/activate", response_model=Campaign)
-def activate_campaign(
+async def activate_campaign(
     campaign_id: UUID,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Campaign:
-    get_campaign(campaign_id, principal=principal, settings=settings)
-    _, admin_client = _clients(settings)
-
-    updates = {"status": "active", "updated_at": datetime.now(UTC).isoformat()}
-    admin_client.table("campaigns").update(updates).eq("id", str(campaign_id)).execute()
-    return get_campaign(campaign_id, principal=principal, settings=settings)
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id) as ctx:
+        stmt = select(CampaignModel).where(
+            CampaignModel.id == campaign_id,
+            CampaignModel.workspace_id == principal.workspace_id
+        )
+        result = await ctx.execute(stmt)
+        model = result.scalar_one_or_none()
+        
+        if not model:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
+            
+        model.status = "active"
+        model.updated_at = datetime.now(UTC)
+        
+        await ctx.flush()
+        await ctx.refresh(model)
+        return _model_to_campaign(model)
 
 
 @router.post("/campaigns/{campaign_id}/actions/pause", response_model=Campaign)
-def pause_campaign(
+async def pause_campaign(
     campaign_id: UUID,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Campaign:
-    get_campaign(campaign_id, principal=principal, settings=settings)
-    _, admin_client = _clients(settings)
-
-    updates = {"status": "paused", "updated_at": datetime.now(UTC).isoformat()}
-    admin_client.table("campaigns").update(updates).eq("id", str(campaign_id)).execute()
-    return get_campaign(campaign_id, principal=principal, settings=settings)
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id) as ctx:
+        stmt = select(CampaignModel).where(
+            CampaignModel.id == campaign_id,
+            CampaignModel.workspace_id == principal.workspace_id
+        )
+        result = await ctx.execute(stmt)
+        model = result.scalar_one_or_none()
+        
+        if not model:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
+            
+        model.status = "paused"
+        model.updated_at = datetime.now(UTC)
+        
+        await ctx.flush()
+        await ctx.refresh(model)
+        return _model_to_campaign(model)
 
 
 @router.post("/campaigns/{campaign_id}/actions/archive", response_model=Campaign)
-def archive_campaign(
+async def archive_campaign(
     campaign_id: UUID,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Campaign:
-    return delete_campaign(campaign_id, principal=principal, settings=settings)
+    return await delete_campaign(campaign_id, principal=principal, session=session)
 
 
 @router.post("/campaigns/{campaign_id}/actions/restore", response_model=Campaign)
-def restore_campaign(
+async def restore_campaign(
     campaign_id: UUID,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> Campaign:
-    get_campaign(campaign_id, principal=principal, settings=settings)
-    _, admin_client = _clients(settings)
-
-    updates = {"status": "draft", "deleted_at": None, "updated_at": datetime.now(UTC).isoformat()}
-    admin_client.table("campaigns").update(updates).eq("id", str(campaign_id)).execute()
-    return get_campaign(campaign_id, principal=principal, settings=settings)
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id) as ctx:
+        stmt = select(CampaignModel).where(
+            CampaignModel.id == campaign_id,
+            CampaignModel.workspace_id == principal.workspace_id
+        )
+        result = await ctx.execute(stmt)
+        model = result.scalar_one_or_none()
+        
+        if not model:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="campaign_not_found")
+            
+        model.status = "draft"
+        model.deleted_at = None
+        model.updated_at = datetime.now(UTC)
+        
+        await ctx.flush()
+        await ctx.refresh(model)
+        return _model_to_campaign(model)

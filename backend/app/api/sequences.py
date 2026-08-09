@@ -4,11 +4,13 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.campaigns import get_campaign
 from app.api.outreach import OutreachDraftCreate, create_outreach_draft
 from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
+from app.db import get_db_session
 
 router = APIRouter(prefix="/v1", tags=["sequences"])
 
@@ -132,14 +134,14 @@ def _row_to_enrollment(enr_row: dict[str, Any]) -> SequenceEnrollment:
 
 
 @router.post("/campaigns/{campaign_id}/sequences", response_model=SequenceDefinition)
-def create_or_update_sequence(
+async def create_or_update_sequence(
     campaign_id: UUID,
     payload: SequenceCreatePayload,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> SequenceDefinition:
     # Verify campaign exists & workspace authorization
-    campaign = get_campaign(campaign_id, principal=principal, settings=settings)
+    campaign = await get_campaign(campaign_id, principal=principal, session=session)
 
     now_iso = datetime.now(UTC).isoformat()
     existing_seq: dict[str, Any] | None = None
@@ -210,12 +212,12 @@ def create_or_update_sequence(
 
 
 @router.get("/campaigns/{campaign_id}/sequences", response_model=SequenceDefinition)
-def get_campaign_sequence(
+async def get_campaign_sequence(
     campaign_id: UUID,
     principal: Principal = Depends(get_current_principal),
-    settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> SequenceDefinition:
-    campaign = get_campaign(campaign_id, principal=principal, settings=settings)
+    campaign = await get_campaign(campaign_id, principal=principal, session=session)
 
     for s in _SEQUENCES_STORE:
         if str(s.get("campaign_id")) == str(campaign.id) and str(s.get("workspace_id")) == str(principal.workspace_id):
@@ -263,13 +265,14 @@ def get_campaign_sequence(
 
 
 @router.post("/sequence-enrollments", response_model=SequenceEnrollment)
-def enroll_contact_in_sequence(
+async def enroll_contact_in_sequence(
     payload: EnrollmentCreatePayload,
     principal: Principal = Depends(get_current_principal),
     settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> SequenceEnrollment:
     # 1. Fetch Campaign & Active Sequence Definition
-    sequence = get_campaign_sequence(payload.campaign_id, principal=principal, settings=settings)
+    sequence = await get_campaign_sequence(payload.campaign_id, principal=principal, session=session)
 
     # 2. Check if active enrollment already exists
     for enr in _SEQUENCE_ENROLLMENTS_STORE:

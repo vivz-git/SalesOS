@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.accounts import list_accounts
 from app.api.campaigns import list_campaigns
@@ -15,6 +16,7 @@ from app.api.outreach import list_outreach_drafts
 from app.api.sequences import _SEQUENCE_ENROLLMENTS_STORE
 from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
+from app.db import get_db_session
 
 router = APIRouter(prefix="/v1", tags=["reports"])
 
@@ -65,7 +67,7 @@ def _get_current_week_bounds() -> tuple[datetime, datetime]:
     return period_start, period_end
 
 
-def compute_workspace_metrics(principal: Principal, settings: Settings) -> ReportMetricsSnapshot:
+async def compute_workspace_metrics(principal: Principal, settings: Settings, session: AsyncSession) -> ReportMetricsSnapshot:
     ws_str = str(principal.workspace_id)
 
     # 1. Campaigns & Accounts/Contacts
@@ -74,9 +76,9 @@ def compute_workspace_metrics(principal: Principal, settings: Settings) -> Repor
     contacts_cnt = 0
     try:
         if settings.supabase_url and settings.supabase_service_role_key:
-            campaigns_cnt = len(list_campaigns(principal=principal, settings=settings))
-            accounts_cnt = len(list_accounts(principal=principal, settings=settings))
-            contacts_cnt = len(list_contacts(principal=principal, settings=settings))
+            campaigns_cnt = len(await list_campaigns(principal=principal, session=session))
+            accounts_cnt = len(await list_accounts(principal=principal, session=session))
+            contacts_cnt = len(await list_contacts(principal=principal, session=session))
     except Exception:
         pass
 
@@ -161,11 +163,12 @@ def _row_to_report_run(row: dict[str, Any]) -> ReportRun:
 
 
 @router.get("/reports/weekly", response_model=list[ReportRun])
-def list_weekly_reports(
+async def list_weekly_reports(
     limit: int = Query(default=10, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
     principal: Principal = Depends(get_current_principal),
     settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> list[ReportRun]:
     runs: list[ReportRun] = []
     for r in _REPORTS_STORE:
@@ -174,7 +177,7 @@ def list_weekly_reports(
 
     if not runs:
         # Generate initial default report if none exists
-        init_run = _generate_report_for_workspace(principal, settings)
+        init_run = await _generate_report_for_workspace(principal, settings, session)
         runs.append(init_run)
 
     runs.sort(key=lambda x: x.created_at, reverse=True)
@@ -182,7 +185,7 @@ def list_weekly_reports(
 
 
 @router.get("/reports/weekly/{report_id}", response_model=ReportRun)
-def get_weekly_report_detail(
+async def get_weekly_report_detail(
     report_id: UUID,
     principal: Principal = Depends(get_current_principal),
 ) -> ReportRun:
@@ -197,16 +200,17 @@ def get_weekly_report_detail(
 
 
 @router.post("/reports/weekly/actions/generate", response_model=ReportRun)
-def generate_weekly_report_digest(
+async def generate_weekly_report_digest(
     principal: Principal = Depends(get_current_principal),
     settings: Settings = Depends(get_settings),
+    session: AsyncSession = Depends(get_db_session),
 ) -> ReportRun:
-    return _generate_report_for_workspace(principal, settings)
+    return await _generate_report_for_workspace(principal, settings, session)
 
 
-def _generate_report_for_workspace(principal: Principal, settings: Settings) -> ReportRun:
+async def _generate_report_for_workspace(principal: Principal, settings: Settings, session: AsyncSession) -> ReportRun:
     p_start, p_end = _get_current_week_bounds()
-    metrics = compute_workspace_metrics(principal, settings)
+    metrics = await compute_workspace_metrics(principal, settings, session)
     now_iso = datetime.now(UTC).isoformat()
     report_id = str(uuid4())
 

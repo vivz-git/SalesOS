@@ -1,155 +1,73 @@
-from unittest.mock import MagicMock, patch
+import pytest
 from uuid import uuid4
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy.exc import OperationalError
 
-from fastapi.testclient import TestClient
-
-from app.auth import Principal, get_current_principal
 from app.main import app
+from app.auth import Principal, get_current_principal
 
+pytestmark = pytest.mark.asyncio
 
-def test_create_contact_endpoint() -> None:
-    user_id = uuid4()
-    workspace_id = uuid4()
-    account_id = uuid4()
-
+async def test_contact_crud_integration(seeded_workspace):
+    workspace_id, user_id = seeded_workspace
+    
     mock_principal = Principal(
         user_id=user_id,
-        email="user@example.com",
+        email="test@example.com",
         workspace_id=workspace_id,
-        role="owner",
+        role="owner"
     )
-
     app.dependency_overrides[get_current_principal] = lambda: mock_principal
-
-    mock_admin = MagicMock()
-    mock_admin.table.return_value.insert.return_value.execute.return_value.data = []
-
-    with patch("app.api.contacts._clients", return_value=(MagicMock(), mock_admin)):
-        client = TestClient(app)
-        response = client.post(
-            "/v1/contacts",
-            json={
+    
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            # 1. Create
+            res = await client.post("/v1/contacts", json={
                 "first_name": "Jane",
                 "last_name": "Doe",
-                "email": "jane.doe@acme.com",
-                "phone": "+1-555-0199",
-                "title": "VP of Engineering",
-                "department": "Engineering",
-                "linkedin_url": "https://linkedin.com/in/janedoe",
-                "account_id": str(account_id),
-                "is_primary": True,
-                "status": "active",
-            },
-            headers={"Authorization": "Bearer fake-token"},
-        )
-        assert response.status_code == 201
-        data = response.json()
-        assert data["first_name"] == "Jane"
-        assert data["last_name"] == "Doe"
-        assert data["email"] == "jane.doe@acme.com"
-        assert data["is_primary"] is True
-        assert data["workspace_id"] == str(workspace_id)
-        assert data["account_id"] == str(account_id)
-
-    app.dependency_overrides.clear()
-
-
-def test_list_and_search_contacts_endpoint() -> None:
-    user_id = uuid4()
-    workspace_id = uuid4()
-    contact_id = uuid4()
-
-    mock_principal = Principal(
-        user_id=user_id,
-        email="user@example.com",
-        workspace_id=workspace_id,
-        role="admin",
-    )
-
-    app.dependency_overrides[get_current_principal] = lambda: mock_principal
-
-    sample_contact = {
-        "id": str(contact_id),
-        "workspace_id": str(workspace_id),
-        "account_id": None,
-        "first_name": "John",
-        "last_name": "Smith",
-        "email": "john@stripe.com",
-        "phone": "+1-555-0100",
-        "title": "Chief Technology Officer",
-        "department": "Product",
-        "linkedin_url": "https://linkedin.com/in/johnsmith",
-        "is_primary": False,
-        "status": "active",
-        "created_by": str(user_id),
-        "created_at": "2026-08-07T12:00:00+00:00",
-        "updated_at": "2026-08-07T12:00:00+00:00",
-        "deleted_at": None,
-    }
-
-    mock_admin = MagicMock()
-    mock_select = mock_admin.table.return_value.select.return_value
-    mock_select.eq.return_value.execute.return_value.data = [sample_contact]
-    mock_select.eq.return_value.eq.return_value.execute.return_value.data = [sample_contact]
-
-    with patch("app.api.contacts._clients", return_value=(MagicMock(), mock_admin)):
-        client = TestClient(app)
-        list_res = client.get(
-            "/v1/contacts?search=smith", headers={"Authorization": "Bearer fake-token"}
-        )
-        assert list_res.status_code == 200
-        assert len(list_res.json()) == 1
-        assert list_res.json()[0]["last_name"] == "Smith"
-
-    app.dependency_overrides.clear()
-
-
-def test_contact_archive_and_restore() -> None:
-    user_id = uuid4()
-    workspace_id = uuid4()
-    contact_id = uuid4()
-
-    mock_principal = Principal(
-        user_id=user_id,
-        email="user@example.com",
-        workspace_id=workspace_id,
-        role="owner",
-    )
-
-    app.dependency_overrides[get_current_principal] = lambda: mock_principal
-
-    sample_contact = {
-        "id": str(contact_id),
-        "workspace_id": str(workspace_id),
-        "account_id": None,
-        "first_name": "Alex",
-        "last_name": "Taylor",
-        "is_primary": False,
-        "status": "active",
-        "created_by": str(user_id),
-        "created_at": "2026-08-07T12:00:00+00:00",
-        "updated_at": "2026-08-07T12:00:00+00:00",
-        "deleted_at": None,
-    }
-
-    mock_admin = MagicMock()
-    mock_select = mock_admin.table.return_value.select.return_value
-    mock_select.eq.return_value.execute.return_value.data = [sample_contact]
-    mock_select.eq.return_value.eq.return_value.execute.return_value.data = [sample_contact]
-    mock_admin.table.return_value.update.return_value.eq.return_value.execute.return_value.data = []
-
-    with patch("app.api.contacts._clients", return_value=(MagicMock(), mock_admin)):
-        client = TestClient(app)
-        archive_res = client.post(
-            f"/v1/contacts/{contact_id}/actions/archive",
-            headers={"Authorization": "Bearer fake-token"},
-        )
-        assert archive_res.status_code == 200
-
-        restore_res = client.post(
-            f"/v1/contacts/{contact_id}/actions/restore",
-            headers={"Authorization": "Bearer fake-token"},
-        )
-        assert restore_res.status_code == 200
-
-    app.dependency_overrides.clear()
+                "email": "jane@acme.com",
+                "title": "VP Sales"
+            })
+            
+            if res.status_code == 500 and "connection" in res.text.lower():
+                pytest.skip("Database unavailable for integration test")
+                
+            assert res.status_code == 201, f"Expected 201, got {res.status_code}: {res.text}"
+            data = res.json()
+            contact_id = data["id"]
+            assert data["first_name"] == "Jane"
+            assert data["last_name"] == "Doe"
+            assert data["email"] == "jane@acme.com"
+            
+            # 2. Get
+            res_get = await client.get(f"/v1/contacts/{contact_id}")
+            assert res_get.status_code == 200
+            
+            # 3. Update
+            res_patch = await client.patch(f"/v1/contacts/{contact_id}", json={"phone": "+1234567890"})
+            assert res_patch.status_code == 200
+            assert res_patch.json()["phone"] == "+1234567890"
+            
+            # 4. Cross-workspace isolation
+            other_principal = Principal(
+                user_id=user_id, email="test@example.com", workspace_id=uuid4(), role="owner"
+            )
+            app.dependency_overrides[get_current_principal] = lambda: other_principal
+            
+            assert (await client.get(f"/v1/contacts/{contact_id}")).status_code == 404
+            assert (await client.patch(f"/v1/contacts/{contact_id}", json={"first_name": "Hacked"})).status_code == 404
+            
+            app.dependency_overrides[get_current_principal] = lambda: mock_principal
+            
+            # 5. Delete (Soft delete)
+            res_delete = await client.delete(f"/v1/contacts/{contact_id}")
+            assert res_delete.status_code == 200
+            assert res_delete.json()["status"] == "archived"
+            assert res_delete.json()["deleted_at"] is not None
+            
+            # 6. List filtering
+            res_list = await client.get("/v1/contacts")
+            assert len([c for c in res_list.json() if c["id"] == contact_id]) == 0
+            
+    finally:
+        app.dependency_overrides.clear()

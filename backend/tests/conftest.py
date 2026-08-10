@@ -1,24 +1,29 @@
 import os
+
 os.environ["TESTING"] = "1"
-import sys
 import asyncio
+import sys
+from uuid import uuid4
+
 import pytest
 import pytest_asyncio
-from uuid import uuid4
 from sqlalchemy import text
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+from typing import Any
+
+
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Any:
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
     yield loop
     loop.close()
 
 @pytest_asyncio.fixture
-async def seeded_workspace():
+async def seeded_workspace() -> Any:
     from sqlalchemy.ext.asyncio import create_async_engine
     
     workspace_id = uuid4()

@@ -1,20 +1,19 @@
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 from uuid import UUID
 
-from sqlalchemy import text
-import os
-
-from sqlalchemy import text, NullPool
+from sqlalchemy import NullPool, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config import get_settings
 
 settings = get_settings()
 
-engine_kwargs = {
+engine_kwargs: dict[str, Any] = {
     "pool_pre_ping": True,
-    "echo": False,
+    "echo": True,
 }
 if os.environ.get("TESTING") == "1":
     engine_kwargs["poolclass"] = NullPool
@@ -29,6 +28,18 @@ engine = create_async_engine(
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
+)
+
+worker_engine = create_async_engine(
+    settings.worker_database_url,
+    **engine_kwargs
+)
+
+AsyncWorkerSessionLocal = async_sessionmaker(
+    bind=worker_engine,
     class_=AsyncSession,
     expire_on_commit=False,
     autoflush=False,

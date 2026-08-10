@@ -1,14 +1,17 @@
-import pytest
+from typing import Any
 from uuid import uuid4
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.exc import OperationalError
 
-from app.main import app
+import pytest
+from httpx import ASGITransport, AsyncClient
+
 from app.auth import Principal, get_current_principal
+from app.main import app
 
 pytestmark = pytest.mark.asyncio
 
-async def test_contact_crud_integration(seeded_workspace):
+
+
+async def test_contact_crud_integration(seeded_workspace: Any) -> None:
     workspace_id, user_id = seeded_workspace
     
     mock_principal = Principal(

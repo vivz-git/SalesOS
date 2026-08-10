@@ -1,9 +1,11 @@
-import pytest
-import sys
 import asyncio
+import sys
 from uuid import uuid4
+
+import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
+
 from app.db import get_db_session, tenant_transaction_context
 
 if sys.platform == "win32":
@@ -11,7 +13,7 @@ if sys.platform == "win32":
 
 pytestmark = pytest.mark.asyncio
 
-async def test_tenant_transaction_context():
+async def test_tenant_transaction_context() -> None:
     # Generate mock UUIDs
     user_id = uuid4()
     workspace_id = uuid4()

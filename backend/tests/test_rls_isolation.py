@@ -1,10 +1,14 @@
-import pytest
-import sys
 import asyncio
+import sys
+from typing import Any, cast
 from uuid import uuid4
+
+import pytest
+import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import create_async_engine
+
 from app.db import get_db_session, tenant_transaction_context
 
 if sys.platform == "win32":
@@ -12,10 +16,10 @@ if sys.platform == "win32":
 
 pytestmark = pytest.mark.asyncio
 
-import pytest_asyncio
+
 
 @pytest_asyncio.fixture
-async def two_workspaces():
+async def two_workspaces() -> Any:
     admin_engine = create_async_engine("postgresql+psycopg://postgres:postgres@127.0.0.1:54322/postgres")
     
     ws1_id = uuid4()
@@ -58,7 +62,9 @@ async def two_workspaces():
     finally:
         await admin_engine.dispose()
 
-async def test_rls_cross_workspace_isolation(two_workspaces):
+
+
+async def test_rls_cross_workspace_isolation(two_workspaces: Any) -> None:
     ws1 = two_workspaces["ws1"]
     ws2 = two_workspaces["ws2"]
     u1 = two_workspaces["u1"]
@@ -103,7 +109,7 @@ async def test_rls_cross_workspace_isolation(two_workspaces):
                 text("UPDATE campaigns SET name = 'Hacked' WHERE id = :id"),
                 {"id": str(camp2_id)}
             )
-            assert result.rowcount == 0, "UPDATE isolation failed: ws1 could update ws2's campaign"
+            assert cast(Any, result).rowcount == 0, "UPDATE isolation failed: ws1 could update ws2's campaign"
             
         # 5. Try cross-workspace DELETE
         async with tenant_transaction_context(session, u1, ws1) as ctx:
@@ -111,7 +117,7 @@ async def test_rls_cross_workspace_isolation(two_workspaces):
                 text("DELETE FROM campaigns WHERE id = :id"),
                 {"id": str(camp2_id)}
             )
-            assert result.rowcount == 0, "DELETE isolation failed: ws1 could delete ws2's campaign"
+            assert cast(Any, result).rowcount == 0, "DELETE isolation failed: ws1 could delete ws2's campaign"
             
     finally:
         await session.close()

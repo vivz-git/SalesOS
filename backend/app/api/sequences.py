@@ -8,11 +8,16 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.campaigns import get_campaign
 from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
 from app.db import get_db_session
-from app.models import CampaignModel, JobModel, SequenceDefinitionModel, SequenceEnrollmentModel, SequenceStepModel
+from app.models import (
+    CampaignModel,
+    JobModel,
+    SequenceDefinitionModel,
+    SequenceEnrollmentModel,
+    SequenceStepModel,
+)
 
 router = APIRouter(prefix="/v1", tags=["sequences"])
 

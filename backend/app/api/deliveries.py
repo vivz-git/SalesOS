@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,11 +14,17 @@ from app.adapters.email_provider import (
     EmailProviderInterface,
 )
 from app.adapters.resend_provider import ResendEmailProvider
-from app.api.outreach import get_outreach_draft
-from app.auth import Principal, _clients, get_current_principal
+from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
-from app.db import get_db_session
-from app.models import DeliveryModel, JobModel, SequenceEnrollmentModel, SequenceStepModel
+from app.db import get_db_session, tenant_transaction_context
+from app.models import (
+    ContactModel,
+    DeliveryModel,
+    JobModel,
+    OutreachDraftModel,
+    SequenceEnrollmentModel,
+    SequenceStepModel,
+)
 
 router = APIRouter(prefix="/v1", tags=["deliveries"])
 
@@ -93,136 +99,135 @@ async def create_delivery(
     email_provider: EmailProviderInterface = Depends(get_email_provider),
     session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
-    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
+        # 1. Fetch Draft
+        draft = await session.get(OutreachDraftModel, payload.draft_id)
+        if not draft or str(draft.workspace_id) != str(principal.workspace_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="draft_not_found"
+            )
 
-    # 1. Fetch Draft & Validate Workspace Membership
-    draft = get_outreach_draft(payload.draft_id, principal=principal, settings=settings)
+        if draft.status != "approved":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"cannot_deliver_unapproved_draft_in_{draft.status}_state",
+            )
 
-    if draft.status != "approved":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"cannot_deliver_unapproved_draft_in_{draft.status}_state",
-        )
+        if not draft.current_version_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="approved_draft_has_no_version",
+            )
 
-    if not draft.current_version_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="approved_draft_has_no_version",
-        )
+        # 3. Load Contact Details
+        contact = await session.get(ContactModel, draft.contact_id)
+        if not contact or str(contact.workspace_id) != str(principal.workspace_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="contact_not_found_in_workspace",
+            )
+            
+        recipient_email = payload.override_recipient_email or contact.email
+        if not recipient_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="contact_has_no_email_address",
+            )
 
-    _, admin_client = _clients(settings)
+        idempotency_key = f"{principal.workspace_id}:{draft.id}:{draft.current_version_number}"
 
-    # 3. Load Contact Details & Verify Workspace Scoping
-    contact_rows = cast(
-        list[dict[str, Any]],
-        admin_client.table("contacts")
-        .select("*")
-        .eq("id", str(draft.contact_id))
-        .eq("workspace_id", str(principal.workspace_id))
-        .execute()
-        .data
-        or [],
-    )
-    if not contact_rows:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="contact_not_found_in_workspace",
-        )
-    contact = contact_rows[0]
-    recipient_email = payload.override_recipient_email or cast(str | None, contact.get("email"))
-    if not recipient_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="contact_has_no_email_address",
-        )
-
-    idempotency_key = f"{principal.workspace_id}:{draft.id}:{draft.current_version_number}"
-
-    # TRANSACTION 1 (Prepare)
-    existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
-    if existing_delivery and existing_delivery.status in ("sent", "delivered", "running", "queued"):
-        return _model_to_delivery(existing_delivery)
-
-    delivery_id = uuid4()
-    now_dt = datetime.now(UTC)
-    
-    delivery_model = DeliveryModel(
-        id=delivery_id,
-        workspace_id=principal.workspace_id,
-        draft_id=draft.id,
-        version_id=draft.current_version_id,
-        version_number=draft.current_version_number,
-        contact_id=draft.contact_id,
-        recipient_email=recipient_email,
-        subject=draft.current_subject or "(No Subject)",
-        body=draft.current_body or "",
-        provider="resend",
-        status="queued",
-        idempotency_key=idempotency_key,
-        created_by=principal.user_id,
-        created_at=now_dt,
-        updated_at=now_dt
-    )
-
-    try:
-        session.add(delivery_model)
-        await session.commit()
-    except IntegrityError:
-        await session.rollback()
+        # TRANSACTION 1 (Prepare)
         existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
         if existing_delivery and existing_delivery.status in ("sent", "delivered", "running", "queued"):
             return _model_to_delivery(existing_delivery)
-        delivery_model = existing_delivery
 
-    # 6. Execute Provider Send Operation
-    send_req = EmailDeliverySendRequest(
-        idempotency_key=idempotency_key,
-        from_email=settings.resend_from_email,
-        recipient_email=recipient_email,
-        subject=draft.current_subject or "(No Subject)",
-        body_text=draft.current_body or "",
-    )
+        delivery_id = uuid4()
+        now_dt = datetime.now(UTC)
+        
+        delivery_model = DeliveryModel(
+            id=delivery_id,
+            workspace_id=principal.workspace_id,
+            draft_id=draft.id,
+            version_id=draft.current_version_id,
+            version_number=draft.current_version_number,
+            contact_id=draft.contact_id,
+            recipient_email=recipient_email,
+            subject=draft.current_subject or "(No Subject)",
+            body=draft.current_body or "",
+            provider="resend",
+            status="queued",
+            idempotency_key=idempotency_key,
+            created_by=principal.user_id,
+            created_at=now_dt,
+            updated_at=now_dt
+        )
 
-    try:
-        send_result = email_provider.send_email(send_req)
-        new_status = send_result.status
-        provider_message_id = send_result.provider_message_id
-        error_message = None
-    except Exception as err:
-        new_status = "failed"
-        provider_message_id = None
-        error_message = str(err)
+        try:
+            session.add(delivery_model)
+            await session.commit()
+            await session.refresh(delivery_model)
+        except IntegrityError:
+            await session.rollback()
+            existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
+            if existing_delivery and existing_delivery.status in ("sent", "delivered", "running", "queued"):
+                return _model_to_delivery(existing_delivery)
+            delivery_model = existing_delivery
 
-    # TRANSACTION 2 (Finalize)
-    delivery_model.status = new_status
-    delivery_model.provider_message_id = provider_message_id
-    delivery_model.error_message = error_message
-    delivery_model.updated_at = datetime.now(UTC)
+        # 6. Execute Provider Send Operation
+        send_req = EmailDeliverySendRequest(
+            idempotency_key=idempotency_key,
+            from_email=settings.resend_from_email,
+            recipient_email=recipient_email,
+            subject=draft.current_subject or "(No Subject)",
+            body_text=draft.current_body or "",
+        )
 
-    if new_status == "sent" and draft.sequence_enrollment_id:
-        enrollment = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=draft.sequence_enrollment_id))
-        if enrollment and enrollment.status == "active":
-            enrollment.current_step_number += 1
-            next_step = await session.scalar(select(SequenceStepModel).filter_by(sequence_id=enrollment.sequence_id, step_number=enrollment.current_step_number))
-            
-            if next_step:
-                enrollment.next_step_due_at = datetime.now(UTC) + timedelta(days=next_step.delay_days)
-                job = JobModel(
-                    id=uuid4(),
-                    workspace_id=principal.workspace_id,
-                    job_type="execute_sequence_step",
-                    payload={"enrollment_id": str(enrollment.id), "step_number": enrollment.current_step_number},
-                    status="pending",
-                    available_at=enrollment.next_step_due_at,
-                    created_at=datetime.now(UTC),
-                    updated_at=datetime.now(UTC)
-                )
-                session.add(job)
-            else:
-                enrollment.status = "completed"
+        try:
+            send_result = email_provider.send_email(send_req)
+            new_status = send_result.status
+            provider_message_id = send_result.provider_message_id
+            error_message = None
+        except Exception as err:
+            new_status = "failed"
+            provider_message_id = None
+            error_message = str(err)
 
-    await session.commit()
-    return _model_to_delivery(delivery_model)
+        # TRANSACTION 2 (Finalize)
+        async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
+            d_model = await session.get(DeliveryModel, delivery_model.id)
+            if not d_model:
+                raise HTTPException(status_code=404, detail="Delivery not found")
+            d_model.status = new_status
+            d_model.provider_message_id = provider_message_id
+            d_model.error_message = error_message
+            d_model.updated_at = datetime.now(UTC)
+
+            if new_status == "sent" and draft.sequence_enrollment_id:
+                enrollment = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=draft.sequence_enrollment_id))
+                if enrollment and enrollment.status == "active":
+                    enrollment.current_step_number += 1
+                    next_step = await session.scalar(select(SequenceStepModel).filter_by(sequence_id=enrollment.sequence_id, step_number=enrollment.current_step_number))
+                    
+                    if next_step:
+                        enrollment.next_step_due_at = datetime.now(UTC) + timedelta(days=next_step.delay_days)
+                        job = JobModel(
+                            id=uuid4(),
+                            workspace_id=principal.workspace_id,
+                            job_type="execute_sequence_step",
+                            payload={"enrollment_id": str(enrollment.id), "step_number": enrollment.current_step_number},
+                            status="pending",
+                            available_at=enrollment.next_step_due_at,
+                            created_at=datetime.now(UTC),
+                            updated_at=datetime.now(UTC)
+                        )
+                        session.add(job)
+                    else:
+                        enrollment.status = "completed"
+
+            await session.commit()
+            await session.refresh(d_model)
+            return _model_to_delivery(d_model)
 
 
 @router.get("/deliveries", response_model=list[EmailDelivery])
@@ -233,16 +238,15 @@ async def list_deliveries(
     principal: Principal = Depends(get_current_principal),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[EmailDelivery]:
-    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
-
-    q = select(DeliveryModel).filter_by(workspace_id=principal.workspace_id)
-    if status_filter != "all":
-        q = q.filter_by(status=status_filter)
-    
-    q = q.order_by(DeliveryModel.created_at.desc()).offset(offset).limit(limit)
-    
-    result = await session.scalars(q)
-    return [_model_to_delivery(d) for d in result]
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
+        q = select(DeliveryModel).filter_by(workspace_id=principal.workspace_id)
+        if status_filter != "all":
+            q = q.filter_by(status=status_filter)
+        
+        q = q.order_by(DeliveryModel.created_at.desc()).offset(offset).limit(limit)
+        
+        result = await session.scalars(q)
+        return [_model_to_delivery(d) for d in result]
 
 
 @router.get("/deliveries/{delivery_id}", response_model=EmailDelivery)
@@ -251,15 +255,14 @@ async def get_delivery_detail(
     principal: Principal = Depends(get_current_principal),
     session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
-    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
-
-    delivery = await session.scalar(select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id))
-    if not delivery:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="delivery_record_not_found",
-        )
-    return _model_to_delivery(delivery)
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
+        delivery = await session.scalar(select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id))
+        if not delivery:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="delivery_record_not_found",
+            )
+        return _model_to_delivery(delivery)
 
 
 @router.post("/deliveries/{delivery_id}/actions/cancel", response_model=EmailDelivery)
@@ -268,26 +271,26 @@ async def cancel_delivery(
     principal: Principal = Depends(get_current_principal),
     session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
-    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(principal.workspace_id)})
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
+        delivery = await session.scalar(select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id))
+        if not delivery:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="delivery_record_not_found",
+            )
+        
+        if delivery.status not in ("queued", "running"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"cannot_cancel_delivery_in_{delivery.status}_state",
+            )
 
-    delivery = await session.scalar(select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id))
-    if not delivery:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="delivery_record_not_found",
-        )
-    
-    if delivery.status not in ("queued", "running"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"cannot_cancel_delivery_in_{delivery.status}_state",
-        )
+        delivery.status = "cancelled"
+        delivery.updated_at = datetime.now(UTC)
+        await session.commit()
+        await session.refresh(delivery)
 
-    delivery.status = "cancelled"
-    delivery.updated_at = datetime.now(UTC)
-    await session.commit()
-
-    return _model_to_delivery(delivery)
+        return _model_to_delivery(delivery)
 
 
 @router.post("/deliveries/webhooks/resend")
@@ -345,7 +348,7 @@ async def resend_webhook_handler(
     if event_type == "email.received":
         from app.adapters.reply_classifier import DeterministicReplyClassifier
         from app.api.conversations import InboundReplyPayload, ingest_inbound_reply
-
+        
         sender = str(data.get("from") or data.get("sender") or "")
         recipient = str(data.get("to") or data.get("recipient") or "")
         subject = str(data.get("subject") or "")
@@ -389,7 +392,6 @@ async def resend_webhook_handler(
 
     new_status = status_mapping.get(event_type)
     if new_status and provider_msg_id:
-        # Cannot easily enforce RLS here without workspace_id, so query by provider_message_id globally
         delivery = await session.scalar(select(DeliveryModel).filter_by(provider_message_id=provider_msg_id))
         if delivery:
             delivery.status = new_status

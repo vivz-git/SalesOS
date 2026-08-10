@@ -223,3 +223,115 @@ class DeliveryModel(Base):
     created_by: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+class ConversationModel(Base):
+    __tablename__ = "conversations"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    contact_id: Mapped[UUID] = mapped_column(ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False)
+    campaign_id: Mapped[UUID | None] = mapped_column(ForeignKey("campaigns.id", ondelete="SET NULL"))
+    delivery_id: Mapped[UUID | None] = mapped_column(ForeignKey("deliveries.id", ondelete="SET NULL"))
+    status: Mapped[str] = mapped_column(Enum('active', 'needs_human_action', 'closed', 'opt_out', name="conversation_status"), nullable=False, default="active")
+    current_reply_state: Mapped[str | None] = mapped_column(Enum('positive', 'objection', 'unsubscribe', 'question', 'ambiguous', 'not_applicable', name="reply_state"))
+    last_message_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ConversationMessageModel(Base):
+    __tablename__ = "conversation_messages"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    conversation_id: Mapped[UUID] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
+    direction: Mapped[str] = mapped_column(Enum('inbound', 'outbound', name="conversation_direction"), nullable=False, default="inbound")
+    sender_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    recipient_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    subject: Mapped[str | None] = mapped_column(Text)
+    body: Mapped[str | None] = mapped_column(Text)
+    provider_message_id: Mapped[str | None] = mapped_column(String(255))
+    delivery_id: Mapped[UUID | None] = mapped_column(ForeignKey("deliveries.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ReplyClassificationModel(Base):
+    __tablename__ = "reply_classifications"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    conversation_id: Mapped[UUID] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
+    message_id: Mapped[UUID] = mapped_column(ForeignKey("conversation_messages.id", ondelete="CASCADE"), nullable=False)
+    reply_state: Mapped[str] = mapped_column(Enum('positive', 'objection', 'unsubscribe', 'question', 'ambiguous', 'not_applicable', name="reply_state"), nullable=False)
+    confidence_score: Mapped[float | None] = mapped_column(nullable=True, default=1.0)
+    explanation: Mapped[str | None] = mapped_column(Text)
+    needs_human_action: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    classified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResearchBriefModel(Base):
+    __tablename__ = "research_briefs"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    account_id: Mapped[UUID] = mapped_column(ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False)
+    contact_id: Mapped[UUID | None] = mapped_column(ForeignKey("contacts.id", ondelete="CASCADE"))
+    summary: Mapped[str | None] = mapped_column(Text)
+    key_findings: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(Enum('pending', 'in_progress', 'completed', 'failed', name="research_status"), nullable=False, default="pending")
+    confidence_score: Mapped[float | None] = mapped_column(nullable=True)
+    confidence_reason: Mapped[str | None] = mapped_column(Text)
+    provider: Mapped[str | None] = mapped_column(String(100))
+    model: Mapped[str | None] = mapped_column(String(100))
+    prompt_version: Mapped[str | None] = mapped_column(String(50))
+    generated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    token_usage: Mapped[int | None] = mapped_column(Integer)
+    estimated_cost: Mapped[float | None] = mapped_column(nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
+    created_by: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class ResearchSourceModel(Base):
+    __tablename__ = "research_sources"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    brief_id: Mapped[UUID] = mapped_column(ForeignKey("research_briefs.id", ondelete="CASCADE"), nullable=False)
+    url: Mapped[str | None] = mapped_column(String(500))
+    title: Mapped[str | None] = mapped_column(String(255))
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False, default="website")
+    snippet: Mapped[str | None] = mapped_column(Text)
+    confidence: Mapped[float | None] = mapped_column(nullable=True, default=1.0)
+    raw_content_hash: Mapped[str | None] = mapped_column(String(128))
+    retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ApprovalDecisionModel(Base):
+    __tablename__ = "approval_decisions"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    draft_id: Mapped[UUID] = mapped_column(ForeignKey("outreach_drafts.id", ondelete="CASCADE"), nullable=False)
+    version_id: Mapped[UUID | None] = mapped_column(ForeignKey("draft_versions.id", ondelete="SET NULL"))
+    version_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    reviewer_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True))
+    decision: Mapped[str] = mapped_column(Enum('approved', 'rejected', 'returned_to_draft', name="approval_decision_type"), nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class AuditEventModel(Base):
+    __tablename__ = "audit_events"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
+    actor_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    actor_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True))
+    action: Mapped[str] = mapped_column(String(100), nullable=False)
+    resource_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    resource_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True))
+    metadata_payload: Mapped[dict[str, Any]] = mapped_column("metadata", JSONB, nullable=False, default={})
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

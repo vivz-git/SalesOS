@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.accounts import list_accounts
 from app.api.campaigns import list_campaigns
 from app.api.contacts import list_contacts
-from app.api.conversations import _CONVERSATIONS_STORE
 from app.api.outreach import list_outreach_drafts
 from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
@@ -88,7 +87,7 @@ async def compute_workspace_metrics(principal: Principal, settings: Settings, se
     # 2. Drafts & Approval Rate
     ws_drafts: list[Any] = []
     try:
-        ws_drafts = list_outreach_drafts(limit=200, principal=principal, settings=settings)
+        ws_drafts = await list_outreach_drafts(limit=200, principal=principal, session=session)
     except Exception:
         pass
 
@@ -106,14 +105,14 @@ async def compute_workspace_metrics(principal: Principal, settings: Settings, se
     deliv_rate = round((delivered_cnt / sent_cnt) * 100.0, 1) if sent_cnt > 0 else 0.0
 
     # 4. Conversations & Reply Rates
-    ws_convs = [c for c in _CONVERSATIONS_STORE if str(c.get("workspace_id")) == ws_str]
-    replies_cnt = len(ws_convs)
+    from app.models import ConversationModel
+    replies_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id))) or 0
     rep_rate = round((replies_cnt / delivered_cnt) * 100.0, 1) if delivered_cnt > 0 else 0.0
 
-    interested_cnt = sum(1 for c in ws_convs if c.get("current_reply_state") == "interested")
+    interested_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id, current_reply_state="positive"))) or 0
     interested_rate = round((interested_cnt / replies_cnt) * 100.0, 1) if replies_cnt > 0 else 0.0
 
-    opt_out_cnt = sum(1 for c in ws_convs if c.get("current_reply_state") == "unsubscribe")
+    opt_out_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id, current_reply_state="unsubscribe"))) or 0
     opt_rate = round((opt_out_cnt / replies_cnt) * 100.0, 1) if replies_cnt > 0 else 0.0
 
     # 5. CRM Sync

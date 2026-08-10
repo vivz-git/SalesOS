@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Any, cast
 from uuid import UUID
 
 from sqlalchemy import select, text
@@ -9,10 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.outreach import OutreachDraftCreate, create_outreach_draft_orm
 from app.auth import Principal
-from app.db import AsyncSessionLocal
+from app.db import AsyncSessionLocal, tenant_transaction_context
 from app.models import (
     JobModel,
     OutreachDraftModel,
+    ResearchBriefModel,
     SequenceEnrollmentModel,
     SequenceStepModel,
 )
@@ -61,26 +63,27 @@ async def _claim_and_process_job() -> None:
         job.attempts += 1
         await session.commit()
         
-        try:
-            await _execute_job(session, job)
-            job.status = "completed"
-            job.completed_at = datetime.now(UTC)
-        except IntegrityError as ie:
-            logger.warning(f"Integrity error processing job {job.id}: {ie}")
-            # If draft already exists, consider it completed safely
-            await session.rollback()
-            job.status = "completed"
-            job.completed_at = datetime.now(UTC)
-        except Exception as e:
-            logger.error(f"Failed to execute job {job.id}: {e}")
-            await session.rollback()
-            job.last_error = str(e)
-            if job.attempts >= job.max_attempts:
-                job.status = "failed"
-            else:
-                job.status = "pending"
-        finally:
-            pass
+        # Execution Phase (as salesos_backend)
+        async with AsyncSessionLocal() as exec_session:
+            try:
+                system_user_id = UUID("00000000-0000-0000-0000-000000000000")
+                async with tenant_transaction_context(exec_session, system_user_id, job.workspace_id) as ctx:
+                    await _execute_job(ctx, job)
+                    # ctx auto-commits on success
+                    
+                job.status = "completed"
+                job.completed_at = datetime.now(UTC)
+            except IntegrityError as ie:
+                logger.warning(f"Integrity error processing job {job.id}: {ie}")
+                job.status = "completed"
+                job.completed_at = datetime.now(UTC)
+            except Exception as e:
+                logger.error(f"Failed to execute job {job.id}: {e}")
+                job.last_error = str(e)
+                if job.attempts >= job.max_attempts:
+                    job.status = "failed"
+                else:
+                    job.status = "pending"
 
         # To avoid detached object issues after rollback, do a direct update:
         async with AsyncSessionLocal() as update_session:
@@ -98,19 +101,21 @@ async def _claim_and_process_job() -> None:
 
 
 async def _execute_job(session: AsyncSession, job: JobModel) -> None:
-    if job.job_type != "execute_sequence_step":
+    if job.job_type == "execute_sequence_step":
+        await _execute_sequence_step_job(session, job)
+    elif job.job_type == "research_generation":
+        await _execute_research_generation_job(session, job)
+    else:
         raise ValueError(f"Unknown job type {job.job_type}")
-        
+
+async def _execute_sequence_step_job(session: AsyncSession, job: JobModel) -> None:
     enrollment_id_str = job.payload.get("enrollment_id")
     step_number = job.payload.get("step_number")
     
     if not enrollment_id_str or not step_number:
         raise ValueError("Missing payload data")
         
-    enrollment_id = UUID(enrollment_id_str)
-    
-    # 1. Set Workspace RLS Context
-    await session.execute(text("SELECT set_config('salesos.app_workspace_id', :ws, true)"), {"ws": str(job.workspace_id)})
+    enrollment_id = enrollment_id_str
     
     # 2. Fetch Enrollment
     enrollment = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=enrollment_id))
@@ -173,3 +178,24 @@ async def _recover_stale_jobs() -> None:
         )
         await session.commit()
 
+
+
+async def _execute_research_generation_job(session: AsyncSession, job: JobModel) -> None:
+    brief_id_str = job.payload.get("brief_id")
+    if not brief_id_str:
+        raise ValueError("Missing brief_id in payload")
+        
+    brief_id = brief_id_str
+    
+    brief = await session.scalar(select(ResearchBriefModel).filter_by(id=brief_id))
+    if not brief:
+        raise ValueError(f"Brief {brief_id} not found")
+
+    # Mock Research Generation Logic
+    # We pretend an LLM runs here.
+    brief.summary = "Generated summary via worker."
+    brief.key_findings = cast(Any, ["Finding A", "Finding B"])
+    brief.status = "completed"
+    brief.confidence_score = 0.95
+    brief.generated_at = datetime.now(UTC)
+    brief.updated_at = datetime.now(UTC)

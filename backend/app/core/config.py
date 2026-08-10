@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     hubspot_client_id: str | None = None
     hubspot_client_secret: str | None = None
     database_url: str = "postgresql+psycopg://localhost/postgres"
+    worker_database_url: str = "postgresql+psycopg://localhost/postgres"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

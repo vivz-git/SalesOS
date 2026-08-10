@@ -1,4 +1,5 @@
 import asyncio
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -23,8 +24,6 @@ from app.core.logging import configure_logging
 from app.db import engine
 from app.worker import process_jobs
 
-
-import os
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:

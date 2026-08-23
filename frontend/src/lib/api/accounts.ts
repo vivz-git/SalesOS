@@ -1,3 +1,4 @@
+import { request } from './client';
 export type AccountStatus = "target" | "qualified" | "disqualified" | "archived";
 
 export interface Account {
@@ -50,22 +51,6 @@ export interface AccountFilterParams {
   offset?: number;
 }
 
-async function request<T>(
-  url: string,
-  workspaceId: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const headers = new Headers(options.headers || {});
-  headers.set("X-SalesOS-Workspace-Id", workspaceId);
-  headers.set("Content-Type", "application/json");
-
-  const res = await fetch(url, { ...options, headers });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(errorData.detail || `HTTP ${res.status}`);
-  }
-  return res.json();
-}
 
 export async function fetchAccounts(
   workspaceId: string,

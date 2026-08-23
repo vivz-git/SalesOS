@@ -1,4 +1,4 @@
-import { request } from "./outreach";
+import { request } from "./client";
 
 export type StepType = "first_touch" | "follow_up";
 export type EnrollmentStatus =

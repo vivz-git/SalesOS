@@ -5,6 +5,7 @@ import { User } from "lucide-react";
 
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { useWorkspace } from "@/lib/workspace-context";
+import { createClient } from "@/lib/supabase/client";
 
 interface UserIdentity {
   user_id: string;
@@ -19,16 +20,29 @@ export function UserNav() {
 
   useEffect(() => {
     if (!activeWorkspace) return;
-    fetch("/api/v1/me", {
-      headers: {
-        "X-SalesOS-Workspace-Id": activeWorkspace.id,
-      },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setIdentity(data);
-      })
-      .catch(() => undefined);
+    
+    async function fetchIdentity() {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const headers = new Headers();
+      headers.set("X-SalesOS-Workspace-Id", activeWorkspace!.id);
+      if (session?.access_token) {
+        headers.set("Authorization", `Bearer ${session.access_token}`);
+      }
+
+      try {
+        const res = await fetch("/api/v1/me", { headers });
+        if (res.ok) {
+          const data = await res.json();
+          setIdentity(data);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    
+    fetchIdentity();
   }, [activeWorkspace]);
 
   return (

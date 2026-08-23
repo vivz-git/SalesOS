@@ -1,4 +1,4 @@
-import { request } from "./outreach";
+import { request } from "./client";
 
 export type DeliveryStatus =
   | "queued"

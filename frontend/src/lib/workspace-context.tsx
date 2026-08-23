@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export interface Workspace {
   id: string;
@@ -42,7 +43,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   async function fetchWorkspaces() {
     try {
-      const res = await fetch("/api/v1/workspaces");
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = new Headers();
+      if (session?.access_token) {
+        headers.set("Authorization", `Bearer ${session.access_token}`);
+      }
+
+      const res = await fetch("/api/v1/workspaces", { headers });
       if (res.ok) {
         const data: Workspace[] = await res.json();
         setWorkspaces(data);
@@ -71,9 +79,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   }
 
   async function createWorkspace(name: string, slug?: string): Promise<Workspace> {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers = new Headers({ "Content-Type": "application/json" });
+    if (session?.access_token) {
+      headers.set("Authorization", `Bearer ${session.access_token}`);
+    }
+
     const res = await fetch("/api/v1/workspaces", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ name, slug }),
     });
     if (!res.ok) {

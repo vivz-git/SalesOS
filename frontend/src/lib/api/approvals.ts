@@ -1,4 +1,5 @@
-import { request, type OutreachDraft, type DraftVersion } from "./outreach";
+import { type OutreachDraft, type DraftVersion } from "./outreach";
+import { request } from "./client";
 
 export interface ApprovalAuditRecord {
   id: string;

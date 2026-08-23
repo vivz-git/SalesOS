@@ -1,3 +1,4 @@
+import { request } from './client';
 export type ContactStatus = "active" | "unresponsive" | "opted_out" | "archived";
 
 export interface Contact {
@@ -53,22 +54,6 @@ export interface ContactFilterParams {
   offset?: number;
 }
 
-async function request<T>(
-  url: string,
-  workspaceId: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const headers = new Headers(options.headers || {});
-  headers.set("X-SalesOS-Workspace-Id", workspaceId);
-  headers.set("Content-Type", "application/json");
-
-  const res = await fetch(url, { ...options, headers });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(errorData.detail || `HTTP ${res.status}`);
-  }
-  return res.json();
-}
 
 export async function fetchContacts(
   workspaceId: string,

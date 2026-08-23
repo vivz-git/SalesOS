@@ -1,4 +1,4 @@
-import { request } from "./outreach";
+import { request } from "./client";
 
 export type ConnectionStatus = "connected" | "disconnected" | "error";
 export type SyncDirection = "export_to_crm" | "import_from_crm";

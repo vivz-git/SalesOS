@@ -1,3 +1,4 @@
+import { request } from './client';
 export type DraftStatus = "draft" | "ready_for_review" | "approved" | "rejected" | "superseded" | "archived";
 export type GenerationSource = "human" | "ai_generated" | "template" | "ai_assisted";
 
@@ -76,22 +77,6 @@ export interface OutreachDraftFilterParams {
   offset?: number;
 }
 
-export async function request<T>(
-  url: string,
-  workspaceId: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const headers = new Headers(options.headers || {});
-  headers.set("X-SalesOS-Workspace-Id", workspaceId);
-  headers.set("Content-Type", "application/json");
-
-  const res = await fetch(url, { ...options, headers });
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ detail: "Request failed" }));
-    throw new Error(errorData.detail || `HTTP ${res.status}`);
-  }
-  return res.json();
-}
 
 export async function fetchOutreachDrafts(
   workspaceId: string,

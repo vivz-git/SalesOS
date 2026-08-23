@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +22,23 @@ class Settings(BaseSettings):
     worker_database_url: str = "postgresql+psycopg://localhost/postgres"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_fallbacks(cls, values: dict) -> dict:
+        import os
+        if isinstance(values, dict):
+            if not values.get("supabase_url"):
+                for k in ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_PROJECT_URL"]:
+                    if os.getenv(k):
+                        values["supabase_url"] = os.getenv(k)
+                        break
+            if not values.get("supabase_publishable_key"):
+                for k in ["SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY"]:
+                    if os.getenv(k):
+                        values["supabase_publishable_key"] = os.getenv(k)
+                        break
+        return values
 
 
 @lru_cache

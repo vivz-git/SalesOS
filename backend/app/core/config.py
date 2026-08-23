@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Any
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,7 +26,7 @@ class Settings(BaseSettings):
 
     @model_validator(mode="before")
     @classmethod
-    def populate_fallbacks(cls, values: dict) -> dict:
+    def populate_fallbacks(cls, values: Any) -> Any:
         import os
         if isinstance(values, dict):
             if not values.get("supabase_url"):

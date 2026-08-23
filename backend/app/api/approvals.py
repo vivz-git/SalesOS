@@ -236,8 +236,8 @@ async def submit_approval_decision(
         )
         session.add(audit_model)
 
-        # 6. Commit transaction
-        await session.commit()
+        # 6. Flush transaction
+        await session.flush()
         await session.refresh(decision_model)
 
         return ApprovalAuditRecord(

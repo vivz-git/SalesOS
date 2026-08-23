@@ -98,7 +98,7 @@ async def compute_workspace_metrics(principal: Principal, settings: Settings, se
     app_rate = round((approved_cnt / submitted_cnt) * 100.0, 1) if submitted_cnt > 0 else 0.0
 
     # 3. Deliveries & Delivery Rate
-    sent_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id).filter(DeliveryModel.status != "cancelled"))) or 0
+    sent_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id).filter(DeliveryModel.status.in_(["sent", "delivered", "bounced", "complained", "failed"])))) or 0
     delivered_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="delivered"))) or 0
     bounced_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="bounced"))) or 0
     complained_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="complained"))) or 0
@@ -109,7 +109,7 @@ async def compute_workspace_metrics(principal: Principal, settings: Settings, se
     replies_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id))) or 0
     rep_rate = round((replies_cnt / delivered_cnt) * 100.0, 1) if delivered_cnt > 0 else 0.0
 
-    interested_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id, current_reply_state="positive"))) or 0
+    interested_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id).filter(ConversationModel.current_reply_state.in_(["interested", "positive"])))) or 0
     interested_rate = round((interested_cnt / replies_cnt) * 100.0, 1) if replies_cnt > 0 else 0.0
 
     opt_out_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id, current_reply_state="unsubscribe"))) or 0

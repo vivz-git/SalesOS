@@ -1,5 +1,9 @@
 import asyncio
 import os
+import sys
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 

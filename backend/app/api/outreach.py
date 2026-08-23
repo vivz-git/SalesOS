@@ -203,7 +203,6 @@ async def create_outreach_draft(
 ) -> OutreachDraft:
     async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
         draft = await create_outreach_draft_orm(session, payload, principal)
-        await session.commit()
         return draft
 
 
@@ -320,7 +319,7 @@ async def revise_outreach_draft(
         model.current_body = payload.body.strip()
         model.updated_at = now_dt
 
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
 
         # return full draft
@@ -349,7 +348,7 @@ async def submit_draft_for_review(
 
         model.status = "ready_for_review"
         model.updated_at = datetime.now(UTC)
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         return _row_to_draft(model)
 
@@ -375,7 +374,7 @@ async def approve_draft(
 
         model.status = "approved"
         model.updated_at = datetime.now(UTC)
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         return _row_to_draft(model)
 
@@ -399,7 +398,7 @@ async def reject_draft(
 
         model.status = "rejected"
         model.updated_at = datetime.now(UTC)
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         return _row_to_draft(model)
 
@@ -423,7 +422,7 @@ async def return_draft_to_draft(
 
         model.status = "draft"
         model.updated_at = datetime.now(UTC)
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         return _row_to_draft(model)
 
@@ -443,7 +442,7 @@ async def archive_draft(
         model.status = "archived"
         model.deleted_at = now_dt
         model.updated_at = now_dt
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         return _row_to_draft(model)
 
@@ -576,7 +575,7 @@ async def generate_outreach_draft_action(
         model.current_body = gen_result.body
         model.updated_at = now_dt
 
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
 
         # return full draft

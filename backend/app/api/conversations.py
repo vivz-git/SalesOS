@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.reply_classifier import (
@@ -210,9 +210,20 @@ async def ingest_inbound_reply(
         resolved_ws_id = matched_delivery.workspace_id
         resolved_contact_id = matched_delivery.contact_id
         resolved_delivery_id = matched_delivery.id
-        resolved_campaign_id = None # Deliveries don't store campaign directly, but drafts do, skipping for now
+        resolved_campaign_id = None
     elif payload.workspace_id:
         resolved_ws_id = payload.workspace_id
+
+    system_user_id = UUID("00000000-0000-0000-0000-000000000000")
+    if resolved_ws_id:
+        await session.execute(
+            text("SELECT set_config('salesos.app_user_id', :user_id, true)"),
+            {"user_id": str(system_user_id)},
+        )
+        await session.execute(
+            text("SELECT set_config('salesos.app_workspace_id', :workspace_id, true)"),
+            {"workspace_id": str(resolved_ws_id)},
+        )
 
     # 2. Query contact by email if not resolved via delivery
     if not resolved_contact_id and resolved_ws_id:
@@ -224,10 +235,11 @@ async def ingest_inbound_reply(
         if c_model:
             resolved_contact_id = c_model.id
 
-    if not resolved_ws_id:
-        resolved_ws_id = uuid4()
-    if not resolved_contact_id:
-        resolved_contact_id = uuid4()
+    if not resolved_ws_id or not resolved_contact_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Contact or workspace could not be resolved for inbound message",
+        )
 
     now_dt = datetime.now(UTC)
 
@@ -244,13 +256,16 @@ async def ingest_inbound_reply(
             if conv:
                 return await _row_to_conversation(session, conv, with_messages=True)
 
-    # Establish atomic block using RLS context if we know the workspace
+    system_user_id = UUID("00000000-0000-0000-0000-000000000000")
     if resolved_ws_id:
-        # We need a pseudo-principal for tenant_transaction_context if this is an unauthenticated webhook. 
-        # But this is a regular API route in this mockup, let's just use the DB session directly if no principal, 
-        # or assume it's protected by some inbound auth. We'll set the config manually.
-        await session.execute(select(1))  # Initialize connection
-        await session.execute(select(1))  # Dummy
+        await session.execute(
+            text("SELECT set_config('salesos.app_user_id', :user_id, true)"),
+            {"user_id": str(system_user_id)},
+        )
+        await session.execute(
+            text("SELECT set_config('salesos.app_workspace_id', :workspace_id, true)"),
+            {"workspace_id": str(resolved_ws_id)},
+        )
 
     existing_conv = await session.scalar(
         select(ConversationModel)
@@ -338,6 +353,14 @@ async def ingest_inbound_reply(
         pass
 
     # Return refreshed conversation
+    await session.execute(
+        text("SELECT set_config('salesos.app_user_id', :user_id, true)"),
+        {"user_id": str(system_user_id)},
+    )
+    await session.execute(
+        text("SELECT set_config('salesos.app_workspace_id', :workspace_id, true)"),
+        {"workspace_id": str(resolved_ws_id)},
+    )
     await session.refresh(existing_conv)
     return await _row_to_conversation(session, existing_conv, with_messages=True)
 
@@ -447,7 +470,7 @@ async def override_classification(
             classified_at=now_dt,
         )
         session.add(class_model)
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
 
         return await _row_to_conversation(session, model, with_messages=True)
@@ -471,7 +494,7 @@ async def update_conversation_status(
         model.status = payload.status
         model.updated_at = datetime.now(UTC)
         
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
 
         return await _row_to_conversation(session, model, with_messages=True)

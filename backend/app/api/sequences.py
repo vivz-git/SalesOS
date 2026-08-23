@@ -304,7 +304,7 @@ async def enroll_contact_in_sequence(
         sequence_id=sequence.id,
         contact_id=payload.contact_id,
         current_step_number=1,
-        status="pending_approval",
+        status="active",
         stop_reason=None,
         enrolled_by=principal.user_id,
         enrolled_at=now_dt,

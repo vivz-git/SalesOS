@@ -156,7 +156,7 @@ async def create_research_brief(
             updated_at=now_dt,
         )
         session.add(model)
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         
         return _row_to_brief(model)
@@ -228,7 +228,7 @@ async def update_research_brief(
         if payload.status is not None:
             model.status = payload.status
 
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         return _row_to_brief(model)
 
@@ -249,7 +249,7 @@ async def delete_research_brief(
         model.deleted_at = now_dt
         model.updated_at = now_dt
         
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         return _row_to_brief(model)
 
@@ -280,7 +280,7 @@ async def append_research_source(
             retrieved_at=datetime.now(UTC),
         )
         session.add(model)
-        await session.commit()
+        await session.flush()
         await session.refresh(model)
         return _row_to_source(model)
 
@@ -333,7 +333,7 @@ async def trigger_research_job(
             updated_at=now_dt,
         )
         session.add(job_model)
-        await session.commit()
+        await session.flush()
 
         return ResearchJob(
             id=job_id,

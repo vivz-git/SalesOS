@@ -224,6 +224,7 @@ class DeliveryModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
+
 class ConversationModel(Base):
     __tablename__ = "conversations"
 
@@ -233,7 +234,7 @@ class ConversationModel(Base):
     campaign_id: Mapped[UUID | None] = mapped_column(ForeignKey("campaigns.id", ondelete="SET NULL"))
     delivery_id: Mapped[UUID | None] = mapped_column(ForeignKey("deliveries.id", ondelete="SET NULL"))
     status: Mapped[str] = mapped_column(Enum('active', 'needs_human_action', 'closed', 'opt_out', name="conversation_status"), nullable=False, default="active")
-    current_reply_state: Mapped[str | None] = mapped_column(Enum('positive', 'objection', 'unsubscribe', 'question', 'ambiguous', 'not_applicable', name="reply_state"))
+    current_reply_state: Mapped[str | None] = mapped_column(Enum('interested', 'not_now', 'referral', 'unsubscribe', 'out_of_office', 'ambiguous', 'positive', 'objection', 'question', 'not_applicable', name="reply_state"))
     last_message_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -262,7 +263,7 @@ class ReplyClassificationModel(Base):
     workspace_id: Mapped[UUID] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False)
     conversation_id: Mapped[UUID] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
     message_id: Mapped[UUID] = mapped_column(ForeignKey("conversation_messages.id", ondelete="CASCADE"), nullable=False)
-    reply_state: Mapped[str] = mapped_column(Enum('positive', 'objection', 'unsubscribe', 'question', 'ambiguous', 'not_applicable', name="reply_state"), nullable=False)
+    reply_state: Mapped[str] = mapped_column(Enum('interested', 'not_now', 'referral', 'unsubscribe', 'out_of_office', 'ambiguous', 'positive', 'objection', 'question', 'not_applicable', name="reply_state"), nullable=False)
     confidence_score: Mapped[float | None] = mapped_column(nullable=True, default=1.0)
     explanation: Mapped[str | None] = mapped_column(Text)
     needs_human_action: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

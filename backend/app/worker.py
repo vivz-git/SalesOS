@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.outreach import OutreachDraftCreate, create_outreach_draft_orm
 from app.auth import Principal
-from app.db import AsyncSessionLocal, tenant_transaction_context
+from app.db import AsyncSessionLocal, AsyncWorkerSessionLocal, tenant_transaction_context
 from app.models import (
     JobModel,
     OutreachDraftModel,
@@ -32,18 +32,18 @@ async def process_jobs() -> None:
 
 
 async def _claim_and_process_job() -> None:
-    async with AsyncSessionLocal() as session:
+    async with AsyncWorkerSessionLocal() as session:
         # Use SKIP LOCKED to atomically claim a job
-        # We also JOIN sequence_enrollments to ensure we only claim jobs for active enrollments
+        # For sequence steps, ensure enrollment is active; for other jobs (e.g. research_generation), claim directly
         q = text("""
             SELECT j.id 
             FROM jobs j
-            JOIN sequence_enrollments se ON se.id = (j.payload->>'enrollment_id')::uuid
+            LEFT JOIN sequence_enrollments se ON se.id = (j.payload->>'enrollment_id')::uuid
             WHERE j.status = 'pending' 
               AND j.available_at <= now() 
-              AND se.status = 'active'
+              AND (j.job_type != 'execute_sequence_step' OR se.status = 'active')
             LIMIT 1
-            FOR UPDATE SKIP LOCKED
+            FOR UPDATE OF j SKIP LOCKED
         """)
         
         result = await session.execute(q)
@@ -86,7 +86,7 @@ async def _claim_and_process_job() -> None:
                     job.status = "pending"
 
         # To avoid detached object issues after rollback, do a direct update:
-        async with AsyncSessionLocal() as update_session:
+        async with AsyncWorkerSessionLocal() as update_session:
             await update_session.execute(
                 text("UPDATE jobs SET status = :status, completed_at = :completed, attempts = :attempts, last_error = :err WHERE id = :id"),
                 {
@@ -162,15 +162,11 @@ async def _execute_sequence_step_job(session: AsyncSession, job: JobModel) -> No
     )
     
     await create_outreach_draft_orm(session, payload, principal)
-    
-    # Flush and commit is handled by the caller or we can do it here. 
-    # Let's commit it here because the job state is saved independently.
-    await session.commit()
 
 
 async def _recover_stale_jobs() -> None:
     # Any job stuck in 'running' for > 10 mins without being updated gets reset to pending
-    async with AsyncSessionLocal() as session:
+    async with AsyncWorkerSessionLocal() as session:
         stale_threshold = datetime.now(UTC) - timedelta(minutes=10)
         await session.execute(
             text("UPDATE jobs SET status = 'pending', locked_at = NULL WHERE status = 'running' AND locked_at < :thresh"),

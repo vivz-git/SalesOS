@@ -5,7 +5,6 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.email_provider import (
@@ -99,8 +98,16 @@ async def create_delivery(
     email_provider: EmailProviderInterface = Depends(get_email_provider),
     session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
+    draft_current_subject = "(No Subject)"
+    draft_current_body = ""
+    draft_seq_enrollment_id = None
+    recipient_email = ""
+    idempotency_key = ""
+    delivery_id = uuid4()
+    now_dt = datetime.now(UTC)
+
+    # TRANSACTION 1: Prepare delivery record
     async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
-        # 1. Fetch Draft
         draft = await session.get(OutreachDraftModel, payload.draft_id)
         if not draft or str(draft.workspace_id) != str(principal.workspace_id):
             raise HTTPException(
@@ -120,7 +127,6 @@ async def create_delivery(
                 detail="approved_draft_has_no_version",
             )
 
-        # 3. Load Contact Details
         contact = await session.get(ContactModel, draft.contact_id)
         if not contact or str(contact.workspace_id) != str(principal.workspace_id):
             raise HTTPException(
@@ -128,7 +134,7 @@ async def create_delivery(
                 detail="contact_not_found_in_workspace",
             )
             
-        recipient_email = payload.override_recipient_email or contact.email
+        recipient_email = payload.override_recipient_email or (contact.email or "")
         if not recipient_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -136,15 +142,14 @@ async def create_delivery(
             )
 
         idempotency_key = f"{principal.workspace_id}:{draft.id}:{draft.current_version_number}"
+        draft_current_subject = draft.current_subject or "(No Subject)"
+        draft_current_body = draft.current_body or ""
+        draft_seq_enrollment_id = draft.sequence_enrollment_id
 
-        # TRANSACTION 1 (Prepare)
         existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
         if existing_delivery and existing_delivery.status in ("sent", "delivered", "running", "queued"):
             return _model_to_delivery(existing_delivery)
 
-        delivery_id = uuid4()
-        now_dt = datetime.now(UTC)
-        
         delivery_model = DeliveryModel(
             id=delivery_id,
             workspace_id=principal.workspace_id,
@@ -153,8 +158,8 @@ async def create_delivery(
             version_number=draft.current_version_number,
             contact_id=draft.contact_id,
             recipient_email=recipient_email,
-            subject=draft.current_subject or "(No Subject)",
-            body=draft.current_body or "",
+            subject=draft_current_subject,
+            body=draft_current_body,
             provider="resend",
             status="queued",
             idempotency_key=idempotency_key,
@@ -162,72 +167,63 @@ async def create_delivery(
             created_at=now_dt,
             updated_at=now_dt
         )
+        session.add(delivery_model)
+        await session.flush()
 
-        try:
-            session.add(delivery_model)
-            await session.commit()
-            await session.refresh(delivery_model)
-        except IntegrityError:
-            await session.rollback()
-            existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
-            if existing_delivery and existing_delivery.status in ("sent", "delivered", "running", "queued"):
-                return _model_to_delivery(existing_delivery)
-            delivery_model = existing_delivery
+    # 6. Execute Provider Send Operation
+    send_req = EmailDeliverySendRequest(
+        idempotency_key=idempotency_key,
+        from_email=settings.resend_from_email,
+        recipient_email=recipient_email,
+        subject=draft_current_subject,
+        body_text=draft_current_body,
+    )
 
-        # 6. Execute Provider Send Operation
-        send_req = EmailDeliverySendRequest(
-            idempotency_key=idempotency_key,
-            from_email=settings.resend_from_email,
-            recipient_email=recipient_email,
-            subject=draft.current_subject or "(No Subject)",
-            body_text=draft.current_body or "",
-        )
+    try:
+        send_result = email_provider.send_email(send_req)
+        new_status = send_result.status
+        provider_message_id = send_result.provider_message_id
+        error_message = None
+    except Exception as err:
+        new_status = "failed"
+        provider_message_id = None
+        error_message = str(err)
 
-        try:
-            send_result = email_provider.send_email(send_req)
-            new_status = send_result.status
-            provider_message_id = send_result.provider_message_id
-            error_message = None
-        except Exception as err:
-            new_status = "failed"
-            provider_message_id = None
-            error_message = str(err)
+    # TRANSACTION 2 (Finalize)
+    async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
+        d_model = await session.get(DeliveryModel, delivery_id)
+        if not d_model:
+            raise HTTPException(status_code=404, detail="Delivery not found")
+        d_model.status = new_status
+        d_model.provider_message_id = provider_message_id
+        d_model.error_message = error_message
+        d_model.updated_at = datetime.now(UTC)
 
-        # TRANSACTION 2 (Finalize)
-        async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
-            d_model = await session.get(DeliveryModel, delivery_model.id)
-            if not d_model:
-                raise HTTPException(status_code=404, detail="Delivery not found")
-            d_model.status = new_status
-            d_model.provider_message_id = provider_message_id
-            d_model.error_message = error_message
-            d_model.updated_at = datetime.now(UTC)
+        if new_status == "sent" and draft_seq_enrollment_id:
+            enrollment = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=draft_seq_enrollment_id))
+            if enrollment and enrollment.status == "active":
+                enrollment.current_step_number += 1
+                next_step = await session.scalar(select(SequenceStepModel).filter_by(sequence_id=enrollment.sequence_id, step_number=enrollment.current_step_number))
 
-            if new_status == "sent" and draft.sequence_enrollment_id:
-                enrollment = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=draft.sequence_enrollment_id))
-                if enrollment and enrollment.status == "active":
-                    enrollment.current_step_number += 1
-                    next_step = await session.scalar(select(SequenceStepModel).filter_by(sequence_id=enrollment.sequence_id, step_number=enrollment.current_step_number))
-                    
-                    if next_step:
-                        enrollment.next_step_due_at = datetime.now(UTC) + timedelta(days=next_step.delay_days)
-                        job = JobModel(
-                            id=uuid4(),
-                            workspace_id=principal.workspace_id,
-                            job_type="execute_sequence_step",
-                            payload={"enrollment_id": str(enrollment.id), "step_number": enrollment.current_step_number},
-                            status="pending",
-                            available_at=enrollment.next_step_due_at,
-                            created_at=datetime.now(UTC),
-                            updated_at=datetime.now(UTC)
-                        )
-                        session.add(job)
-                    else:
-                        enrollment.status = "completed"
+                if next_step:
+                    enrollment.next_step_due_at = datetime.now(UTC) + timedelta(days=next_step.delay_days)
+                    job = JobModel(
+                        id=uuid4(),
+                        workspace_id=principal.workspace_id,
+                        job_type="execute_sequence_step",
+                        payload={"enrollment_id": str(enrollment.id), "step_number": enrollment.current_step_number},
+                        status="pending",
+                        available_at=enrollment.next_step_due_at,
+                        created_at=datetime.now(UTC),
+                        updated_at=datetime.now(UTC)
+                    )
+                    session.add(job)
+                else:
+                    enrollment.status = "completed"
 
-            await session.commit()
-            await session.refresh(d_model)
-            return _model_to_delivery(d_model)
+        await session.flush()
+        await session.refresh(d_model)
+        return _model_to_delivery(d_model)
 
 
 @router.get("/deliveries", response_model=list[EmailDelivery])
@@ -287,7 +283,7 @@ async def cancel_delivery(
 
         delivery.status = "cancelled"
         delivery.updated_at = datetime.now(UTC)
-        await session.commit()
+        await session.flush()
         await session.refresh(delivery)
 
         return _model_to_delivery(delivery)

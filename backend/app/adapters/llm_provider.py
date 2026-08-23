@@ -50,7 +50,7 @@ class LLMGenerationResult(BaseModel):
 class LLMProviderInterface(ABC):
     """Abstract interface for LLM message generation providers.
 
-    Allows plugging in Gemini, OpenAI, Anthropic, or local model adapters
+    Allows plugging in Groq, OpenAI, Anthropic, or local model adapters
     without modifying FastAPI core domain rules or draft lifecycle logic.
     """
 

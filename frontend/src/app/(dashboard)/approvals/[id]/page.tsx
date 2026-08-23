@@ -340,7 +340,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
               </h2>
               <div className="space-y-1 text-xs text-purple-950 font-mono">
                 <div>Provider: <strong>{current_version.provider}</strong></div>
-                <div>Model: <strong>{current_version.model || "gemini-2.5-flash"}</strong></div>
+                <div>Model: <strong>{current_version.model || "llama-3.3-70b-versatile"}</strong></div>
                 <div>Prompt Version: <strong>{current_version.prompt_version || "v1.0.0"}</strong></div>
                 <div>Source: <strong>{current_version.generation_source}</strong></div>
               </div>

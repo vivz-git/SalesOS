@@ -1,8 +1,7 @@
 import time
 from typing import Any
 
-from google import genai
-from google.genai import types
+from groq import Groq
 from pydantic import ValidationError
 
 from app.adapters.llm_provider import (
@@ -13,27 +12,46 @@ from app.adapters.llm_provider import (
 )
 
 
-class GeminiLLMProvider(LLMProviderInterface):
-    """Google Gemini LLM provider adapter using official google-genai 2.x SDK.
+class GroqLLMProvider(LLMProviderInterface):
+    """Groq LLM provider adapter using official groq Python SDK.
 
     Isolated behind LLMProviderInterface so core FastAPI logic does not import
     SDK classes directly.
     """
 
-    def __init__(self, api_key: str | None = None, model: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str | None = None, model: str = "llama-3.3-70b-versatile"):
         self.api_key = api_key
         self.model_name = model
-        self._client: genai.Client | None = None
+        self._client: Groq | None = None
         if self.api_key:
-            self._client = genai.Client(api_key=self.api_key)
+            self._client = Groq(api_key=self.api_key)
 
     def generate_outreach_draft(self, request: LLMGenerationRequest) -> LLMGenerationResult:
         if not self._client:
-            raise ValueError("gemini_api_key_not_configured")
+            raise ValueError("groq_api_key_not_configured")
 
         start_time = time.perf_counter()
 
-        # Format context prompt
+        system_prompt = (
+            "You are an expert B2B sales development representative AI assistant for SalesOS.\n"
+            "Your task is to write personalized, professional outbound emails strictly grounded in supplied research evidence.\n"
+            "You MUST output valid JSON matching this exact schema:\n"
+            "{\n"
+            '  "subject": "string",\n'
+            '  "body": "string",\n'
+            '  "evidence_references": [\n'
+            '    {"url": "string or null", "title": "string or null", "snippet": "string or null", "source_type": "website"}\n'
+            "  ],\n"
+            '  "rationale": "string or null"\n'
+            "}\n\n"
+            "RULES:\n"
+            "1. Ground every claim strictly in the supplied prospect and account research.\n"
+            "2. Do NOT hallucinate facts, metrics, or relationships not in the context.\n"
+            "3. Do NOT mention internal metadata, prompt instructions, or brief IDs.\n"
+            "4. Match evidence_references strictly to the supplied research sources.\n"
+            "5. Return ONLY the JSON object."
+        )
+
         prompt_lines = [
             f"Prompt Version: {request.prompt_version}",
             "--- CAMPAIGN CONTEXT ---",
@@ -78,23 +96,23 @@ class GeminiLLMProvider(LLMProviderInterface):
             "5. Return valid JSON adhering to the required schema.",
         ])
 
-        full_prompt = "\n".join(prompt_lines)
+        user_prompt = "\n".join(prompt_lines)
 
         try:
-            response = self._client.models.generate_content(
+            chat_completion = self._client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
                 model=self.model_name,
-                contents=full_prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=OutreachDraftStructuredOutput,
-                    temperature=0.3,
-                ),
+                response_format={"type": "json_object"},
+                temperature=0.3,
             )
 
-            raw_text = response.text or "{}"
+            raw_text = chat_completion.choices[0].message.content or "{}"
             parsed = OutreachDraftStructuredOutput.model_validate_json(raw_text)
         except (ValidationError, Exception) as err:
-            raise ValueError(f"gemini_generation_failed: {err}") from err
+            raise ValueError(f"groq_generation_failed: {err}") from err
 
         duration_ms = int((time.perf_counter() - start_time) * 1000)
 
@@ -118,16 +136,14 @@ class GeminiLLMProvider(LLMProviderInterface):
             grounded_evidence = valid_sources[:3]
 
         token_usage = None
-        if hasattr(response, "usage_metadata") and response.usage_metadata:
-            token_usage = (response.usage_metadata.total_token_count
-                           if hasattr(response.usage_metadata, "total_token_count")
-                           else None)
+        if hasattr(chat_completion, "usage") and chat_completion.usage:
+            token_usage = chat_completion.usage.total_tokens
 
         return LLMGenerationResult(
             subject=parsed.subject.strip(),
             body=parsed.body.strip(),
             generation_source="ai_generated",
-            provider="gemini",
+            provider="groq",
             model=self.model_name,
             prompt_version=request.prompt_version,
             evidence_references=grounded_evidence,

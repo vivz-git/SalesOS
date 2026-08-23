@@ -8,6 +8,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.accounts import router as accounts_router
 from app.api.approvals import router as approvals_router
@@ -53,6 +54,20 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None,
     lifespan=lifespan,
+)
+
+settings = get_settings()
+raw_origins = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
+origins = [o for o in raw_origins if o != "*"]
+if not origins:
+    origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.include_router(health_router)
 app.include_router(me_router)

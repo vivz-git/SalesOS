@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.adapters.gemini_provider import GeminiLLMProvider
+from app.adapters.groq_provider import GroqLLMProvider
 from app.adapters.llm_provider import LLMGenerationRequest, LLMProviderInterface
 from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
@@ -469,8 +469,7 @@ class OutreachGenerationJob(BaseModel):
 
 
 def get_llm_provider(settings: Settings = Depends(get_settings)) -> LLMProviderInterface:
-    api_key = settings.gemini_api_key or settings.google_api_key
-    return GeminiLLMProvider(api_key=api_key)
+    return GroqLLMProvider(api_key=settings.groq_api_key, model=settings.groq_model)
 
 
 @router.post("/outreach/drafts/{draft_id}/actions/generate", response_model=OutreachDraft)

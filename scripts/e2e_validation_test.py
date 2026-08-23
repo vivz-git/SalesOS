@@ -154,7 +154,7 @@ async def run_e2e_test():
     assert draft_create_resp.status_code == 201
     draft_id = draft_create_resp.json()["id"]
 
-    # Test AI Generate Action (Tests real Gemini integration)
+    # Test AI Generate Action (Tests real Groq integration)
     try:
         ai_gen_resp = await client1.post(f"/v1/outreach/drafts/{draft_id}/actions/generate", timeout=30.0)
         print(f"AI Generate action: {ai_gen_resp.status_code}, subject={ai_gen_resp.json().get('current_subject') if ai_gen_resp.status_code == 200 else ai_gen_resp.text}")

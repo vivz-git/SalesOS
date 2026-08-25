@@ -1,4 +1,4 @@
-Project SalesOS
+SalesOS
 
 SalesOS is a multi-tenant B2B sales platform built to take an outbound campaign from **targeting to conversation** in one workflow.
 

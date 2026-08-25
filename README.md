@@ -1,17 +1,63 @@
-# SalesOS
+Project SalesOS
 
-Production monorepo scaffold for SalesOS.
+SalesOS is a multi-tenant B2B sales platform built to take an outbound campaign from **targeting to conversation** in one workflow.
 
-## Applications
+Instead of stitching together a CRM, research tools, AI copy generators, approval tools, and email infrastructure, SalesOS brings the core workflow into one place — with a human approval step before anything is sent.
 
-- `frontend/` — Next.js 15 product client, deployed to Vercel.
-- `backend/` — FastAPI control-plane scaffold, deployed to Railway.
+**Live:** https://sales-os-frontend-black.vercel.app
 
-## Local development
+---
 
-1. Copy `.env.example` into local environment files as needed.
-2. Install frontend dependencies with `pnpm install`.
-3. Install backend dependencies with `uv sync --all-groups` from `backend/`.
-4. Run `pnpm dev` for the frontend and `uv run fastapi dev app/main.py` from `backend/` for the API.
+## What it does
 
-The only implemented API route is `GET /health`. Product features belong to future, documented work.
+SalesOS follows this flow:
+
+**Campaign → Research → AI Outreach → Human Approval → Delivery → Reply Classification → CRM Sync → Reporting**
+
+### Core features
+
+- **Multi-tenant workspaces** with workspace-scoped data access
+- **Accounts & contacts** for managing outbound targets
+- **Campaigns & sequences** for defining ICP and outreach strategy
+- **AI-powered research** for accounts and decision-makers
+- **AI outreach generation** with structured drafts and personalization
+- **Approval queue** so humans review AI-generated outreach before delivery
+- **Email delivery tracking** through Resend
+- **Inbound reply handling** with reply-state classification
+- **HubSpot integration** for CRM synchronization
+- **Reports** for campaign and outreach performance
+- **Google OAuth + email/password authentication**
+- **Background job processing** for research and outreach workflows
+
+---
+
+## Why SalesOS is different
+
+The goal is not to build another AI email writer.
+
+SalesOS is designed as an **approval-first sales operating system**: AI handles research and repetitive work, while the user keeps control over what actually gets sent.
+
+That makes the system useful for real outbound workflows without turning the sales process into a black box.
+
+---
+
+## Architecture
+
+```text
+                   ┌──────────────────┐
+                   │   Next.js App    │
+                   │     Vercel       │
+                   └────────┬─────────┘
+                            │
+                     Supabase Auth
+                            │
+                            ▼
+                   ┌──────────────────┐
+                   │   FastAPI API    │
+                   │     Railway      │
+                   └────────┬─────────┘
+                            │
+          ┌─────────────────┼─────────────────┐
+          ▼                 ▼                 ▼
+     PostgreSQL         AI / Workers      Integrations
+      Supabase           LangGraph        Resend / HubSpot

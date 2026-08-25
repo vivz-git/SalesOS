@@ -32,7 +32,35 @@ def test_get_hubspot_connection_status_and_authorize() -> None:
     assert auth_resp.status_code == 200
     auth_data = auth_resp.json()
     assert "https://app.hubspot.com/oauth/authorize" in auth_data["authorization_url"]
+    assert "http://localhost:3000/api/auth/callback/hubspot" in auth_data["authorization_url"]
     assert str(ws_id) in auth_data["state"]
+
+    app.dependency_overrides.clear()
+
+
+def test_hubspot_authorize_production_url() -> None:
+    user_id = uuid4()
+    ws_id = uuid4()
+
+    mock_principal = Principal(
+        user_id=user_id,
+        email="admin@company.com",
+        workspace_id=ws_id,
+        role="admin",
+    )
+
+    from app.core.config import Settings, get_settings
+
+    mock_settings = Settings(frontend_url="https://sales-os-frontend-7lttf3ju-vercel-vivs-projects.vercel.app")
+
+    app.dependency_overrides[get_current_principal] = lambda: mock_principal
+    app.dependency_overrides[get_settings] = lambda: mock_settings
+    client = TestClient(app)
+
+    auth_resp = client.post("/v1/integrations/hubspot/actions/authorize")
+    assert auth_resp.status_code == 200
+    auth_data = auth_resp.json()
+    assert "https://sales-os-frontend-7lttf3ju-vercel-vivs-projects.vercel.app/api/auth/callback/hubspot" in auth_data["authorization_url"]
 
     app.dependency_overrides.clear()
 

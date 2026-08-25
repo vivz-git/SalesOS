@@ -110,7 +110,7 @@ def authorize_hubspot(
     settings: Settings = Depends(get_settings),
 ) -> AuthorizeResponse:
     client_id = settings.hubspot_client_id or "dummy_hubspot_client_id"
-    redirect_uri = "http://localhost:3000/api/auth/callback/hubspot"
+    redirect_uri = f"{settings.frontend_url.rstrip('/')}/api/auth/callback/hubspot"
     scope = "crm.objects.contacts.read%20crm.objects.contacts.write%20crm.objects.companies.read%20crm.objects.companies.write"
     state_nonce = f"{principal.workspace_id}:{uuid4()}"
 
@@ -140,7 +140,7 @@ def handle_hubspot_oauth_callback(
     now_iso = datetime.now(UTC).isoformat()
     client_id = settings.hubspot_client_id or "dummy_client_id"
     client_secret = settings.hubspot_client_secret or "dummy_client_secret"
-    redirect_uri = "http://localhost:3000/api/auth/callback/hubspot"
+    redirect_uri = f"{settings.frontend_url.rstrip('/')}/api/auth/callback/hubspot"
 
     tokens: Any = None
     try:

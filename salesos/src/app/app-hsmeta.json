@@ -1,0 +1,38 @@
+{
+  "uid": "salesos_app",
+  "type": "app",
+  "config": {
+    "description": "SalesOS HubSpot CRM integration",
+    "name": "SalesOS",
+    "distribution": "private",
+    "auth": {
+      "type": "oauth",
+      "redirectUrls": [
+        "http://localhost:3000/api/auth/callback/hubspot",
+        "https://sales-os-frontend-7lttf3ju-vercel-vivs-projects.vercel.app/api/auth/callback/hubspot"
+      ],
+      "requiredScopes": [
+        "crm.objects.contacts.read",
+        "crm.objects.contacts.write",
+        "crm.objects.companies.read",
+        "crm.objects.companies.write",
+        "oauth"
+      ],
+      "optionalScopes": [],
+      "conditionallyRequiredScopes": []
+    },
+    "permittedUrls": {
+      "fetch": [
+        "https://api.hubapi.com"
+      ],
+      "iframe": [],
+      "img": []
+    },
+    "support": {
+      "supportEmail": "support@example.com",
+      "documentationUrl": "https://example.com/docs",
+      "supportUrl": "https://example.com/support",
+      "supportPhone": "+18005555555"
+    }
+  }
+}

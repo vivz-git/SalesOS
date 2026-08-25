@@ -1,3 +1,8 @@
+import sys
+if sys.platform == "win32":
+    import asyncio
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
@@ -195,3 +200,6 @@ async def _execute_research_generation_job(session: AsyncSession, job: JobModel)
     brief.confidence_score = 0.95
     brief.generated_at = datetime.now(UTC)
     brief.updated_at = datetime.now(UTC)
+
+if __name__ == "__main__":
+    asyncio.run(process_jobs())

@@ -19,7 +19,9 @@ describe("Auth Middleware", () => {
     const response = await middleware(request);
 
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost:3000/login");
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/login",
+    );
   });
 
   it("allows unauthenticated user to access public route /login", async () => {
@@ -56,6 +58,56 @@ describe("Auth Middleware", () => {
     });
 
     const request = new NextRequest("http://localhost:3000/");
+    const response = await middleware(request);
+
+    expect(response).toBe(mockRes);
+  });
+
+  // New auth routes — unauthenticated access allowed
+  it.each(["/signup", "/forgot-password", "/reset-password"])(
+    "allows unauthenticated user to access public route %s",
+    async (path) => {
+      const mockRes = NextResponse.next();
+      vi.mocked(updateSession).mockResolvedValueOnce({
+        response: mockRes,
+        authenticated: false,
+      });
+
+      const request = new NextRequest(`http://localhost:3000${path}`);
+      const response = await middleware(request);
+
+      expect(response).toBe(mockRes);
+    },
+  );
+
+  // /signup and /forgot-password redirect authenticated users to dashboard
+  it.each(["/signup", "/forgot-password"])(
+    "redirects authenticated user from %s to /",
+    async (path) => {
+      vi.mocked(updateSession).mockResolvedValueOnce({
+        response: NextResponse.next(),
+        authenticated: true,
+      });
+
+      const request = new NextRequest(`http://localhost:3000${path}`);
+      const response = await middleware(request);
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("http://localhost:3000/");
+    },
+  );
+
+  // /reset-password must NOT redirect authenticated users (recovery session flow)
+  it("allows authenticated user to access /reset-password (recovery session flow)", async () => {
+    const mockRes = NextResponse.next();
+    vi.mocked(updateSession).mockResolvedValueOnce({
+      response: mockRes,
+      authenticated: true,
+    });
+
+    const request = new NextRequest(
+      "http://localhost:3000/reset-password",
+    );
     const response = await middleware(request);
 
     expect(response).toBe(mockRes);

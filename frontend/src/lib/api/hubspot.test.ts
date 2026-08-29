@@ -18,7 +18,7 @@ describe("HubSpot API Client", () => {
     mockFetch.mockReset();
   });
 
-  it("fetchHubspotStatus requests GET /v1/integrations/hubspot", async () => {
+  it("fetchHubspotStatus requests GET /api/v1/integrations/hubspot", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "c1", status: "connected", portal_id: "portal-1" }),
@@ -26,13 +26,13 @@ describe("HubSpot API Client", () => {
 
     const status = await fetchHubspotStatus(workspaceId);
     expect(mockFetch).toHaveBeenCalledWith(
-      "/v1/integrations/hubspot",
+      "/api/v1/integrations/hubspot",
       expect.objectContaining({ headers: expect.any(Headers) })
     );
     expect(status.status).toBe("connected");
   });
 
-  it("authorizeHubspot sends POST to /v1/integrations/hubspot/actions/authorize", async () => {
+  it("authorizeHubspot sends POST to /api/v1/integrations/hubspot/actions/authorize", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ authorization_url: "https://app.hubspot.com/oauth/authorize", state: "st" }),
@@ -40,13 +40,13 @@ describe("HubSpot API Client", () => {
 
     const auth = await authorizeHubspot(workspaceId);
     expect(mockFetch).toHaveBeenCalledWith(
-      "/v1/integrations/hubspot/actions/authorize",
+      "/api/v1/integrations/hubspot/actions/authorize",
       expect.objectContaining({ method: "POST" })
     );
     expect(auth.authorization_url).toContain("hubspot.com");
   });
 
-  it("disconnectHubspot sends POST to /v1/integrations/hubspot/actions/disconnect", async () => {
+  it("disconnectHubspot sends POST to /api/v1/integrations/hubspot/actions/disconnect", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "c1", status: "disconnected" }),
@@ -54,13 +54,13 @@ describe("HubSpot API Client", () => {
 
     const res = await disconnectHubspot(workspaceId);
     expect(mockFetch).toHaveBeenCalledWith(
-      "/v1/integrations/hubspot/actions/disconnect",
+      "/api/v1/integrations/hubspot/actions/disconnect",
       expect.objectContaining({ method: "POST" })
     );
     expect(res.status).toBe("disconnected");
   });
 
-  it("triggerHubspotSync sends POST to /v1/integrations/hubspot/actions/sync", async () => {
+  it("triggerHubspotSync sends POST to /api/v1/integrations/hubspot/actions/sync", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "sr-1", status: "completed", records_processed: 5 }),
@@ -68,7 +68,7 @@ describe("HubSpot API Client", () => {
 
     const run = await triggerHubspotSync(workspaceId, "export_to_crm");
     expect(mockFetch).toHaveBeenCalledWith(
-      "/v1/integrations/hubspot/actions/sync",
+      "/api/v1/integrations/hubspot/actions/sync",
       expect.objectContaining({ method: "POST" })
     );
     expect(run.records_processed).toBe(5);

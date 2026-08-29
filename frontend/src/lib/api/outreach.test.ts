@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import {
   approveDraft,
   createOutreachDraft,
-  fetchOutreachDraft,
   fetchOutreachDrafts,
   generateOutreachDraft,
   rejectDraft,

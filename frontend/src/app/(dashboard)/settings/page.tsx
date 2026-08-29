@@ -21,7 +21,6 @@ import {
   AlertCircle,
   Clock,
   Shield,
-  Layers,
 } from "lucide-react";
 
 export default function SettingsPage() {

@@ -16,7 +16,7 @@ describe("Deliveries API Client", () => {
     mockFetch.mockReset();
   });
 
-  it("createDelivery sends POST request to /v1/deliveries with workspace header", async () => {
+  it("createDelivery sends POST request to /api/v1/deliveries with workspace header", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -31,7 +31,7 @@ describe("Deliveries API Client", () => {
     const result = await createDelivery(workspaceId, "draft-789");
 
     expect(mockFetch).toHaveBeenCalledWith(
-      "/v1/deliveries",
+      "/api/v1/deliveries",
       expect.objectContaining({
         method: "POST",
         body: JSON.stringify({ draft_id: "draft-789" }),
@@ -41,7 +41,7 @@ describe("Deliveries API Client", () => {
     expect(result.id).toBe("del-101");
   });
 
-  it("fetchDeliveries sends GET request to /v1/deliveries with workspace header and filter params", async () => {
+  it("fetchDeliveries sends GET request to /api/v1/deliveries with workspace header and filter params", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => [
@@ -53,7 +53,7 @@ describe("Deliveries API Client", () => {
     const results = await fetchDeliveries(workspaceId, { status: "sent" });
 
     expect(mockFetch).toHaveBeenCalledWith(
-      "/v1/deliveries?status=sent",
+      "/api/v1/deliveries?status=sent",
       expect.objectContaining({
         headers: expect.any(Headers),
       })
@@ -68,7 +68,7 @@ describe("Deliveries API Client", () => {
     });
 
     const detail = await fetchDeliveryDetail(workspaceId, "del-555");
-    expect(mockFetch).toHaveBeenCalledWith("/v1/deliveries/del-555", expect.any(Object));
+    expect(mockFetch).toHaveBeenCalledWith("/api/v1/deliveries/del-555", expect.any(Object));
     expect(detail.id).toBe("del-555");
   });
 
@@ -80,7 +80,7 @@ describe("Deliveries API Client", () => {
 
     const updated = await cancelDelivery(workspaceId, "del-555");
     expect(mockFetch).toHaveBeenCalledWith(
-      "/v1/deliveries/del-555/actions/cancel",
+      "/api/v1/deliveries/del-555/actions/cancel",
       expect.objectContaining({ method: "POST" })
     );
     expect(updated.status).toBe("cancelled");

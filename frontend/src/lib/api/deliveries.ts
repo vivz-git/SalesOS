@@ -41,7 +41,7 @@ export async function createDelivery(
   draftId: string,
   overrideRecipientEmail?: string
 ): Promise<EmailDelivery> {
-  return request<EmailDelivery>("/v1/deliveries", workspaceId, {
+  return request<EmailDelivery>("/api/v1/deliveries", workspaceId, {
     method: "POST",
     body: JSON.stringify({
       draft_id: draftId,
@@ -62,21 +62,21 @@ export async function fetchDeliveries(
   if (params.offset) searchParams.set("offset", params.offset.toString());
 
   const queryStr = searchParams.toString() ? `?${searchParams.toString()}` : "";
-  return request<EmailDelivery[]>(`/v1/deliveries${queryStr}`, workspaceId);
+  return request<EmailDelivery[]>(`/api/v1/deliveries${queryStr}`, workspaceId);
 }
 
 export async function fetchDeliveryDetail(
   workspaceId: string,
   deliveryId: string
 ): Promise<EmailDelivery> {
-  return request<EmailDelivery>(`/v1/deliveries/${deliveryId}`, workspaceId);
+  return request<EmailDelivery>(`/api/v1/deliveries/${deliveryId}`, workspaceId);
 }
 
 export async function cancelDelivery(
   workspaceId: string,
   deliveryId: string
 ): Promise<EmailDelivery> {
-  return request<EmailDelivery>(`/v1/deliveries/${deliveryId}/actions/cancel`, workspaceId, {
+  return request<EmailDelivery>(`/api/v1/deliveries/${deliveryId}/actions/cancel`, workspaceId, {
     method: "POST",
   });
 }

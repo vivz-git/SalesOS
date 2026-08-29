@@ -20,7 +20,7 @@ describe("Sequences API Client", () => {
     mockFetch.mockReset();
   });
 
-  it("fetchCampaignSequence requests GET /v1/campaigns/:id/sequences", async () => {
+  it("fetchCampaignSequence requests GET /api/v1/campaigns/:id/sequences", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "seq-1", campaign_id: campaignId, steps: [] }),
@@ -28,13 +28,13 @@ describe("Sequences API Client", () => {
 
     const res = await fetchCampaignSequence(workspaceId, campaignId);
     expect(mockFetch).toHaveBeenCalledWith(
-      `/v1/campaigns/${campaignId}/sequences`,
+      `/api/v1/campaigns/${campaignId}/sequences`,
       expect.objectContaining({ headers: expect.any(Headers) })
     );
     expect(res.id).toBe("seq-1");
   });
 
-  it("saveCampaignSequence sends POST to /v1/campaigns/:id/sequences", async () => {
+  it("saveCampaignSequence sends POST to /api/v1/campaigns/:id/sequences", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "seq-1", version_number: 2 }),
@@ -48,13 +48,13 @@ describe("Sequences API Client", () => {
     const updated = await saveCampaignSequence(workspaceId, campaignId, "Custom Seq", steps);
 
     expect(mockFetch).toHaveBeenCalledWith(
-      `/v1/campaigns/${campaignId}/sequences`,
+      `/api/v1/campaigns/${campaignId}/sequences`,
       expect.objectContaining({ method: "POST" })
     );
     expect(updated.version_number).toBe(2);
   });
 
-  it("enrollContactInSequence sends POST to /v1/sequence-enrollments", async () => {
+  it("enrollContactInSequence sends POST to /api/v1/sequence-enrollments", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "enr-1", status: "pending_approval" }),
@@ -62,13 +62,13 @@ describe("Sequences API Client", () => {
 
     const enr = await enrollContactInSequence(workspaceId, campaignId, "contact-333");
     expect(mockFetch).toHaveBeenCalledWith(
-      "/v1/sequence-enrollments",
+      "/api/v1/sequence-enrollments",
       expect.objectContaining({ method: "POST" })
     );
     expect(enr.status).toBe("pending_approval");
   });
 
-  it("fetchSequenceEnrollments requests GET /v1/sequence-enrollments with parameters", async () => {
+  it("fetchSequenceEnrollments requests GET /api/v1/sequence-enrollments with parameters", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => [{ id: "enr-1", status: "active" }],
@@ -76,7 +76,7 @@ describe("Sequences API Client", () => {
 
     const results = await fetchSequenceEnrollments(workspaceId, { campaign_id: campaignId });
     expect(mockFetch).toHaveBeenCalledWith(
-      `/v1/sequence-enrollments?campaign_id=${campaignId}`,
+      `/api/v1/sequence-enrollments?campaign_id=${campaignId}`,
       expect.any(Object)
     );
     expect(results).toHaveLength(1);

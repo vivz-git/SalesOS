@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
-import { fetchApprovalQueue, type ApprovalItemDetail } from "@/lib/api/approvals";
-import type { DraftStatus } from "@/lib/api/outreach";
+import { fetchApprovalQueue } from "@/lib/api/approvals";
+import type { OutreachDraft, DraftStatus } from "@/lib/api/outreach";
 import { DraftStatusBadge } from "@/components/outreach/draft-status-badge";
-import { CheckCircle2, Search, Sparkles, AlertCircle, Eye, Inbox } from "lucide-react";
+import { Search, Sparkles, AlertCircle, Eye, Inbox } from "lucide-react";
 
 export default function ApprovalsPage() {
   const { activeWorkspace } = useWorkspace();
-  const [items, setItems] = useState<ApprovalItemDetail[]>([]);
+  const [items, setItems] = useState<OutreachDraft[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("ready_for_review");
@@ -23,7 +23,7 @@ export default function ApprovalsPage() {
       setError(null);
       try {
         const data = await fetchApprovalQueue(activeWorkspace.id, {
-          status: statusFilter,
+          status: statusFilter === "all" ? undefined : statusFilter,
           search: searchQuery.trim() || undefined,
         });
         setItems(data);
@@ -126,13 +126,23 @@ export default function ApprovalsPage() {
               </thead>
               <tbody className="divide-y divide-zinc-200">
                 {items.map((item) => {
-                  const draft = item.draft;
+                  const draft: OutreachDraft = (item as unknown as { draft?: OutreachDraft }).draft || item;
+                  const itemAny = item as unknown as Record<string, unknown>;
                   const contactName =
-                    `${item.contact.first_name || ""} ${item.contact.last_name || ""}`.trim() ||
-                    "Unknown Prospect";
-                  const accountName = (item.account.name as string) || "Unknown Account";
-                  const campaignName = (item.campaign.name as string) || draft.campaign_id;
-                  const currentVer = item.current_version;
+                    (itemAny.contact_name as string) ||
+                    (itemAny.contact
+                      ? `${((itemAny.contact as Record<string, string>).first_name || "")} ${((itemAny.contact as Record<string, string>).last_name || "")}`.trim()
+                      : null) ||
+                    `Contact (${draft.contact_id ? draft.contact_id.slice(0, 8) : "N/A"})`;
+                  const accountName =
+                    (itemAny.account_name as string) ||
+                    ((itemAny.account as Record<string, string>)?.name as string) ||
+                    "Target Account";
+                  const campaignName =
+                    (itemAny.campaign_name as string) ||
+                    ((itemAny.campaign as Record<string, string>)?.name as string) ||
+                    `Campaign (${draft.campaign_id ? draft.campaign_id.slice(0, 8) : "N/A"})`;
+                  const currentVer = itemAny.current_version as { model?: string } | undefined;
 
                   return (
                     <tr key={draft.id} className="hover:bg-zinc-50/80 transition-colors">
@@ -144,7 +154,7 @@ export default function ApprovalsPage() {
                           {draft.current_subject || "(Untitled Subject)"}
                         </Link>
                         <div className="mt-0.5 text-[11px] text-zinc-500">
-                          {contactName} · <span className="text-zinc-700 font-medium">{accountName}</span>
+                          {contactName} � <span className="text-zinc-700 font-medium">{accountName}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-zinc-700 font-medium truncate max-w-[140px]">

@@ -33,17 +33,17 @@ export interface AuthorizeResponse {
 }
 
 export async function fetchHubspotStatus(workspaceId: string): Promise<IntegrationConnection> {
-  return request<IntegrationConnection>("/v1/integrations/hubspot", workspaceId);
+  return request<IntegrationConnection>("/api/v1/integrations/hubspot", workspaceId);
 }
 
 export async function authorizeHubspot(workspaceId: string): Promise<AuthorizeResponse> {
-  return request<AuthorizeResponse>("/v1/integrations/hubspot/actions/authorize", workspaceId, {
+  return request<AuthorizeResponse>("/api/v1/integrations/hubspot/actions/authorize", workspaceId, {
     method: "POST",
   });
 }
 
 export async function disconnectHubspot(workspaceId: string): Promise<IntegrationConnection> {
-  return request<IntegrationConnection>("/v1/integrations/hubspot/actions/disconnect", workspaceId, {
+  return request<IntegrationConnection>("/api/v1/integrations/hubspot/actions/disconnect", workspaceId, {
     method: "POST",
   });
 }
@@ -52,7 +52,7 @@ export async function triggerHubspotSync(
   workspaceId: string,
   direction: SyncDirection = "export_to_crm"
 ): Promise<SyncRun> {
-  return request<SyncRun>("/v1/integrations/hubspot/actions/sync", workspaceId, {
+  return request<SyncRun>("/api/v1/integrations/hubspot/actions/sync", workspaceId, {
     method: "POST",
     body: JSON.stringify({ direction }),
   });
@@ -64,7 +64,7 @@ export async function fetchHubspotSyncRuns(
   offset: number = 0
 ): Promise<SyncRun[]> {
   return request<SyncRun[]>(
-    `/v1/integrations/hubspot/sync-runs?limit=${limit}&offset=${offset}`,
+    `/api/v1/integrations/hubspot/sync-runs?limit=${limit}&offset=${offset}`,
     workspaceId
   );
 }
@@ -73,5 +73,5 @@ export async function fetchHubspotSyncRunDetail(
   workspaceId: string,
   syncRunId: string
 ): Promise<SyncRun> {
-  return request<SyncRun>(`/v1/integrations/hubspot/sync-runs/${syncRunId}`, workspaceId);
+  return request<SyncRun>(`/api/v1/integrations/hubspot/sync-runs/${syncRunId}`, workspaceId);
 }

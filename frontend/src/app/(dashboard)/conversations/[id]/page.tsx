@@ -15,16 +15,12 @@ import { ReplyClassificationBadge } from "@/components/conversations/reply-class
 import {
   ArrowLeft,
   MessageSquare,
-  User,
-  Building,
   CheckCircle2,
   AlertCircle,
   ShieldAlert,
   Edit3,
-  Clock,
   Sparkles,
-  ChevronDown,
-} from "lucide-react";
+  } from "lucide-react";
 
 interface ConversationDetailPageProps {
   params: Promise<{ id: string }>;

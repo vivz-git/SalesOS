@@ -13,34 +13,26 @@ describe("approvals API client", () => {
   const workspaceId = "ws-12345";
 
   it("fetches approval queue items with query filters", async () => {
-    const mockItems = [
+    const mockDrafts = [
       {
-        draft: {
-          id: "d-1",
-          workspace_id: workspaceId,
-          campaign_id: "c-1",
-          contact_id: "ct-1",
-          status: "ready_for_review",
-          current_version_number: 2,
-        },
-        campaign: { name: "Enterprise Campaign" },
-        contact: { first_name: "John", last_name: "Doe" },
-        account: { name: "Acme Corp" },
-        research_brief: {},
-        evidence_sources: [],
-        review_history: [],
+        id: "d-1",
+        workspace_id: workspaceId,
+        campaign_id: "c-1",
+        contact_id: "ct-1",
+        status: "ready_for_review",
+        current_version_number: 2,
       },
     ];
 
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockItems,
+      json: async () => mockDrafts,
     });
 
     const result = await fetchApprovalQueue(workspaceId, { status: "ready_for_review" });
-    expect(result).toEqual(mockItems);
+    expect(result).toEqual(mockDrafts);
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/v1/approvals?status=ready_for_review",
+      "/api/v1/approvals/queue?status=ready_for_review",
       expect.objectContaining({
         headers: expect.any(Headers),
       })
@@ -50,10 +42,10 @@ describe("approvals API client", () => {
   it("fetches detailed approval item context", async () => {
     const mockDetail = {
       draft: { id: "d-1", status: "ready_for_review" },
-      campaign: { name: "Campaign 1" },
-      contact: { first_name: "Jane" },
-      account: { name: "Company" },
-      review_history: [],
+      campaign_name: "Campaign 1",
+      contact_name: "Jane Doe",
+      account_name: "Company",
+      recent_history: [],
     };
 
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
@@ -64,7 +56,7 @@ describe("approvals API client", () => {
     const result = await fetchApprovalItem(workspaceId, "d-1");
     expect(result).toEqual(mockDetail);
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/v1/approvals/d-1",
+      "/api/v1/approvals/items/d-1",
       expect.objectContaining({ headers: expect.any(Headers) })
     );
   });
@@ -72,16 +64,16 @@ describe("approvals API client", () => {
   it("triggers approve action with reviewer notes", async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ draft: { id: "d-1", status: "approved" } }),
+      json: async () => ({ id: "dec-1", decision: "approved", notes: "Looks good" }),
     });
 
     const result = await approveApprovalItem(workspaceId, "d-1", "Looks good");
-    expect(result.draft.status).toBe("approved");
+    expect(result.decision).toBe("approved");
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/v1/approvals/d-1/actions/approve",
+      "/api/v1/approvals/items/d-1/decision",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ notes: "Looks good" }),
+        body: JSON.stringify({ decision: "approved", notes: "Looks good" }),
       })
     );
   });
@@ -89,16 +81,16 @@ describe("approvals API client", () => {
   it("triggers reject action with reviewer reason", async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ draft: { id: "d-1", status: "rejected" } }),
+      json: async () => ({ id: "dec-2", decision: "rejected", notes: "Needs pricing fix" }),
     });
 
     const result = await rejectApprovalItem(workspaceId, "d-1", "Needs pricing fix");
-    expect(result.draft.status).toBe("rejected");
+    expect(result.decision).toBe("rejected");
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/v1/approvals/d-1/actions/reject",
+      "/api/v1/approvals/items/d-1/decision",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ notes: "Needs pricing fix" }),
+        body: JSON.stringify({ decision: "rejected", notes: "Needs pricing fix" }),
       })
     );
   });
@@ -106,16 +98,16 @@ describe("approvals API client", () => {
   it("triggers return-to-draft action", async () => {
     (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ draft: { id: "d-1", status: "draft" } }),
+      json: async () => ({ id: "dec-3", decision: "returned_to_draft", notes: "Return for edit" }),
     });
 
     const result = await returnApprovalItemToDraft(workspaceId, "d-1", "Return for edit");
-    expect(result.draft.status).toBe("draft");
+    expect(result.decision).toBe("returned_to_draft");
     expect(global.fetch).toHaveBeenCalledWith(
-      "/api/v1/approvals/d-1/actions/return-to-draft",
+      "/api/v1/approvals/items/d-1/decision",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ notes: "Return for edit" }),
+        body: JSON.stringify({ decision: "returned_to_draft", notes: "Return for edit" }),
       })
     );
   });

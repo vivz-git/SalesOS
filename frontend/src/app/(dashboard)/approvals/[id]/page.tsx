@@ -65,17 +65,17 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
   async function handleConfirmAction(notes: string) {
     if (!activeWorkspace || !draftId || !modalAction) return;
     try {
-      let updated: ApprovalItemDetail;
       if (modalAction === "approve") {
-        updated = await approveApprovalItem(activeWorkspace.id, draftId, notes);
+        await approveApprovalItem(activeWorkspace.id, draftId, notes);
         setActionMessage("Draft approved successfully");
       } else if (modalAction === "reject") {
-        updated = await rejectApprovalItem(activeWorkspace.id, draftId, notes);
+        await rejectApprovalItem(activeWorkspace.id, draftId, notes);
         setActionMessage("Draft rejected");
       } else {
-        updated = await returnApprovalItemToDraft(activeWorkspace.id, draftId, notes);
+        await returnApprovalItemToDraft(activeWorkspace.id, draftId, notes);
         setActionMessage("Returned draft to editing state");
       }
+      const updated = await fetchApprovalItem(activeWorkspace.id, draftId);
       setDetail(updated);
       setTimeout(() => setActionMessage(null), 4000);
     } catch (err: unknown) {
@@ -110,17 +110,27 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
     );
   }
 
-  const { draft, campaign, contact, account, research_brief, evidence_sources, current_version, review_history } = detail;
+  const { draft, research_brief, evidence_sources, current_version } = detail;
+  const review_history = detail.recent_history || detail.review_history || [];
   const isReadyForReview = draft.status === "ready_for_review";
 
-  const firstName = (contact.first_name as string) || "";
-  const lastName = (contact.last_name as string) || "";
-  const contactName = `${firstName} ${lastName}`.trim() || "Prospect";
-  const contactTitle = (contact.title as string) || null;
-  const accountName = (account.name as string) || null;
-  const accountDomain = (account.domain as string) || null;
-  const campaignName = (campaign.name as string) || draft.campaign_id;
-  const targetSegment = (campaign.target_segment as string) || null;
+  const contactName =
+    detail.contact_name ||
+    (detail.contact
+      ? `${((detail.contact as Record<string, string>).first_name || "")} ${((detail.contact as Record<string, string>).last_name || "")}`.trim()
+      : null) ||
+    "Prospect";
+  const contactTitle = ((detail.contact as Record<string, string>)?.title as string) || null;
+  const accountName =
+    detail.account_name ||
+    ((detail.account as Record<string, string>)?.name as string) ||
+    null;
+  const accountDomain = ((detail.account as Record<string, string>)?.domain as string) || null;
+  const campaignName =
+    detail.campaign_name ||
+    ((detail.campaign as Record<string, string>)?.name as string) ||
+    draft.campaign_id;
+  const targetSegment = ((detail.campaign as Record<string, string>)?.target_segment as string) || null;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">

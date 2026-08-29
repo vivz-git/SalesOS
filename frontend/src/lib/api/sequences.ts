@@ -66,7 +66,7 @@ export async function fetchCampaignSequence(
   workspaceId: string,
   campaignId: string
 ): Promise<SequenceDefinition> {
-  return request<SequenceDefinition>(`/v1/campaigns/${campaignId}/sequences`, workspaceId);
+  return request<SequenceDefinition>(`/api/v1/campaigns/${campaignId}/sequences`, workspaceId);
 }
 
 export async function saveCampaignSequence(
@@ -75,7 +75,7 @@ export async function saveCampaignSequence(
   name: string,
   steps: SequenceStepPayload[]
 ): Promise<SequenceDefinition> {
-  return request<SequenceDefinition>(`/v1/campaigns/${campaignId}/sequences`, workspaceId, {
+  return request<SequenceDefinition>(`/api/v1/campaigns/${campaignId}/sequences`, workspaceId, {
     method: "POST",
     body: JSON.stringify({ name, steps }),
   });
@@ -86,7 +86,7 @@ export async function enrollContactInSequence(
   campaignId: string,
   contactId: string
 ): Promise<SequenceEnrollment> {
-  return request<SequenceEnrollment>("/v1/sequence-enrollments", workspaceId, {
+  return request<SequenceEnrollment>("/api/v1/sequence-enrollments", workspaceId, {
     method: "POST",
     body: JSON.stringify({ campaign_id: campaignId, contact_id: contactId }),
   });
@@ -103,7 +103,7 @@ export async function fetchSequenceEnrollments(
   if (params.offset) searchParams.set("offset", params.offset.toString());
 
   const queryStr = searchParams.toString() ? `?${searchParams.toString()}` : "";
-  return request<SequenceEnrollment[]>(`/v1/sequence-enrollments${queryStr}`, workspaceId);
+  return request<SequenceEnrollment[]>(`/api/v1/sequence-enrollments${queryStr}`, workspaceId);
 }
 
 export async function pauseEnrollment(
@@ -111,7 +111,7 @@ export async function pauseEnrollment(
   enrollmentId: string
 ): Promise<SequenceEnrollment> {
   return request<SequenceEnrollment>(
-    `/v1/sequence-enrollments/${enrollmentId}/actions/pause`,
+    `/api/v1/sequence-enrollments/${enrollmentId}/actions/pause`,
     workspaceId,
     { method: "POST" }
   );
@@ -122,7 +122,7 @@ export async function resumeEnrollment(
   enrollmentId: string
 ): Promise<SequenceEnrollment> {
   return request<SequenceEnrollment>(
-    `/v1/sequence-enrollments/${enrollmentId}/actions/resume`,
+    `/api/v1/sequence-enrollments/${enrollmentId}/actions/resume`,
     workspaceId,
     { method: "POST" }
   );
@@ -134,7 +134,7 @@ export async function stopEnrollment(
   reason?: string
 ): Promise<SequenceEnrollment> {
   return request<SequenceEnrollment>(
-    `/v1/sequence-enrollments/${enrollmentId}/actions/stop`,
+    `/api/v1/sequence-enrollments/${enrollmentId}/actions/stop`,
     workspaceId,
     {
       method: "POST",

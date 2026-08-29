@@ -40,7 +40,7 @@ export async function fetchWeeklyReportsList(
   offset: number = 0
 ): Promise<ReportRun[]> {
   return request<ReportRun[]>(
-    `/v1/reports/weekly?limit=${limit}&offset=${offset}`,
+    `/api/v1/reports/weekly?limit=${limit}&offset=${offset}`,
     workspaceId
   );
 }
@@ -49,11 +49,11 @@ export async function fetchWeeklyReportDetail(
   workspaceId: string,
   reportId: string
 ): Promise<ReportRun> {
-  return request<ReportRun>(`/v1/reports/weekly/${reportId}`, workspaceId);
+  return request<ReportRun>(`/api/v1/reports/weekly/${reportId}`, workspaceId);
 }
 
 export async function generateWeeklyReport(workspaceId: string): Promise<ReportRun> {
-  return request<ReportRun>("/v1/reports/weekly/actions/generate", workspaceId, {
+  return request<ReportRun>("/api/v1/reports/weekly/actions/generate", workspaceId, {
     method: "POST",
   });
 }

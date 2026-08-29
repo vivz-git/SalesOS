@@ -84,21 +84,21 @@ export async function fetchConversations(
   if (params.offset) searchParams.set("offset", params.offset.toString());
 
   const queryStr = searchParams.toString() ? `?${searchParams.toString()}` : "";
-  return request<Conversation[]>(`/v1/conversations${queryStr}`, workspaceId);
+  return request<Conversation[]>(`/api/v1/conversations${queryStr}`, workspaceId);
 }
 
 export async function fetchConversationDetail(
   workspaceId: string,
   conversationId: string
 ): Promise<Conversation> {
-  return request<Conversation>(`/v1/conversations/${conversationId}`, workspaceId);
+  return request<Conversation>(`/api/v1/conversations/${conversationId}`, workspaceId);
 }
 
 export async function ingestInboundReply(
   workspaceId: string,
   payload: InboundReplyPayload
 ): Promise<Conversation> {
-  return request<Conversation>("/v1/conversations/inbound", workspaceId, {
+  return request<Conversation>("/api/v1/conversations/inbound", workspaceId, {
     method: "POST",
     body: JSON.stringify({ ...payload, workspace_id: workspaceId }),
   });
@@ -110,7 +110,7 @@ export async function reclassifyConversation(
   replyState: ReplyState,
   explanation?: string
 ): Promise<Conversation> {
-  return request<Conversation>(`/v1/conversations/${conversationId}/actions/classify`, workspaceId, {
+  return request<Conversation>(`/api/v1/conversations/${conversationId}/actions/classify`, workspaceId, {
     method: "POST",
     body: JSON.stringify({ reply_state: replyState, explanation }),
   });
@@ -122,7 +122,7 @@ export async function updateConversationStatus(
   status: ConversationStatus
 ): Promise<Conversation> {
   return request<Conversation>(
-    `/v1/conversations/${conversationId}/actions/update-status`,
+    `/api/v1/conversations/${conversationId}/actions/update-status`,
     workspaceId,
     {
       method: "POST",

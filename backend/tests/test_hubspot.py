@@ -2,10 +2,9 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import httpx
-import pytest
 from fastapi.testclient import TestClient
 
-from app.adapters.hubspot_adapter import HubSpotAssociationType, HubSpotCRMAdapter
+from app.adapters.hubspot_adapter import HubSpotCRMAdapter
 from app.auth import Principal, get_current_principal
 from app.main import app
 

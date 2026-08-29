@@ -21,10 +21,32 @@ from uuid import UUID, uuid4
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.pool import StaticPool
+
+from app.adapters.email_provider import (
+    EmailDeliverySendRequest,
+    EmailDeliverySendResult,
+    EmailProviderInterface,
+)
+from app.adapters.llm_provider import (
+    LLMGenerationRequest,
+    LLMGenerationResult,
+    LLMProviderInterface,
+    ResearchSynthesisRequest,
+    ResearchSynthesisResult,
+)
+from app.api.deliveries import get_email_provider
+from app.api.outreach import get_llm_provider
+from app.auth import AuthUser, Principal, get_current_principal, get_current_user
+from app.core.config import Settings, get_settings
+from app.db import get_db_session
+from app.main import app
+from app.models import Base
+
 
 # Compiler adaptations for in-memory SQLite test harness
 @compiles(JSONB, "sqlite")
@@ -36,24 +58,6 @@ def compile_jsonb_sqlite(type_: Any, compiler: Any, **kw: Any) -> str:
 def compile_pguuid_sqlite(type_: Any, compiler: Any, **kw: Any) -> str:
     return "CHAR(36)"
 
-
-from app.adapters.email_provider import (
-    EmailDeliverySendRequest,
-    EmailDeliverySendResult,
-    EmailProviderInterface,
-)
-from app.adapters.llm_provider import (
-    LLMGenerationRequest,
-    LLMGenerationResult,
-    LLMProviderInterface,
-)
-from app.api.deliveries import get_email_provider
-from app.api.outreach import get_llm_provider
-from app.auth import AuthUser, Principal, get_current_principal, get_current_user
-from app.core.config import Settings, get_settings
-from app.db import get_db_session
-from app.main import app
-from app.models import Base
 
 pytestmark = pytest.mark.asyncio
 
@@ -88,6 +92,22 @@ class MockLLMProvider(LLMProviderInterface):
             token_usage=256,
             estimated_cost=0.00015,
             duration_ms=420,
+        )
+
+    def generate_research_synthesis(
+        self, request: ResearchSynthesisRequest
+    ) -> ResearchSynthesisResult:
+        return ResearchSynthesisResult(
+            summary=f"Synthesized research for {request.account_name}",
+            key_insights=[f"Active in {request.account_industry or 'Tech'}", "Growing outbound motion"],
+            confidence_score=0.92,
+            recommended_hooks=[f"Mention scale at {request.account_name}"],
+            provider="groq",
+            model="llama-3.3-70b-versatile",
+            prompt_version=request.prompt_version,
+            token_usage=180,
+            estimated_cost=0.0001,
+            duration_ms=350,
         )
 
 

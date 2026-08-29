@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -47,6 +47,38 @@ class LLMGenerationResult(BaseModel):
     duration_ms: int | None = None
 
 
+class ResearchSynthesisStructuredOutput(BaseModel):
+    summary: str = Field(..., description="Executive summary of research intelligence on the account and contact")
+    key_findings: list[str] = Field(default_factory=list, description="Key strategic insights and findings")
+    confidence_score: float = Field(default=0.85, ge=0.0, le=1.0, description="Confidence score between 0.0 and 1.0")
+    confidence_reason: str | None = Field(default=None, description="Explanation for confidence score")
+
+
+class ResearchSynthesisRequest(BaseModel):
+    account_name: str
+    account_domain: str | None = None
+    industry: str | None = None
+    description: str | None = None
+    contact_name: str | None = None
+    contact_title: str | None = None
+    contact_department: str | None = None
+    sources: list[dict[str, Any]] = Field(default_factory=list)
+    prompt_version: str = "v1.0.0"
+
+
+class ResearchSynthesisResult(BaseModel):
+    summary: str
+    key_findings: list[str] = Field(default_factory=list)
+    confidence_score: float
+    confidence_reason: str | None = None
+    provider: str
+    model: str
+    prompt_version: str
+    token_usage: int | None = None
+    estimated_cost: float | None = None
+    duration_ms: int | None = None
+
+
 class LLMProviderInterface(ABC):
     """Abstract interface for LLM message generation providers.
 
@@ -57,4 +89,11 @@ class LLMProviderInterface(ABC):
     @abstractmethod
     def generate_outreach_draft(self, request: LLMGenerationRequest) -> LLMGenerationResult:
         """Generate a structured B2B outreach draft based on request context."""
+        pass
+
+    @abstractmethod
+    def generate_research_synthesis(
+        self, request: ResearchSynthesisRequest
+    ) -> ResearchSynthesisResult:
+        """Generate a structured research intelligence synthesis based on request context."""
         pass

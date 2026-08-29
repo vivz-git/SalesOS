@@ -1,4 +1,4 @@
-import time
+﻿import time
 from typing import Any
 
 from groq import Groq
@@ -9,6 +9,9 @@ from app.adapters.llm_provider import (
     LLMGenerationResult,
     LLMProviderInterface,
     OutreachDraftStructuredOutput,
+    ResearchSynthesisRequest,
+    ResearchSynthesisResult,
+    ResearchSynthesisStructuredOutput,
 )
 
 
@@ -149,6 +152,102 @@ class GroqLLMProvider(LLMProviderInterface):
             model=self.model_name,
             prompt_version=request.prompt_version,
             evidence_references=grounded_evidence,
+            token_usage=token_usage,
+            estimated_cost=None,
+            duration_ms=duration_ms,
+        )
+
+    def generate_research_synthesis(
+        self, request: ResearchSynthesisRequest
+    ) -> ResearchSynthesisResult:
+        if not self._client:
+            raise ValueError("groq_api_key_not_configured")
+
+        start_time = time.perf_counter()
+
+        system_prompt = (
+            "You are an expert enterprise research analyst for SalesOS.\n"
+            "Your task is to synthesize account and prospect intelligence into an actionable, grounded executive research brief.\n"
+            "You MUST output valid JSON matching this exact schema:\n"
+            "{\n"
+            '  "summary": "string",\n'
+            '  "key_findings": ["string"],\n'
+            '  "confidence_score": 0.90,\n'
+            '  "confidence_reason": "string or null"\n'
+            "}\n\n"
+            "RULES:\n"
+            "1. Ground findings in supplied sources and account/contact details.\n"
+            "2. Provide 2-5 concise, high-value key findings.\n"
+            "3. Confidence score must be a float between 0.0 and 1.0.\n"
+            "4. Return ONLY valid JSON."
+        )
+
+        prompt_lines = [
+            f"Prompt Version: {request.prompt_version}",
+            "--- ACCOUNT CONTEXT ---",
+            f"Account Name: {request.account_name}",
+            f"Domain: {request.account_domain or 'N/A'}",
+            f"Industry: {request.industry or 'N/A'}",
+            f"Description: {request.description or 'N/A'}",
+            "",
+            "--- PROSPECT CONTEXT ---",
+            f"Contact Name: {request.contact_name or 'N/A'}",
+            f"Title: {request.contact_title or 'N/A'}",
+            f"Department: {request.contact_department or 'N/A'}",
+            "",
+            "--- EVIDENCE & RESEARCH SOURCES ---",
+        ]
+
+        if request.sources:
+            for idx, src in enumerate(request.sources, 1):
+                url = src.get("url")
+                title = src.get("title")
+                snippet = src.get("snippet")
+                prompt_lines.append(
+                    f"[{idx}] {title or 'Source'} ({url or 'No URL'}): {snippet or 'No snippet'}"
+                )
+        else:
+            prompt_lines.append("No external source snippets provided.")
+
+        prompt_lines.extend([
+            "",
+            "INSTRUCTIONS:",
+            "Synthesize the research brief summarizing the company/prospect profile, market context, and outreach angles.",
+            "Return valid JSON matching the schema.",
+        ])
+
+        user_prompt = "\n".join(prompt_lines)
+
+        try:
+            chat_completion = self._client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                model=self.model_name,
+                response_format={"type": "json_object"},
+                temperature=0.2,
+            )
+
+            raw_text = chat_completion.choices[0].message.content or "{}"
+            parsed = ResearchSynthesisStructuredOutput.model_validate_json(raw_text)
+        except (ValidationError, Exception) as err:
+            raise ValueError(f"groq_synthesis_failed: {err}") from err
+
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
+
+        token_usage = None
+        if hasattr(chat_completion, "usage") and chat_completion.usage:
+            token_usage = chat_completion.usage.total_tokens
+
+        return ResearchSynthesisResult(
+            summary=parsed.summary.strip(),
+            key_findings=parsed.key_findings,
+            confidence_score=parsed.confidence_score,
+            confidence_reason=parsed.confidence_reason,
+            provider="groq",
+            model=self.model_name,
+            prompt_version=request.prompt_version,
             token_usage=token_usage,
             estimated_cost=None,
             duration_ms=duration_ms,

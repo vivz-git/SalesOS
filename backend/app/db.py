@@ -1,4 +1,4 @@
-import os
+﻿import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -17,14 +17,12 @@ engine_kwargs: dict[str, Any] = {
 }
 if os.environ.get("TESTING") == "1":
     engine_kwargs["poolclass"] = NullPool
+    engine_kwargs["connect_args"] = {"connect_timeout": 1}
 else:
     engine_kwargs["pool_size"] = 5
     engine_kwargs["max_overflow"] = 20
 
-engine = create_async_engine(
-    settings.database_url,
-    **engine_kwargs
-)
+engine = create_async_engine(settings.database_url, **engine_kwargs)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
@@ -33,10 +31,7 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
-worker_engine = create_async_engine(
-    settings.worker_database_url,
-    **engine_kwargs
-)
+worker_engine = create_async_engine(settings.worker_database_url, **engine_kwargs)
 
 AsyncWorkerSessionLocal = async_sessionmaker(
     bind=worker_engine,
@@ -64,7 +59,7 @@ async def tenant_transaction_context(
             text("SELECT set_config('salesos.app_workspace_id', :workspace_id, true)"),
             {"workspace_id": str(workspace_id)},
         )
-        
+
         yield session
 
 

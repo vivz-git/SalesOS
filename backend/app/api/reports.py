@@ -7,14 +7,18 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.accounts import list_accounts
-from app.api.campaigns import list_campaigns
-from app.api.contacts import list_contacts
-from app.api.outreach import list_outreach_drafts
 from app.auth import Principal, get_current_principal
 from app.core.config import Settings, get_settings
 from app.db import get_db_session
-from app.models import DeliveryModel, SequenceEnrollmentModel
+from app.models import (
+    AccountModel,
+    CampaignModel,
+    ContactModel,
+    ConversationModel,
+    DeliveryModel,
+    OutreachDraftModel,
+    SequenceEnrollmentModel,
+)
 
 router = APIRouter(prefix="/v1", tags=["reports"])
 
@@ -67,52 +71,84 @@ def _get_current_week_bounds() -> tuple[datetime, datetime]:
 
 async def compute_workspace_metrics(principal: Principal, settings: Settings, session: AsyncSession) -> ReportMetricsSnapshot:
     ws_str = str(principal.workspace_id)
+    ws_id = principal.workspace_id
 
     # 1. Campaigns & Accounts/Contacts
-    campaigns_cnt = 0
-    accounts_cnt = 0
-    contacts_cnt = 0
-    try:
-        if settings.supabase_url and settings.supabase_service_role_key:
-            campaigns_cnt = len(await list_campaigns(principal=principal, session=session))
-            accounts_cnt = len(await list_accounts(principal=principal, session=session))
-            contacts_cnt = len(await list_contacts(principal=principal, session=session))
-    except Exception:
-        pass
+    campaigns_cnt = (await session.scalar(
+        select(func.count()).select_from(CampaignModel).filter_by(workspace_id=ws_id).filter(CampaignModel.deleted_at.is_(None))
+    )) or 0
 
-    contacts_enrolled = (await session.scalar(select(func.count()).select_from(SequenceEnrollmentModel).filter_by(workspace_id=principal.workspace_id))) or 0
+    accounts_cnt = (await session.scalar(
+        select(func.count()).select_from(AccountModel).filter_by(workspace_id=ws_id).filter(AccountModel.deleted_at.is_(None))
+    )) or 0
+
+    contacts_cnt = (await session.scalar(
+        select(func.count()).select_from(ContactModel).filter_by(workspace_id=ws_id).filter(ContactModel.deleted_at.is_(None))
+    )) or 0
+
+    contacts_enrolled = (await session.scalar(
+        select(func.count()).select_from(SequenceEnrollmentModel).filter_by(workspace_id=ws_id)
+    )) or 0
     if contacts_enrolled == 0:
         contacts_enrolled = contacts_cnt
 
     # 2. Drafts & Approval Rate
-    ws_drafts: list[Any] = []
-    try:
-        ws_drafts = await list_outreach_drafts(limit=200, principal=principal, session=session)
-    except Exception:
-        pass
+    drafts_gen = (await session.scalar(
+        select(func.count()).select_from(OutreachDraftModel).filter_by(workspace_id=ws_id).filter(OutreachDraftModel.deleted_at.is_(None))
+    )) or 0
 
-    drafts_gen = len(ws_drafts)
-    submitted_drafts = [d for d in ws_drafts if getattr(d, "status", "") in ("ready_for_review", "approved", "rejected")]
-    submitted_cnt = len(submitted_drafts)
-    approved_cnt = sum(1 for d in ws_drafts if getattr(d, "status", "") == "approved")
+    submitted_cnt = (await session.scalar(
+        select(func.count()).select_from(OutreachDraftModel).filter_by(workspace_id=ws_id).filter(
+            OutreachDraftModel.status.in_(["ready_for_review", "approved", "rejected"])
+        ).filter(OutreachDraftModel.deleted_at.is_(None))
+    )) or 0
+
+    approved_cnt = (await session.scalar(
+        select(func.count()).select_from(OutreachDraftModel).filter_by(workspace_id=ws_id, status="approved").filter(OutreachDraftModel.deleted_at.is_(None))
+    )) or 0
+
     app_rate = round((approved_cnt / submitted_cnt) * 100.0, 1) if submitted_cnt > 0 else 0.0
 
     # 3. Deliveries & Delivery Rate
-    sent_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id).filter(DeliveryModel.status.in_(["sent", "delivered", "bounced", "complained", "failed"])))) or 0
-    delivered_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="delivered"))) or 0
-    bounced_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="bounced"))) or 0
-    complained_cnt = (await session.scalar(select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=principal.workspace_id, status="complained"))) or 0
+    sent_cnt = (await session.scalar(
+        select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=ws_id).filter(
+            DeliveryModel.status.in_(["sent", "delivered", "bounced", "complained", "failed"])
+        )
+    )) or 0
+
+    delivered_cnt = (await session.scalar(
+        select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=ws_id, status="delivered")
+    )) or 0
+
+    bounced_cnt = (await session.scalar(
+        select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=ws_id, status="bounced")
+    )) or 0
+
+    complained_cnt = (await session.scalar(
+        select(func.count()).select_from(DeliveryModel).filter_by(workspace_id=ws_id, status="complained")
+    )) or 0
+
     deliv_rate = round((delivered_cnt / sent_cnt) * 100.0, 1) if sent_cnt > 0 else 0.0
 
     # 4. Conversations & Reply Rates
-    from app.models import ConversationModel
-    replies_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id))) or 0
+    replies_cnt = (await session.scalar(
+        select(func.count()).select_from(ConversationModel).filter_by(workspace_id=ws_id)
+    )) or 0
+
     rep_rate = round((replies_cnt / delivered_cnt) * 100.0, 1) if delivered_cnt > 0 else 0.0
 
-    interested_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id).filter(ConversationModel.current_reply_state.in_(["interested", "positive"])))) or 0
+    interested_cnt = (await session.scalar(
+        select(func.count()).select_from(ConversationModel).filter_by(workspace_id=ws_id).filter(
+            ConversationModel.current_reply_state.in_(["interested", "positive"])
+        )
+    )) or 0
+
     interested_rate = round((interested_cnt / replies_cnt) * 100.0, 1) if replies_cnt > 0 else 0.0
 
-    opt_out_cnt = (await session.scalar(select(func.count()).select_from(ConversationModel).filter_by(workspace_id=principal.workspace_id, current_reply_state="unsubscribe"))) or 0
+    opt_out_cnt = (await session.scalar(
+        select(func.count()).select_from(ConversationModel).filter_by(workspace_id=ws_id, current_reply_state="unsubscribe")
+    )) or 0
+
     opt_rate = round((opt_out_cnt / replies_cnt) * 100.0, 1) if replies_cnt > 0 else 0.0
 
     # 5. CRM Sync

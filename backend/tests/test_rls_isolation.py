@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import sys
 from typing import Any, cast
 from uuid import uuid4
@@ -31,52 +31,52 @@ async def two_workspaces() -> Any:
     user2_id = uuid4()
 
     try:
-        async with admin_engine.begin() as conn:
-            # Create User 1 and Workspace 1
-            await conn.execute(
-                text(
-                    "INSERT INTO auth.users (id, instance_id, aud, role, email) "
-                    "VALUES (:uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', :email)"
-                ),
-                {"uid": str(user1_id), "email": f"rls1_{user1_id}@example.com"},
-            )
-            await conn.execute(
-                text("INSERT INTO workspaces (id, name, slug) VALUES (:wid, 'Workspace 1', :slug)"),
-                {"wid": str(ws1_id), "slug": f"rls-ws1-{ws1_id}"},
-            )
-            await conn.execute(
-                text(
-                    "INSERT INTO memberships (id, workspace_id, user_id, role, created_at, updated_at) "
-                    "VALUES (:mid, :wid, :uid, 'owner', now(), now())"
-                ),
-                {"mid": str(uuid4()), "wid": str(ws1_id), "uid": str(user1_id)},
-            )
+        async with asyncio.timeout(2.0):
+            async with admin_engine.begin() as conn:
+                # Create User 1 and Workspace 1
+                await conn.execute(
+                    text(
+                        "INSERT INTO auth.users (id, instance_id, aud, role, email) "
+                        "VALUES (:uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', :email)"
+                    ),
+                    {"uid": str(user1_id), "email": f"rls1_{user1_id}@example.com"},
+                )
+                await conn.execute(
+                    text("INSERT INTO workspaces (id, name, slug) VALUES (:wid, 'Workspace 1', :slug)"),
+                    {"wid": str(ws1_id), "slug": f"rls-ws1-{ws1_id}"},
+                )
+                await conn.execute(
+                    text(
+                        "INSERT INTO memberships (id, workspace_id, user_id, role, created_at, updated_at) "
+                        "VALUES (:mid, :wid, :uid, 'owner', now(), now())"
+                    ),
+                    {"mid": str(uuid4()), "wid": str(ws1_id), "uid": str(user1_id)},
+                )
 
-            # Create User 2 and Workspace 2
-            await conn.execute(
-                text(
-                    "INSERT INTO auth.users (id, instance_id, aud, role, email) "
-                    "VALUES (:uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', :email)"
-                ),
-                {"uid": str(user2_id), "email": f"rls2_{user2_id}@example.com"},
-            )
-            await conn.execute(
-                text("INSERT INTO workspaces (id, name, slug) VALUES (:wid, 'Workspace 2', :slug)"),
-                {"wid": str(ws2_id), "slug": f"rls-ws2-{ws2_id}"},
-            )
-            await conn.execute(
-                text(
-                    "INSERT INTO memberships (id, workspace_id, user_id, role, created_at, updated_at) "
-                    "VALUES (:mid, :wid, :uid, 'owner', now(), now())"
-                ),
-                {"mid": str(uuid4()), "wid": str(ws2_id), "uid": str(user2_id)},
-            )
+                # Create User 2 and Workspace 2
+                await conn.execute(
+                    text(
+                        "INSERT INTO auth.users (id, instance_id, aud, role, email) "
+                        "VALUES (:uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', :email)"
+                    ),
+                    {"uid": str(user2_id), "email": f"rls2_{user2_id}@example.com"},
+                )
+                await conn.execute(
+                    text("INSERT INTO workspaces (id, name, slug) VALUES (:wid, 'Workspace 2', :slug)"),
+                    {"wid": str(ws2_id), "slug": f"rls-ws2-{ws2_id}"},
+                )
+                await conn.execute(
+                    text(
+                        "INSERT INTO memberships (id, workspace_id, user_id, role, created_at, updated_at) "
+                        "VALUES (:mid, :wid, :uid, 'owner', now(), now())"
+                    ),
+                    {"mid": str(uuid4()), "wid": str(ws2_id), "uid": str(user2_id)},
+                )
 
-        yield {"ws1": ws1_id, "ws2": ws2_id, "u1": user1_id, "u2": user2_id}
+            yield {"ws1": ws1_id, "ws2": ws2_id, "u1": user1_id, "u2": user2_id}
 
     except Exception as e:
-        await admin_engine.dispose()
-        pytest.skip(f"Real PostgreSQL database is unavailable. Skipping integration test. Error: {e}")
+        pytest.skip(f"Live PostgreSQL at 127.0.0.1:54322 is unavailable: {e}")
     finally:
         await admin_engine.dispose()
 

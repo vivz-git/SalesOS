@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import os
 import sys
 from typing import Any
@@ -38,36 +38,36 @@ async def seeded_workspace() -> Any:
     )
 
     try:
-        async with admin_engine.begin() as conn:
-            # Insert into auth.users to satisfy foreign keys
-            await conn.execute(
-                text(
-                    "INSERT INTO auth.users (id, instance_id, aud, role, email) "
-                    "VALUES (:uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', :email)"
-                ),
-                {"uid": str(user_id), "email": f"test_{user_id}@example.com"},
-            )
-            await conn.execute(
-                text("INSERT INTO workspaces (id, name, slug) VALUES (:wid, 'Integration Workspace', :slug)"),
-                {"wid": str(workspace_id), "slug": f"test-workspace-{workspace_id}"},
-            )
-            await conn.execute(
-                text(
-                    "INSERT INTO campaigns (id, workspace_id, name, status, created_by, target_segment, icp_definition) "
-                    "VALUES (:cid, :wid, 'Test Campaign', 'active', :uid, 'segment', 'icp')"
-                ),
-                {"cid": str(campaign_id), "wid": str(workspace_id), "uid": str(user_id)},
-            )
-            await conn.execute(
-                text(
-                    "INSERT INTO memberships (id, workspace_id, user_id, role, created_at, updated_at) "
-                    "VALUES (:mid, :wid, :uid, 'owner', now(), now())"
-                ),
-                {"mid": str(uuid4()), "wid": str(workspace_id), "uid": str(user_id)},
-            )
+        async with asyncio.timeout(2.0):
+            async with admin_engine.begin() as conn:
+                # Insert into auth.users to satisfy foreign keys
+                await conn.execute(
+                    text(
+                        "INSERT INTO auth.users (id, instance_id, aud, role, email) "
+                        "VALUES (:uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', :email)"
+                    ),
+                    {"uid": str(user_id), "email": f"test_{user_id}@example.com"},
+                )
+                await conn.execute(
+                    text("INSERT INTO workspaces (id, name, slug) VALUES (:wid, 'Integration Workspace', :slug)"),
+                    {"wid": str(workspace_id), "slug": f"test-workspace-{workspace_id}"},
+                )
+                await conn.execute(
+                    text(
+                        "INSERT INTO campaigns (id, workspace_id, name, status, created_by, target_segment, icp_definition) "
+                        "VALUES (:cid, :wid, 'Test Campaign', 'active', :uid, 'segment', 'icp')"
+                    ),
+                    {"cid": str(campaign_id), "wid": str(workspace_id), "uid": str(user_id)},
+                )
+                await conn.execute(
+                    text(
+                        "INSERT INTO memberships (id, workspace_id, user_id, role, created_at, updated_at) "
+                        "VALUES (:mid, :wid, :uid, 'owner', now(), now())"
+                    ),
+                    {"mid": str(uuid4()), "wid": str(workspace_id), "uid": str(user_id)},
+                )
     except Exception as e:
-        await admin_engine.dispose()
-        pytest.skip(f"Real PostgreSQL database is unavailable. Skipping integration test. Error: {e}")
+        pytest.skip(f"Live PostgreSQL at 127.0.0.1:54322 is unavailable: {e}")
     finally:
         await admin_engine.dispose()
 

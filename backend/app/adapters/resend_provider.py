@@ -17,7 +17,7 @@ class ResendEmailProvider(EmailProviderInterface):
     """
 
     def __init__(self, api_key: str | None = None):
-        self.api_key = api_key
+        self.api_key = api_key.strip() if api_key else None
         if self.api_key:
             resend.api_key = self.api_key
 
@@ -39,6 +39,9 @@ class ResendEmailProvider(EmailProviderInterface):
                 "X-Entity-Ref-ID": request.idempotency_key,
             },
         }
+
+        if request.tags:
+            params["tags"] = [{"name": k, "value": v} for k, v in request.tags.items()]
 
         try:
             resp = resend.Emails.send(params)

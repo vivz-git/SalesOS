@@ -11,7 +11,13 @@ ReplyState = Literal[
     "unsubscribe",
     "out_of_office",
     "ambiguous",
+    "objection",
+    "question",
+    "positive",
+    "not_applicable",
 ]
+
+Sentiment = Literal["positive", "neutral", "negative"]
 
 
 class ClassificationResult(BaseModel):
@@ -19,6 +25,7 @@ class ClassificationResult(BaseModel):
     confidence_score: float
     explanation: str
     needs_human_action: bool
+    sentiment: Sentiment = "neutral"
 
 
 class ReplyClassifierInterface(ABC):
@@ -30,7 +37,7 @@ class ReplyClassifierInterface(ABC):
 
     @abstractmethod
     def classify(self, text_body: str, subject: str = "") -> ClassificationResult:
-        """Classify inbound text body and subject into bounded 6-state reply taxonomy."""
+        """Classify inbound text body and subject into bounded reply taxonomy."""
         pass
 
 
@@ -44,6 +51,9 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
         r"\bdo not contact\b",
         r"\bopt out\b",
         r"\btake me off\b",
+        r"\bnot interested\b",
+        r"\bleave me alone\b",
+        r"\bplease stop\b",
     ]
 
     OOO_PATTERNS = [
@@ -53,6 +63,8 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
         r"\bautomatic reply\b",
         r"\baway from my desk\b",
         r"\bcurrently away\b",
+        r"\bon (maternity|paternity|annual|sick|medical)? ?leave\b",
+        r"\breturn(ing)? on\b",
     ]
 
     REFERRAL_PATTERNS = [
@@ -63,6 +75,20 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
         r"\bcc'?d\b",
         r"\breach out to\b",
         r"\bforwarded to\b",
+        r"\btalk to\b",
+        r"\bthe right person (is|would be)\b",
+    ]
+
+    OBJECTION_PATTERNS = [
+        r"\btoo expensive\b",
+        r"\balready (using|use|have|work with)\b",
+        r"\bcompetitor\b",
+        r"\bnot a good fit\b",
+        r"\bhappy with our current\b",
+        r"\bno need for this\b",
+        r"\bcontract with\b",
+        r"\bnot looking for\b",
+        r"\bdon'?t need\b",
     ]
 
     NOT_NOW_PATTERNS = [
@@ -70,9 +96,11 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
         r"\bbad timing\b",
         r"\bcheck back (next|in)\b",
         r"\bnext quarter\b",
-        r"\bnot looking\b",
+        r"\bnot looking right now\b",
         r"\bno budget\b",
         r"\bbusy right now\b",
+        r"\bcircl(e|ing) back later\b",
+        r"\breach back out in\b",
     ]
 
     INTERESTED_PATTERNS = [
@@ -85,12 +113,28 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
         r"\bcalendar\b",
         r"\bdemo\b",
         r"\bcall\b",
+        r"\bbook (a )?time\b",
+        r"\bgrab time\b",
+        r"\bset up a (call|meeting|chat)\b",
+    ]
+
+    QUESTION_PATTERNS = [
+        r"\bhow much (does|is|would|do)\b",
+        r"\bwhat (is|are) the (pricing|cost|rates|tiers)\b",
+        r"\bcan you (explain|share|clarify|provide|send details)\b",
+        r"\bhow does (this|it) work\b",
+        r"\bdo you integrate with\b",
+        r"\bwhat is your pricing\b",
+        r"\bcould you tell me\b",
+        r"\bquestion about\b",
+        r"\bmore information on\b",
+        r"\?",
     ]
 
     def classify(self, text_body: str, subject: str = "") -> ClassificationResult:
         combined_text = f"{subject} {text_body}".lower()
 
-        # 1. Unsubscribe / Opt-Out Check
+        # 1. Unsubscribe / Opt-Out Check (Highest priority)
         for pat in self.UNSUBSCRIBE_PATTERNS:
             if re.search(pat, combined_text):
                 return ClassificationResult(
@@ -98,6 +142,7 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
                     confidence_score=0.95,
                     explanation=f"Matched opt-out pattern '{pat}'",
                     needs_human_action=True,
+                    sentiment="negative",
                 )
 
         # 2. Out of Office / Auto-Reply Check
@@ -108,6 +153,7 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
                     confidence_score=0.90,
                     explanation=f"Matched out of office pattern '{pat}'",
                     needs_human_action=False,
+                    sentiment="neutral",
                 )
 
         # 3. Referral Check
@@ -118,9 +164,21 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
                     confidence_score=0.85,
                     explanation=f"Matched referral pattern '{pat}'",
                     needs_human_action=False,
+                    sentiment="positive",
                 )
 
-        # 4. Not Now Check
+        # 4. Objection Check
+        for pat in self.OBJECTION_PATTERNS:
+            if re.search(pat, combined_text):
+                return ClassificationResult(
+                    reply_state="objection",
+                    confidence_score=0.85,
+                    explanation=f"Matched objection pattern '{pat}'",
+                    needs_human_action=True,
+                    sentiment="negative",
+                )
+
+        # 5. Not Now / Timing Objection Check
         for pat in self.NOT_NOW_PATTERNS:
             if re.search(pat, combined_text):
                 return ClassificationResult(
@@ -128,9 +186,10 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
                     confidence_score=0.80,
                     explanation=f"Matched bad timing / not now pattern '{pat}'",
                     needs_human_action=False,
+                    sentiment="neutral",
                 )
 
-        # 5. Interested Check
+        # 6. Interested Check
         for pat in self.INTERESTED_PATTERNS:
             if re.search(pat, combined_text):
                 return ClassificationResult(
@@ -138,12 +197,25 @@ class DeterministicReplyClassifier(ReplyClassifierInterface):
                     confidence_score=0.85,
                     explanation=f"Matched interested / meeting request pattern '{pat}'",
                     needs_human_action=False,
+                    sentiment="positive",
                 )
 
-        # 6. Ambiguous / Low Confidence Default
+        # 7. Question Check
+        for pat in self.QUESTION_PATTERNS:
+            if re.search(pat, combined_text):
+                return ClassificationResult(
+                    reply_state="question",
+                    confidence_score=0.80,
+                    explanation=f"Matched question / inquiry pattern '{pat}'",
+                    needs_human_action=True,
+                    sentiment="neutral",
+                )
+
+        # 8. Ambiguous / Low Confidence Default
         return ClassificationResult(
             reply_state="ambiguous",
             confidence_score=0.40,
             explanation="Unrecognized response pattern requiring human review",
             needs_human_action=True,
+            sentiment="neutral",
         )

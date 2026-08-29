@@ -20,14 +20,14 @@ class GroqLLMProvider(LLMProviderInterface):
     """
 
     def __init__(self, api_key: str | None = None, model: str = "llama-3.3-70b-versatile"):
-        self.api_key = api_key
+        self.api_key = api_key.strip() if api_key else None
         self.model_name = model
         self._client: Groq | None = None
         if self.api_key:
             self._client = Groq(api_key=self.api_key)
 
     def generate_outreach_draft(self, request: LLMGenerationRequest) -> LLMGenerationResult:
-        if not self._client:
+        if not self._client or not self.api_key:
             raise ValueError("groq_api_key_not_configured")
 
         start_time = time.perf_counter()
@@ -109,6 +109,8 @@ class GroqLLMProvider(LLMProviderInterface):
                 temperature=0.3,
             )
 
+            if not chat_completion.choices:
+                raise ValueError("No completion choices returned by Groq")
             raw_text = chat_completion.choices[0].message.content or "{}"
             parsed = OutreachDraftStructuredOutput.model_validate_json(raw_text)
         except (ValidationError, Exception) as err:

@@ -24,7 +24,7 @@ def _sample_request() -> LLMGenerationRequest:
             {
                 "url": "https://cyberdyne.example.com/press/series-b",
                 "title": "Series B Funding Announcement",
-                "snippet": "Cyberdyne secures $50M to scale developer platform.",
+                "snippet": "Cyberdyne secures  to scale developer platform.",
                 "source_type": "website",
             },
             {
@@ -45,6 +45,13 @@ def test_groq_provider_missing_key_raises() -> None:
         provider.generate_outreach_draft(req)
 
 
+def test_groq_provider_whitespace_key_raises() -> None:
+    provider = GroqLLMProvider(api_key="   ")
+    req = _sample_request()
+    with pytest.raises(ValueError, match="groq_api_key_not_configured"):
+        provider.generate_outreach_draft(req)
+
+
 @patch("app.adapters.groq_provider.Groq")
 def test_groq_provider_successful_generation(mock_groq_class: MagicMock) -> None:
     mock_client = MagicMock()
@@ -56,12 +63,12 @@ def test_groq_provider_successful_generation(mock_groq_class: MagicMock) -> None
     # Structured JSON response from model
     mock_payload = {
         "subject": "Scaling Cyberdyne's Distributed Systems & Payments API",
-        "body": "Hi Sarah,\n\nCongrats on the $50M Series B. Noticed Cyberdyne is scaling backend infrastructure.",
+        "body": "Hi Sarah,\n\nCongrats on the  Series B. Noticed Cyberdyne is scaling backend infrastructure.",
         "evidence_references": [
             {
                 "url": "https://cyberdyne.example.com/press/series-b",
                 "title": "Series B Funding Announcement",
-                "snippet": "Cyberdyne secures $50M to scale developer platform.",
+                "snippet": "Cyberdyne secures  to scale developer platform.",
                 "source_type": "website",
             }
         ],
@@ -87,8 +94,9 @@ def test_groq_provider_successful_generation(mock_groq_class: MagicMock) -> None
 
     assert result.provider == "groq"
     assert result.model == "llama-3.3-70b-versatile"
+    assert result.prompt_version == "v1.0.0"
     assert result.subject == "Scaling Cyberdyne's Distributed Systems & Payments API"
-    assert "Congrats on the $50M Series B" in result.body
+    assert "Congrats on the  Series B" in result.body
     assert result.token_usage == 342
     assert result.duration_ms is not None and result.duration_ms >= 0
     assert len(result.evidence_references) == 1
@@ -102,6 +110,7 @@ def test_groq_provider_successful_generation(mock_groq_class: MagicMock) -> None
     assert len(kwargs["messages"]) == 2
     assert kwargs["messages"][0]["role"] == "system"
     assert kwargs["messages"][1]["role"] == "user"
+    assert "Prompt Version: v1.0.0" in kwargs["messages"][1]["content"]
 
 
 @patch("app.adapters.groq_provider.Groq")
@@ -150,6 +159,23 @@ def test_groq_provider_invalid_json_raises_value_error(mock_groq_class: MagicMoc
     req = _sample_request()
 
     with pytest.raises(ValueError, match="groq_generation_failed"):
+        provider.generate_outreach_draft(req)
+
+
+@patch("app.adapters.groq_provider.Groq")
+def test_groq_provider_empty_choices_raises_value_error(mock_groq_class: MagicMock) -> None:
+    mock_client = MagicMock()
+    mock_groq_class.return_value = mock_client
+
+    mock_response = MagicMock()
+    mock_response.choices = []
+
+    mock_client.chat.completions.create.return_value = mock_response
+
+    provider = GroqLLMProvider(api_key="gsk_test_key_123")
+    req = _sample_request()
+
+    with pytest.raises(ValueError, match="groq_generation_failed: No completion choices returned by Groq"):
         provider.generate_outreach_draft(req)
 
 

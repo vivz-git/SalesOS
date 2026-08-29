@@ -2,9 +2,10 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 
-from app.adapters.hubspot_adapter import HubSpotCRMAdapter
+from app.adapters.hubspot_adapter import HubSpotAssociationType, HubSpotCRMAdapter
 from app.auth import Principal, get_current_principal
 from app.main import app
 
@@ -135,6 +136,51 @@ def test_trigger_hubspot_sync_and_list_runs() -> None:
     app.dependency_overrides.clear()
 
 
+def test_hubspot_sync_run_not_found() -> None:
+    user_id = uuid4()
+    ws_id = uuid4()
+
+    mock_principal = Principal(
+        user_id=user_id,
+        email="admin@company.com",
+        workspace_id=ws_id,
+        role="admin",
+    )
+    app.dependency_overrides[get_current_principal] = lambda: mock_principal
+    client = TestClient(app)
+
+    random_id = uuid4()
+    detail_resp = client.get(f"/v1/integrations/hubspot/sync-runs/{random_id}")
+    assert detail_resp.status_code == 404
+    assert detail_resp.json()["detail"] == "sync_run_not_found"
+
+    app.dependency_overrides.clear()
+
+
+def test_hubspot_webhook_endpoint() -> None:
+    client = TestClient(app)
+
+    # Test webhook with signature
+    resp = client.post(
+        "/v1/webhooks/hubspot",
+        headers={"X-HubSpot-Signature-v3": "test_sig_123"},
+        json={"event": "contact.creation"},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "received"
+    assert data["signature_present"] is True
+
+    # Test webhook without signature
+    resp2 = client.post(
+        "/v1/webhooks/hubspot",
+        json={"event": "company.creation"},
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    assert data2["signature_present"] is False
+
+
 def test_hubspot_adapter_v4_association_resolution_and_v3_apis() -> None:
     mock_http = MagicMock(spec=httpx.Client)
 
@@ -182,17 +228,36 @@ def test_hubspot_adapter_v4_association_resolution_and_v3_apis() -> None:
     assert assoc_type.category == "HUBSPOT_DEFINED"
     assert assoc_type.type_id == 1
 
-    # 4. Test Contact & Company upsert
-    contact = adapter.create_or_update_contact("acc_v3_token", "test@company.com", "Jane", "Doe")
+    # 4. Test Contact & Company creation
+    contact = adapter.create_or_update_contact("acc_v3_token", "test@company.com", "Jane", "Doe", job_title="VP Sales")
     assert contact["id"] == "hs-obj-1001"
 
-    company = adapter.create_or_update_company("acc_v3_token", "targetcompany.com", "Target Co")
+    company = adapter.create_or_update_company("acc_v3_token", "targetcompany.com", "Target Co", industry="Technology")
     assert company["id"] == "hs-obj-1001"
 
-    # 5. Test object association
+    # 5. Test Contact & Company update with existing ID
+    contact_patch = adapter.create_or_update_contact("acc_v3_token", "test@company.com", existing_hubspot_id="hs-123")
+    assert contact_patch["id"] == "hs-obj-1001"
+
+    company_patch = adapter.create_or_update_company("acc_v3_token", "targetcompany.com", "Target Co", existing_hubspot_id="hs-company-456")
+    assert company_patch["id"] == "hs-obj-1001"
+
+    # 6. Test object association
     associated = adapter.associate_objects("acc_v3_token", "contact", "c1", "company", "co1", assoc_type)
     assert associated is True
 
-    # 6. Test Sales Email activity
+    # 7. Test Sales Email activity
     activity = adapter.create_sales_email_activity("acc_v3_token", "Subject", "Body", direction="EMAIL")
     assert activity["id"] == "hs-obj-1001"
+
+
+def test_hubspot_adapter_association_fallback_on_error() -> None:
+    mock_http = MagicMock(spec=httpx.Client)
+    mock_http.get.side_effect = httpx.HTTPStatusError("Not Found", request=MagicMock(), response=MagicMock(status_code=404))
+
+    adapter = HubSpotCRMAdapter(http_client=mock_http)
+    assoc_type = adapter.resolve_association_type("acc_v3_token", "contact", "company")
+
+    # Safe fallback
+    assert assoc_type.category == "HUBSPOT_DEFINED"
+    assert assoc_type.type_id == 1

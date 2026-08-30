@@ -4,24 +4,22 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.reply_classifier import (
-    ClassificationResult,
     DeterministicReplyClassifier,
     ReplyClassifierInterface,
     ReplyState,
 )
 from app.auth import Principal, get_current_principal
-from app.core.config import Settings, get_settings
+from app.core.config import Settings
 from app.db import get_db_session, tenant_transaction_context
 from app.models import (
     AccountModel,
     ContactModel,
     ConversationMessageModel,
     ConversationModel,
-    DeliveryModel,
     ReplyClassificationModel,
 )
 
@@ -98,9 +96,7 @@ def get_reply_classifier() -> ReplyClassifierInterface:
 
 
 async def _row_to_conversation(
-    session: AsyncSession,
-    model: ConversationModel,
-    with_messages: bool = False
+    session: AsyncSession, model: ConversationModel, with_messages: bool = False
 ) -> Conversation:
     # 1. Load Contact & Account context
     contact = await session.get(ContactModel, model.contact_id)
@@ -182,187 +178,236 @@ async def _row_to_conversation(
     )
 
 
-@router.post("/conversations/inbound", response_model=Conversation)
-async def ingest_inbound_reply(
+async def _process_inbound_reply(
     payload: InboundReplyPayload,
-    classifier: ReplyClassifierInterface = Depends(get_reply_classifier),
-    settings: Settings = Depends(get_settings),
-    session: AsyncSession = Depends(get_db_session),
+    resolved_ws_id: UUID,
+    resolved_contact_id: UUID | None,
+    resolved_delivery_id: UUID | None,
+    resolved_campaign_id: UUID | None,
+    classifier: ReplyClassifierInterface,
+    session: AsyncSession,
 ) -> Conversation:
-    # 1. Match referenced outbound delivery or recipient contact (We don't have RLS context yet, so we query globally, but it's safe because it's inbound webhook)
-    # Wait, if this is inbound, the webhook might not have `principal`. 
-    # The prompt specified "Inbound Reply Idempotency" and "Tenant Isolation".
-    
-    matched_delivery = None
-    if payload.in_reply_to_provider_message_id:
-        matched_delivery = await session.scalar(
-            select(DeliveryModel)
-            .filter_by(provider_message_id=payload.in_reply_to_provider_message_id)
+    system_user_id = UUID("00000000-0000-0000-0000-000000000000")
+    now_dt = datetime.now(UTC)
+    stop_reason = ""
+    conv_id = None
+
+    from sqlalchemy.exc import IntegrityError
+
+    from app.db import tenant_transaction_context
+
+    async with tenant_transaction_context(session, system_user_id, resolved_ws_id):
+        if not resolved_contact_id:
+            c_model = await session.scalar(
+                select(ContactModel)
+                .filter_by(workspace_id=resolved_ws_id, email=payload.sender_email)
+                .limit(1)
+            )
+            if c_model:
+                resolved_contact_id = c_model.id
+
+        if not resolved_contact_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contact or workspace could not be resolved for inbound message",
+            )
+
+        # Idempotency Check (Application Level)
+        if payload.provider_message_id:
+            existing_msg = await session.scalar(
+                select(ConversationMessageModel)
+                .filter_by(provider_message_id=payload.provider_message_id)
+                .limit(1)
+            )
+            if existing_msg:
+                conv = await session.get(ConversationModel, existing_msg.conversation_id)
+                if conv:
+                    return await _row_to_conversation(session, conv, with_messages=True)
+
+        existing_conv = await session.scalar(
+            select(ConversationModel)
+            .filter_by(workspace_id=resolved_ws_id, contact_id=resolved_contact_id)
             .limit(1)
         )
 
+        if not existing_conv:
+            conv_id = uuid4()
+            existing_conv = ConversationModel(
+                id=conv_id,
+                workspace_id=resolved_ws_id,
+                contact_id=resolved_contact_id,
+                campaign_id=resolved_campaign_id,
+                delivery_id=resolved_delivery_id,
+                status="active",
+                current_reply_state=None,
+                last_message_at=now_dt,
+                created_at=now_dt,
+                updated_at=now_dt,
+            )
+            session.add(existing_conv)
+            await session.flush()
+        else:
+            conv_id = existing_conv.id
+
+        # Insert Message
+        msg_id = uuid4()
+        msg_model = ConversationMessageModel(
+            id=msg_id,
+            workspace_id=resolved_ws_id,
+            conversation_id=conv_id,
+            direction="inbound",
+            sender_email=payload.sender_email,
+            recipient_email=payload.recipient_email,
+            subject=payload.subject,
+            body=payload.body,
+            provider_message_id=payload.provider_message_id,
+            delivery_id=resolved_delivery_id,
+            created_at=now_dt,
+        )
+        session.add(msg_model)
+
+        try:
+            async with session.begin_nested():
+                await session.flush()
+        except IntegrityError:
+            # Idempotent return - we caught the duplicate insert!
+            return await _row_to_conversation(session, existing_conv, with_messages=True)
+
+    if stop_reason == "":
+        async with tenant_transaction_context(session, system_user_id, resolved_ws_id):
+            # 5. Execute Classification Engine
+            classification_result = classifier.classify(payload.body, payload.subject)
+
+            class_id = uuid4()
+            class_model = ReplyClassificationModel(
+                id=class_id,
+                workspace_id=resolved_ws_id,
+                conversation_id=conv_id,
+                message_id=msg_id,
+                reply_state=classification_result.reply_state,
+                confidence_score=classification_result.confidence_score,
+                explanation=classification_result.explanation,
+                needs_human_action=classification_result.needs_human_action,
+                classified_at=now_dt,
+            )
+            session.add(class_model)
+
+            existing_conv = await session.get(ConversationModel, conv_id)
+            if existing_conv:
+                existing_conv.current_reply_state = classification_result.reply_state
+                existing_conv.last_message_at = now_dt
+                existing_conv.updated_at = now_dt
+
+                if classification_result.reply_state == "unsubscribe":
+                    existing_conv.status = "opt_out"
+                    stop_reason = "unsubscribed"
+                elif classification_result.needs_human_action:
+                    existing_conv.status = "needs_human_action"
+                    stop_reason = "prospect_replied"
+                else:
+                    existing_conv.status = "active"
+                    stop_reason = "prospect_replied"
+
+            await session.flush()
+
+        # 7. Evaluate and halt active sequence enrollments for this contact
+        try:
+            from app.api.sequences import evaluate_sequence_stop_conditions_for_contact
+
+            await evaluate_sequence_stop_conditions_for_contact(
+                str(resolved_ws_id), str(resolved_contact_id), stop_reason, session
+            )
+        except Exception as e:
+            import logging
+
+            logging.error(f"FAILED TO EVALUATE SEQUENCE STOP CONDITIONS: {e}")
+
+    async with tenant_transaction_context(session, system_user_id, resolved_ws_id):
+        conv = await session.get(ConversationModel, conv_id)
+        if not conv:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        return await _row_to_conversation(session, conv, with_messages=True)
+
+
+# NO ROUTER POST! INTERNAL FUNCTION!
+async def ingest_inbound_reply(
+    payload: InboundReplyPayload,
+    classifier: ReplyClassifierInterface,
+    settings: Settings,
+    session: AsyncSession,
+) -> Conversation:
     resolved_ws_id: UUID | None = None
     resolved_contact_id: UUID | None = None
     resolved_campaign_id: UUID | None = None
     resolved_delivery_id: UUID | None = None
 
-    if matched_delivery:
-        resolved_ws_id = matched_delivery.workspace_id
-        resolved_contact_id = matched_delivery.contact_id
-        resolved_delivery_id = matched_delivery.id
-        resolved_campaign_id = None
-    elif payload.workspace_id:
-        resolved_ws_id = payload.workspace_id
+    if payload.in_reply_to_provider_message_id:
+        import logging
 
-    system_user_id = UUID("00000000-0000-0000-0000-000000000000")
-    if resolved_ws_id:
-        await session.execute(
-            text("SELECT set_config('salesos.app_user_id', :user_id, true)"),
-            {"user_id": str(system_user_id)},
-        )
-        await session.execute(
-            text("SELECT set_config('salesos.app_workspace_id', :workspace_id, true)"),
-            {"workspace_id": str(resolved_ws_id)},
-        )
+        from app.auth import _clients
 
-    # 2. Query contact by email if not resolved via delivery
-    if not resolved_contact_id and resolved_ws_id:
-        c_model = await session.scalar(
-            select(ContactModel)
-            .filter_by(workspace_id=resolved_ws_id, email=payload.sender_email)
-            .limit(1)
-        )
-        if c_model:
-            resolved_contact_id = c_model.id
+        try:
+            _, admin_client = _clients(settings)
+            resp = (
+                admin_client.table("deliveries")
+                .select("id, workspace_id, contact_id")
+                .eq("provider_message_id", payload.in_reply_to_provider_message_id)
+                .limit(1)
+                .execute()
+            )
+        except Exception as e:
+            logging.error(f"Webhook discovery lookup failed internally: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="webhook_discovery_service_unavailable",
+            ) from e
 
-    if not resolved_ws_id or not resolved_contact_id:
+        data = resp.data
+        if data and len(data) > 0:
+            resolved_ws_id = UUID(str(data[0]["workspace_id"]))  # type: ignore
+            resolved_contact_id = UUID(str(data[0]["contact_id"]))  # type: ignore
+            resolved_delivery_id = UUID(str(data[0]["id"]))  # type: ignore
+
+    if not resolved_ws_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Contact or workspace could not be resolved for inbound message",
         )
 
-    now_dt = datetime.now(UTC)
-
-    # 3. Handle Idempotency
-    if payload.provider_message_id:
-        existing_msg = await session.scalar(
-            select(ConversationMessageModel)
-            .filter_by(provider_message_id=payload.provider_message_id)
-            .limit(1)
-        )
-        if existing_msg:
-            # Idempotent return - find the parent conversation
-            conv = await session.get(ConversationModel, existing_msg.conversation_id)
-            if conv:
-                return await _row_to_conversation(session, conv, with_messages=True)
-
-    system_user_id = UUID("00000000-0000-0000-0000-000000000000")
-    if resolved_ws_id:
-        await session.execute(
-            text("SELECT set_config('salesos.app_user_id', :user_id, true)"),
-            {"user_id": str(system_user_id)},
-        )
-        await session.execute(
-            text("SELECT set_config('salesos.app_workspace_id', :workspace_id, true)"),
-            {"workspace_id": str(resolved_ws_id)},
-        )
-
-    existing_conv = await session.scalar(
-        select(ConversationModel)
-        .filter_by(workspace_id=resolved_ws_id, contact_id=resolved_contact_id)
-        .limit(1)
+    return await _process_inbound_reply(
+        payload=payload,
+        resolved_ws_id=resolved_ws_id,
+        resolved_contact_id=resolved_contact_id,
+        resolved_delivery_id=resolved_delivery_id,
+        resolved_campaign_id=resolved_campaign_id,
+        classifier=classifier,
+        session=session,
     )
 
-    if not existing_conv:
-        conv_id = uuid4()
-        existing_conv = ConversationModel(
-            id=conv_id,
-            workspace_id=resolved_ws_id,
-            contact_id=resolved_contact_id,
-            campaign_id=resolved_campaign_id,
-            delivery_id=resolved_delivery_id,
-            status="active",
-            current_reply_state=None,
-            last_message_at=now_dt,
-            created_at=now_dt,
-            updated_at=now_dt,
-        )
-        session.add(existing_conv)
-        await session.flush()
 
-    conv_id = existing_conv.id
+@router.post("/conversations/simulate", response_model=Conversation)
+async def simulate_inbound_reply(
+    payload: InboundReplyPayload,
+    principal: Principal = Depends(get_current_principal),
+    classifier: ReplyClassifierInterface = Depends(get_reply_classifier),
+    session: AsyncSession = Depends(get_db_session),
+) -> Conversation:
+    # Use authenticated workspace
+    resolved_ws_id = principal.workspace_id
 
-    # 4. Append Inbound Message Record
-    msg_id = uuid4()
-    msg_model = ConversationMessageModel(
-        id=msg_id,
-        workspace_id=resolved_ws_id,
-        conversation_id=conv_id,
-        direction="inbound",
-        sender_email=payload.sender_email,
-        recipient_email=payload.recipient_email,
-        subject=payload.subject,
-        body=payload.body,
-        provider_message_id=payload.provider_message_id,
-        delivery_id=resolved_delivery_id,
-        created_at=now_dt,
+    resolved_contact_id: UUID | None = None
+    resolved_campaign_id: UUID | None = None
+    resolved_delivery_id: UUID | None = None
+
+    return await _process_inbound_reply(
+        payload=payload,
+        resolved_ws_id=resolved_ws_id,
+        resolved_contact_id=resolved_contact_id,
+        resolved_delivery_id=resolved_delivery_id,
+        resolved_campaign_id=resolved_campaign_id,
+        classifier=classifier,
+        session=session,
     )
-    session.add(msg_model)
-    await session.flush()
-
-    # 5. Execute Classification Engine
-    classification_result: ClassificationResult = classifier.classify(payload.body, payload.subject)
-
-    class_id = uuid4()
-    class_model = ReplyClassificationModel(
-        id=class_id,
-        workspace_id=resolved_ws_id,
-        conversation_id=conv_id,
-        message_id=msg_id,
-        reply_state=classification_result.reply_state,
-        confidence_score=classification_result.confidence_score,
-        explanation=classification_result.explanation,
-        needs_human_action=classification_result.needs_human_action,
-        classified_at=now_dt,
-    )
-    session.add(class_model)
-
-    # 6. Update Thread Status & Reply State
-    existing_conv.current_reply_state = classification_result.reply_state
-    existing_conv.last_message_at = now_dt
-    existing_conv.updated_at = now_dt
-
-    if classification_result.reply_state == "unsubscribe":
-        existing_conv.status = "opt_out"
-        stop_reason = "unsubscribed"
-    elif classification_result.needs_human_action:
-        existing_conv.status = "needs_human_action"
-        stop_reason = "prospect_replied"
-    else:
-        existing_conv.status = "active"
-        stop_reason = "prospect_replied"
-
-    await session.commit()
-
-    # 7. Evaluate and halt active sequence enrollments for this contact
-    try:
-        from app.api.sequences import evaluate_sequence_stop_conditions_for_contact
-        await evaluate_sequence_stop_conditions_for_contact(str(resolved_ws_id), str(resolved_contact_id), stop_reason, session)
-    except Exception as e:
-        print(f"FAILED TO EVALUATE SEQUENCE STOP CONDITIONS: {e}")
-        pass
-
-    # Return refreshed conversation
-    await session.execute(
-        text("SELECT set_config('salesos.app_user_id', :user_id, true)"),
-        {"user_id": str(system_user_id)},
-    )
-    await session.execute(
-        text("SELECT set_config('salesos.app_workspace_id', :workspace_id, true)"),
-        {"workspace_id": str(resolved_ws_id)},
-    )
-    await session.refresh(existing_conv)
-    return await _row_to_conversation(session, existing_conv, with_messages=True)
 
 
 @router.get("/conversations", response_model=list[Conversation])
@@ -384,14 +429,14 @@ async def list_conversations(
             stmt = stmt.filter_by(current_reply_state=reply_state_filter)
 
         stmt = stmt.order_by(ConversationModel.last_message_at.desc()).offset(offset).limit(limit)
-        
+
         result = await session.execute(stmt)
         models = result.scalars().all()
 
         results: list[Conversation] = []
         for m in models:
             conv_obj = await _row_to_conversation(session, m, with_messages=False)
-            
+
             if search:
                 query = search.lower()
                 c_name = (conv_obj.contact_name or "").lower()
@@ -419,7 +464,7 @@ async def get_conversation_detail(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="conversation_thread_not_found",
             )
-        
+
         return await _row_to_conversation(session, model, with_messages=True)
 
 
@@ -490,10 +535,10 @@ async def update_conversation_status(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="conversation_thread_not_found",
             )
-        
+
         model.status = payload.status
         model.updated_at = datetime.now(UTC)
-        
+
         await session.flush()
         await session.refresh(model)
 

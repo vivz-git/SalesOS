@@ -69,12 +69,14 @@ class MockLLMProvider(LLMProviderInterface):
         evidence = []
         if request.research_sources:
             for s in request.research_sources[:2]:
-                evidence.append({
-                    "url": s.get("url"),
-                    "title": s.get("title"),
-                    "snippet": s.get("snippet"),
-                    "source_type": s.get("source_type", "website"),
-                })
+                evidence.append(
+                    {
+                        "url": s.get("url"),
+                        "title": s.get("title"),
+                        "snippet": s.get("snippet"),
+                        "source_type": s.get("source_type", "website"),
+                    }
+                )
 
         return LLMGenerationResult(
             subject=f"Accelerating {request.account_name or 'Your'} Core Platform",
@@ -99,7 +101,10 @@ class MockLLMProvider(LLMProviderInterface):
     ) -> ResearchSynthesisResult:
         return ResearchSynthesisResult(
             summary=f"Synthesized research for {request.account_name}",
-            key_insights=[f"Active in {request.account_industry or 'Tech'}", "Growing outbound motion"],
+            key_insights=[
+                f"Active in {request.account_industry or 'Tech'}",
+                "Growing outbound motion",
+            ],
             confidence_score=0.92,
             recommended_hooks=[f"Mention scale at {request.account_name}"],
             provider="groq",
@@ -206,7 +211,6 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
     }
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-
         # =========================================================================
         # STAGE 1: Authentication and Workspace Context
         # =========================================================================
@@ -229,8 +233,12 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
             "state": "NY",
             "country": "USA",
         }
-        acc_create_resp = await client.post("/v1/accounts", json=create_account_payload, headers=headers)
-        assert acc_create_resp.status_code == 201, f"Stage 2 (Create Account) failed: {acc_create_resp.text}"
+        acc_create_resp = await client.post(
+            "/v1/accounts", json=create_account_payload, headers=headers
+        )
+        assert acc_create_resp.status_code == 201, (
+            f"Stage 2 (Create Account) failed: {acc_create_resp.text}"
+        )
         account = acc_create_resp.json()
         account_id = account["id"]
         assert account["name"] == "Stark Industries"
@@ -271,8 +279,12 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
             "department": "Executive",
             "is_primary": True,
         }
-        contact_create_resp = await client.post("/v1/contacts", json=create_contact_payload, headers=headers)
-        assert contact_create_resp.status_code == 201, f"Stage 3 (Create Contact) failed: {contact_create_resp.text}"
+        contact_create_resp = await client.post(
+            "/v1/contacts", json=create_contact_payload, headers=headers
+        )
+        assert contact_create_resp.status_code == 201, (
+            f"Stage 3 (Create Contact) failed: {contact_create_resp.text}"
+        )
         contact = contact_create_resp.json()
         contact_id = contact["id"]
         assert contact["first_name"] == "Pepper"
@@ -287,7 +299,9 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
         assert contact_get_resp.json()["id"] == contact_id
 
         # List Contacts by Account
-        contact_list_resp = await client.get(f"/v1/contacts?account_id={account_id}", headers=headers)
+        contact_list_resp = await client.get(
+            f"/v1/contacts?account_id={account_id}", headers=headers
+        )
         assert contact_list_resp.status_code == 200
         assert len(contact_list_resp.json()) == 1
         assert contact_list_resp.json()[0]["id"] == contact_id
@@ -301,30 +315,42 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
             "target_segment": "Enterprise Aerospace and Defense",
             "icp_definition": "Series C+ or Public Aerospace enterprises modernizing supply chain platforms",
         }
-        camp_create_resp = await client.post("/v1/campaigns", json=create_campaign_payload, headers=headers)
-        assert camp_create_resp.status_code == 201, f"Stage 4 (Create Campaign) failed: {camp_create_resp.text}"
+        camp_create_resp = await client.post(
+            "/v1/campaigns", json=create_campaign_payload, headers=headers
+        )
+        assert camp_create_resp.status_code == 201, (
+            f"Stage 4 (Create Campaign) failed: {camp_create_resp.text}"
+        )
         campaign = camp_create_resp.json()
         campaign_id = campaign["id"]
         assert campaign["name"] == "Q3 Enterprise Defense Modernization"
         assert campaign["status"] == "draft"
 
         # Activate Campaign
-        activate_resp = await client.post(f"/v1/campaigns/{campaign_id}/actions/activate", headers=headers)
+        activate_resp = await client.post(
+            f"/v1/campaigns/{campaign_id}/actions/activate", headers=headers
+        )
         assert activate_resp.status_code == 200
         assert activate_resp.json()["status"] == "active"
 
         # Pause Campaign
-        pause_resp = await client.post(f"/v1/campaigns/{campaign_id}/actions/pause", headers=headers)
+        pause_resp = await client.post(
+            f"/v1/campaigns/{campaign_id}/actions/pause", headers=headers
+        )
         assert pause_resp.status_code == 200
         assert pause_resp.json()["status"] == "paused"
 
         # Reactivate Campaign
-        reactivate_resp = await client.post(f"/v1/campaigns/{campaign_id}/actions/activate", headers=headers)
+        reactivate_resp = await client.post(
+            f"/v1/campaigns/{campaign_id}/actions/activate", headers=headers
+        )
         assert reactivate_resp.status_code == 200
         assert reactivate_resp.json()["status"] == "active"
 
         # Assign Campaign to Contact
-        await client.patch(f"/v1/contacts/{contact_id}", json={"campaign_id": campaign_id}, headers=headers)
+        await client.patch(
+            f"/v1/contacts/{contact_id}", json={"campaign_id": campaign_id}, headers=headers
+        )
 
         # =========================================================================
         # STAGE 5: Research Brief Generation and Source Citation
@@ -339,8 +365,12 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
                 "Recent $100M initiative for next-generation defense analytics",
             ],
         }
-        brief_create_resp = await client.post("/v1/research/briefs", json=create_brief_payload, headers=headers)
-        assert brief_create_resp.status_code == 201, f"Stage 5 (Create Brief) failed: {brief_create_resp.text}"
+        brief_create_resp = await client.post(
+            "/v1/research/briefs", json=create_brief_payload, headers=headers
+        )
+        assert brief_create_resp.status_code == 201, (
+            f"Stage 5 (Create Brief) failed: {brief_create_resp.text}"
+        )
         brief = brief_create_resp.json()
         brief_id = brief["id"]
         assert brief["status"] == "pending"
@@ -361,13 +391,19 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
             "snippet": "Seeking Senior Platform Engineers to modernize supply-chain microservices.",
             "confidence": 0.90,
         }
-        s1_resp = await client.post(f"/v1/research/briefs/{brief_id}/sources", json=source_1_payload, headers=headers)
+        s1_resp = await client.post(
+            f"/v1/research/briefs/{brief_id}/sources", json=source_1_payload, headers=headers
+        )
         assert s1_resp.status_code == 201
-        s2_resp = await client.post(f"/v1/research/briefs/{brief_id}/sources", json=source_2_payload, headers=headers)
+        s2_resp = await client.post(
+            f"/v1/research/briefs/{brief_id}/sources", json=source_2_payload, headers=headers
+        )
         assert s2_resp.status_code == 201
 
         # Trigger Research Job
-        trigger_resp = await client.post(f"/v1/research/briefs/{brief_id}/actions/trigger", headers=headers)
+        trigger_resp = await client.post(
+            f"/v1/research/briefs/{brief_id}/actions/trigger", headers=headers
+        )
         assert trigger_resp.status_code == 200
         assert trigger_resp.json()["status"] == "queued"
 
@@ -385,7 +421,9 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
         assert brief_update_resp.json()["status"] == "completed"
 
         # List Sources for Brief
-        sources_list_resp = await client.get(f"/v1/research/briefs/{brief_id}/sources", headers=headers)
+        sources_list_resp = await client.get(
+            f"/v1/research/briefs/{brief_id}/sources", headers=headers
+        )
         assert sources_list_resp.status_code == 200
         assert len(sources_list_resp.json()) == 2
 
@@ -400,15 +438,21 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
             "body": "Initial Scaffold Body",
             "generation_source": "human",
         }
-        draft_create_resp = await client.post("/v1/outreach/drafts", json=create_draft_payload, headers=headers)
-        assert draft_create_resp.status_code == 201, f"Stage 6 (Create Draft) failed: {draft_create_resp.text}"
+        draft_create_resp = await client.post(
+            "/v1/outreach/drafts", json=create_draft_payload, headers=headers
+        )
+        assert draft_create_resp.status_code == 201, (
+            f"Stage 6 (Create Draft) failed: {draft_create_resp.text}"
+        )
         draft = draft_create_resp.json()
         draft_id = draft["id"]
         assert draft["status"] == "draft"
         assert draft["current_version_number"] == 1
 
         # Execute AI Generation Action
-        gen_resp = await client.post(f"/v1/outreach/drafts/{draft_id}/actions/generate", headers=headers)
+        gen_resp = await client.post(
+            f"/v1/outreach/drafts/{draft_id}/actions/generate", headers=headers
+        )
         assert gen_resp.status_code == 200, f"Stage 6 (Generate AI Draft) failed: {gen_resp.text}"
         generated_draft = gen_resp.json()
         assert generated_draft["current_version_number"] == 2
@@ -417,7 +461,9 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
         assert generated_draft["status"] == "draft"
 
         # Verify Draft Version Details and Evidence References
-        versions_resp = await client.get(f"/v1/outreach/drafts/{draft_id}/versions", headers=headers)
+        versions_resp = await client.get(
+            f"/v1/outreach/drafts/{draft_id}/versions", headers=headers
+        )
         assert versions_resp.status_code == 200
         versions = versions_resp.json()
         assert len(versions) == 2
@@ -425,7 +471,10 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
         assert v2["generation_source"] == "ai_generated"
         assert v2["provider"] == "groq"
         assert len(v2["evidence_references"]) == 2
-        assert v2["evidence_references"][0]["url"] == "https://starkindustries.example.com/press/arc-expansion"
+        assert (
+            v2["evidence_references"][0]["url"]
+            == "https://starkindustries.example.com/press/arc-expansion"
+        )
 
         # =========================================================================
         # STAGE 7: Submit Draft for Review and Unapproved Delivery Guard
@@ -440,7 +489,9 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
         assert "cannot_deliver_unapproved_draft" in guard_draft_resp.text
 
         # Submit draft for review
-        submit_resp = await client.post(f"/v1/outreach/drafts/{draft_id}/actions/submit-review", headers=headers)
+        submit_resp = await client.post(
+            f"/v1/outreach/drafts/{draft_id}/actions/submit-review", headers=headers
+        )
         assert submit_resp.status_code == 200, f"Stage 7 (Submit Review) failed: {submit_resp.text}"
         assert submit_resp.json()["status"] == "ready_for_review"
 
@@ -480,7 +531,9 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
             json=decision_payload,
             headers=headers,
         )
-        assert decision_resp.status_code == 200, f"Stage 8 (Approval Decision) failed: {decision_resp.text}"
+        assert decision_resp.status_code == 200, (
+            f"Stage 8 (Approval Decision) failed: {decision_resp.text}"
+        )
         audit_record = decision_resp.json()
         assert audit_record["decision"] == "approved"
         assert audit_record["version_number"] == 2
@@ -541,8 +594,12 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
             "provider_message_id": "inbound_msg_interested_001",
             "in_reply_to_provider_message_id": provider_message_id,
         }
-        inbound_resp1 = await client.post("/v1/conversations/inbound", json=interested_inbound_payload)
-        assert inbound_resp1.status_code == 200, f"Stage 10A (Inbound Interested) failed: {inbound_resp1.text}"
+        inbound_resp1 = await client.post(
+            "/v1/conversations/simulate", json=interested_inbound_payload, headers=headers
+        )
+        assert inbound_resp1.status_code == 200, (
+            f"Stage 10A (Inbound Interested) failed: {inbound_resp1.text}"
+        )
         conv1 = inbound_resp1.json()
         assert conv1["current_reply_state"] == "interested"
         assert conv1["contact_id"] == str(contact_id)
@@ -565,8 +622,12 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
             "provider_message_id": "inbound_msg_unsub_002",
             "in_reply_to_provider_message_id": provider_message_id,
         }
-        inbound_resp2 = await client.post("/v1/conversations/inbound", json=unsubscribe_inbound_payload)
-        assert inbound_resp2.status_code == 200, f"Stage 10B (Inbound Unsubscribe) failed: {inbound_resp2.text}"
+        inbound_resp2 = await client.post(
+            "/v1/conversations/simulate", json=unsubscribe_inbound_payload, headers=headers
+        )
+        assert inbound_resp2.status_code == 200, (
+            f"Stage 10B (Inbound Unsubscribe) failed: {inbound_resp2.text}"
+        )
         conv2 = inbound_resp2.json()
         assert conv2["current_reply_state"] == "unsubscribe"
         assert conv2["status"] == "opt_out"
@@ -576,7 +637,9 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
         # =========================================================================
         # 11A: HubSpot Integration OAuth and Sync
         auth_resp = await client.post("/v1/integrations/hubspot/actions/authorize", headers=headers)
-        assert auth_resp.status_code == 200, f"Stage 11A (HubSpot Authorize) failed: {auth_resp.text}"
+        assert auth_resp.status_code == 200, (
+            f"Stage 11A (HubSpot Authorize) failed: {auth_resp.text}"
+        )
         auth_data = auth_resp.json()
         assert "https://app.hubspot.com/oauth/authorize" in auth_data["authorization_url"]
         assert str(workspace_id) in auth_data["state"]
@@ -588,7 +651,9 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
         )
         assert callback_resp.status_code == 200
         assert callback_resp.json()["status"] == "connected"
-        assert "access_token" not in callback_resp.json(), "Security leak: raw token exposed in response!"
+        assert "access_token" not in callback_resp.json(), (
+            "Security leak: raw token exposed in response!"
+        )
 
         # Trigger CRM Export Sync
         sync_resp = await client.post(
@@ -603,7 +668,9 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
 
         # 11B: Weekly Performance Metrics Digest Generation
         report_gen_resp = await client.post("/v1/reports/weekly/actions/generate", headers=headers)
-        assert report_gen_resp.status_code == 200, f"Stage 11B (Generate Report) failed: {report_gen_resp.text}"
+        assert report_gen_resp.status_code == 200, (
+            f"Stage 11B (Generate Report) failed: {report_gen_resp.text}"
+        )
         report = report_gen_resp.json()
         metrics = report["metrics_snapshot"]
 

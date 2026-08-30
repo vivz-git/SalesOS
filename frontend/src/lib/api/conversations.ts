@@ -98,7 +98,7 @@ export async function ingestInboundReply(
   workspaceId: string,
   payload: InboundReplyPayload
 ): Promise<Conversation> {
-  return request<Conversation>("/api/v1/conversations/inbound", workspaceId, {
+  return request<Conversation>("/api/v1/conversations/simulate", workspaceId, {
     method: "POST",
     body: JSON.stringify({ ...payload, workspace_id: workspaceId }),
   });

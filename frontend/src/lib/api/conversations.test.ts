@@ -43,7 +43,7 @@ describe("Conversations API Client", () => {
     expect(detail.status).toBe("needs_human_action");
   });
 
-  it("ingestInboundReply sends POST to /api/v1/conversations/inbound", async () => {
+  it("ingestInboundReply sends POST to /api/v1/conversations/simulate", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ id: "c1", current_reply_state: "interested" }),
@@ -57,7 +57,7 @@ describe("Conversations API Client", () => {
     });
 
     expect(mockFetch).toHaveBeenCalledWith(
-      "/api/v1/conversations/inbound",
+      "/api/v1/conversations/simulate",
       expect.objectContaining({ method: "POST" })
     );
     expect(result.current_reply_state).toBe("interested");

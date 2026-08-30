@@ -214,7 +214,7 @@ async def run_e2e_test():
 
     # 16. CONVERSATION / INBOUND REPLY FLOW
     print("\n[16. CONVERSATIONS] Ingesting Inbound Prospect Reply...")
-    inbound_resp = await client1.post("/v1/conversations/inbound", json={
+    inbound_resp = await client1.post("/v1/conversations/simulate", json={
         "workspace_id": ws1_id,
         "sender_email": "jane.doe@acmepayments.com",
         "recipient_email": "outreach@salesos.com",

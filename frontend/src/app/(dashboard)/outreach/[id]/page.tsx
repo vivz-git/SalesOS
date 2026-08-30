@@ -14,10 +14,12 @@ import {
   type DraftStatus,
 } from "@/lib/api/outreach";
 import { fetchResearchBrief, type ResearchBrief } from "@/lib/api/research";
+import { fetchContact, type Contact } from "@/lib/api/contacts";
 import { DraftStatusBadge } from "@/components/outreach/draft-status-badge";
 import { DraftVersionHistory } from "@/components/outreach/draft-version-history";
 import { ResearchContextCard } from "@/components/outreach/research-context-card";
 import { GenerateDraftButton } from "@/components/outreach/generate-draft-button";
+import { DeliveryActionModal } from "@/components/deliveries/delivery-action-modal";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -42,9 +44,11 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
 
   const [draft, setDraft] = useState<OutreachDraft | null>(null);
   const [researchBrief, setResearchBrief] = useState<ResearchBrief | null>(null);
+  const [contact, setContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [deliveryModalOpen, setDeliveryModalOpen] = useState<boolean>(false);
 
   // Edit / Revise Mode State
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -66,6 +70,12 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
         fetchResearchBrief(activeWorkspace.id, data.research_brief_id)
           .then(setResearchBrief)
           .catch(() => setResearchBrief(null));
+      }
+
+      if (data.contact_id) {
+        fetchContact(activeWorkspace.id, data.contact_id)
+          .then(setContact)
+          .catch(() => setContact(null));
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load outreach draft");
@@ -264,18 +274,8 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
             {isApproved && (
               <button
                 type="button"
-                onClick={async () => {
-                  if (!activeWorkspace) return;
-                  try {
-                    const { createDelivery } = await import("@/lib/api/deliveries");
-                    const delivery = await createDelivery(activeWorkspace.id, draft.id);
-                    setActionMessage(`Email delivery initiated (${delivery.status})! View in Deliveries log.`);
-                    setTimeout(() => setActionMessage(null), 5000);
-                  } catch (err: unknown) {
-                    setError(err instanceof Error ? err.message : "Delivery failed");
-                  }
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 shadow-2xs transition-colors"
+                onClick={() => setDeliveryModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 shadow-sm transition-colors"
               >
                 <Send className="h-3.5 w-3.5" />
                 <span>Send Outbound Email</span>
@@ -395,6 +395,26 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
           <ResearchContextCard brief={researchBrief} />
         </div>
       </div>
+
+      {deliveryModalOpen && draft && (
+        <DeliveryActionModal
+          isOpen={deliveryModalOpen}
+          draftSubject={draft.current_subject || "(Untitled Subject)"}
+          realProspectEmail={contact?.email || undefined}
+          onClose={() => setDeliveryModalOpen(false)}
+          onConfirm={async (testRecipientEmail) => {
+            if (!activeWorkspace) return;
+            const { createDelivery } = await import("@/lib/api/deliveries");
+            const delivery = await createDelivery(
+              activeWorkspace.id,
+              draft.id,
+              testRecipientEmail || undefined
+            );
+            setActionMessage(`Email delivery initiated (${delivery.status})! View in Deliveries log.`);
+            setTimeout(() => setActionMessage(null), 5000);
+          }}
+        />
+      )}
     </div>
   );
 }

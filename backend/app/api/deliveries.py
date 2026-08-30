@@ -147,28 +147,35 @@ async def create_delivery(
         draft_seq_enrollment_id = draft.sequence_enrollment_id
 
         existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
-        if existing_delivery and existing_delivery.status in ("sent", "delivered", "running", "queued"):
-            return _model_to_delivery(existing_delivery)
+        if existing_delivery:
+            if existing_delivery.status in ("sent", "delivered", "running", "queued"):
+                return _model_to_delivery(existing_delivery)
+            else:
+                existing_delivery.status = "queued"
+                existing_delivery.updated_at = now_dt
+                await session.flush()
+                delivery_id = existing_delivery.id
+        else:
+            delivery_model = DeliveryModel(
+                id=delivery_id,
+                workspace_id=principal.workspace_id,
+                draft_id=draft.id,
+                version_id=draft.current_version_id,
+                version_number=draft.current_version_number,
+                contact_id=draft.contact_id,
+                recipient_email=recipient_email,
+                subject=draft_current_subject,
+                body=draft_current_body,
+                provider="resend",
+                status="queued",
+                idempotency_key=idempotency_key,
+                created_by=principal.user_id,
+                created_at=now_dt,
+                updated_at=now_dt
+            )
+            session.add(delivery_model)
+            await session.flush()
 
-        delivery_model = DeliveryModel(
-            id=delivery_id,
-            workspace_id=principal.workspace_id,
-            draft_id=draft.id,
-            version_id=draft.current_version_id,
-            version_number=draft.current_version_number,
-            contact_id=draft.contact_id,
-            recipient_email=recipient_email,
-            subject=draft_current_subject,
-            body=draft_current_body,
-            provider="resend",
-            status="queued",
-            idempotency_key=idempotency_key,
-            created_by=principal.user_id,
-            created_at=now_dt,
-            updated_at=now_dt
-        )
-        session.add(delivery_model)
-        await session.flush()
 
     # 6. Execute Provider Send Operation
     send_req = EmailDeliverySendRequest(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
 import {
@@ -20,24 +20,30 @@ import {
   Inbox,
   Send,
   Plus,
+  CheckCircle2,
+  Loader2,
+  X,
 } from "lucide-react";
 
 export default function ConversationsPage() {
   const { activeWorkspace } = useWorkspace();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [replyStateFilter, setReplyStateFilter] = useState<string>("all");
+  const [replyStateFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Simulated Inbound Test Drawer state
   const [showSimulateModal, setShowSimulateModal] = useState<boolean>(false);
+  const [simulating, setSimulating] = useState<boolean>(false);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [simSender, setSimSender] = useState<string>("alex.buyer@targetcompany.com");
   const [simSubject, setSimSubject] = useState<string>("Re: SalesOS Demo Inquiry");
   const [simBody, setSimBody] = useState<string>("Sounds great! Are you free for a call on Thursday at 2pm?");
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!activeWorkspace) return;
     setLoading(true);
     setError(null);
@@ -53,25 +59,35 @@ export default function ConversationsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [activeWorkspace, statusFilter, replyStateFilter, searchQuery]);
 
   useEffect(() => {
     loadData();
-  }, [activeWorkspace, statusFilter, replyStateFilter]);
+  }, [loadData]);
 
-  async function handleSimulateInbound() {
-    if (!activeWorkspace) return;
+  async function handleSimulateInbound(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!activeWorkspace || simulating) return;
+    setSimulating(true);
+    setModalError(null);
     try {
-      await ingestInboundReply(activeWorkspace.id, {
+      const conv = await ingestInboundReply(activeWorkspace.id, {
         sender_email: simSender,
         recipient_email: "sales@mycompany.com",
         subject: simSubject,
         body: simBody,
       });
       setShowSimulateModal(false);
-      loadData();
+      const stateLabel = conv?.current_reply_state
+        ? ` as "${conv.current_reply_state.replace(/_/g, " ")}"`
+        : "";
+      setSuccessMsg(`Inbound prospect reply was successfully ingested and classified${stateLabel}.`);
+      await loadData();
+      setTimeout(() => setSuccessMsg(null), 5000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to ingest inbound test reply");
+      setModalError(err instanceof Error ? err.message : "Failed to ingest inbound test reply");
+    } finally {
+      setSimulating(false);
     }
   }
 
@@ -91,7 +107,10 @@ export default function ConversationsPage() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowSimulateModal(true)}
+            onClick={() => {
+              setModalError(null);
+              setShowSimulateModal(true);
+            }}
             className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-purple-700 transition-colors shadow-2xs"
           >
             <Plus className="h-4 w-4" />
@@ -150,6 +169,13 @@ export default function ConversationsPage() {
         <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-800">
           <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-900 font-semibold shadow-2xs">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+          <span>{successMsg}</span>
         </div>
       )}
 
@@ -226,62 +252,97 @@ export default function ConversationsPage() {
       {showSimulateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
           <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 shadow-xl space-y-4">
-            <h3 className="text-base font-bold text-zinc-900 flex items-center gap-2">
-              <Send className="h-5 w-5 text-purple-600" />
-              Simulate Inbound Prospect Reply
-            </h3>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <Send className="h-5 w-5 text-purple-600" />
+                <h3 className="text-base font-bold text-zinc-900">
+                  Simulate Inbound Prospect Reply
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => !simulating && setShowSimulateModal(false)}
+                disabled={simulating}
+                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 disabled:opacity-50"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
             <p className="text-xs text-zinc-500">
               Test inbound reply ingestion and automatic intent classification.
             </p>
 
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="font-semibold text-zinc-700">Sender Email</label>
-                <input
-                  type="email"
-                  value={simSender}
-                  onChange={(e) => setSimSender(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs"
-                />
+            <form onSubmit={handleSimulateInbound} className="space-y-4">
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="font-semibold text-zinc-700">Sender Email</label>
+                  <input
+                    type="email"
+                    value={simSender}
+                    onChange={(e) => setSimSender(e.target.value)}
+                    disabled={simulating}
+                    required
+                    className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs disabled:bg-zinc-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-zinc-700">Subject</label>
+                  <input
+                    type="text"
+                    value={simSubject}
+                    onChange={(e) => setSimSubject(e.target.value)}
+                    disabled={simulating}
+                    required
+                    className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs disabled:bg-zinc-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-zinc-700">Reply Message Body</label>
+                  <textarea
+                    rows={3}
+                    value={simBody}
+                    onChange={(e) => setSimBody(e.target.value)}
+                    disabled={simulating}
+                    required
+                    className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs disabled:bg-zinc-50"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-zinc-700">Subject</label>
-                <input
-                  type="text"
-                  value={simSubject}
-                  onChange={(e) => setSimSubject(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs"
-                />
-              </div>
+              {modalError && (
+                <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-800">
+                  <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span>{modalError}</span>
+                </div>
+              )}
 
-              <div>
-                <label className="font-semibold text-zinc-700">Reply Message Body</label>
-                <textarea
-                  rows={3}
-                  value={simBody}
-                  onChange={(e) => setSimBody(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs"
-                />
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSimulateModal(false)}
+                  disabled={simulating}
+                  className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={simulating}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
+                >
+                  {simulating ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <span>Ingest & Classify Reply</span>
+                  )}
+                </button>
               </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowSimulateModal(false)}
-                className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSimulateInbound}
-                className="rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700"
-              >
-                Ingest & Classify Reply
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

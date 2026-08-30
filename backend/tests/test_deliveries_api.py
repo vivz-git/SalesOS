@@ -1,4 +1,4 @@
-﻿from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -131,7 +131,9 @@ def test_delivery_idempotency_returns_existing(mock_principal: Principal) -> Non
     mock_session = create_mock_session()
     # mock_session.get handles draft, contact, delivery
     mock_session.get.side_effect = lambda model, id_val: (
-        mock_draft if model == OutreachDraftModel else (mock_contact if model == ContactModel else existing_delivery)
+        mock_draft
+        if model == OutreachDraftModel
+        else (mock_contact if model == ContactModel else existing_delivery)
     )
     # scalar returns existing delivery for idempotency check
     mock_session.scalar.return_value = existing_delivery
@@ -152,3 +154,76 @@ def test_delivery_idempotency_returns_existing(mock_principal: Principal) -> Non
         assert data["idempotency_key"] == idemp_key
     finally:
         app.dependency_overrides.clear()
+
+
+def test_resend_webhook_updates_delivery_status() -> None:
+    delivery_id = uuid4()
+    workspace_id = uuid4()
+    msg_id = "msg_resend_123"
+
+    mock_delivery = DeliveryModel(
+        id=delivery_id,
+        workspace_id=workspace_id,
+        provider_message_id=msg_id,
+        status="sent",
+        draft_id=uuid4(),
+        version_id=uuid4(),
+        version_number=1,
+        contact_id=uuid4(),
+        recipient_email="test@example.com",
+        subject="sub",
+        body="body",
+        provider="resend",
+        idempotency_key="test",
+        created_by=uuid4(),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+
+    mock_session = create_mock_session()
+    mock_session.scalar.return_value = mock_delivery
+
+    async def _override_session() -> AsyncIterator[Any]:
+        yield mock_session
+
+    from app.core.config import Settings
+
+    def _override_settings() -> Settings:
+        return Settings(resend_webhook_secret=None)
+
+    app.dependency_overrides[get_db_session] = _override_session
+    from app.core.config import get_settings
+
+    app.dependency_overrides[get_settings] = _override_settings
+
+    from unittest.mock import patch
+
+    with patch("app.auth._clients") as mock_clients:
+        mock_admin = MagicMock()
+        mock_clients.return_value = (None, mock_admin)
+
+        mock_execute = MagicMock()
+        mock_execute.execute.return_value.data = [
+            {"id": str(delivery_id), "workspace_id": str(workspace_id)}
+        ]
+        mock_limit = MagicMock()
+        mock_limit.limit.return_value = mock_execute
+        mock_eq = MagicMock()
+        mock_eq.eq.return_value = mock_limit
+        mock_select = MagicMock()
+        mock_select.select.return_value = mock_eq
+        mock_table = MagicMock()
+        mock_table.table.return_value = mock_select
+        mock_admin.table = mock_table.table
+
+        try:
+            client = TestClient(app)
+            payload = {"type": "email.delivered", "data": {"email_id": msg_id}}
+            res = client.post("/v1/deliveries/webhooks/resend", json=payload)
+            assert res.status_code == 200
+            assert res.json()["status"] == "processed"
+
+            assert mock_delivery.status == "delivered"
+            mock_session.commit.assert_awaited()
+        finally:
+            app.dependency_overrides.clear()

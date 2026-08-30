@@ -13,6 +13,7 @@ export default function DeliveriesListPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   useEffect(() => {
     async function loadData() {
@@ -29,7 +30,7 @@ export default function DeliveriesListPage() {
       }
     }
     loadData();
-  }, [activeWorkspace, statusFilter]);
+  }, [activeWorkspace, statusFilter, refreshKey]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
@@ -77,7 +78,7 @@ export default function DeliveriesListPage() {
         </div>
 
         <button
-          onClick={() => setStatusFilter((prev) => prev)}
+          onClick={() => setRefreshKey((k) => k + 1)}
           className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900"
         >
           <RefreshCw className="h-3.5 w-3.5" />

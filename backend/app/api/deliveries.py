@@ -110,10 +110,7 @@ async def create_delivery(
     async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
         draft = await session.get(OutreachDraftModel, payload.draft_id)
         if not draft or str(draft.workspace_id) != str(principal.workspace_id):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="draft_not_found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="draft_not_found")
 
         if draft.status != "approved":
             raise HTTPException(
@@ -133,7 +130,7 @@ async def create_delivery(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="contact_not_found_in_workspace",
             )
-            
+
         recipient_email = payload.override_recipient_email or (contact.email or "")
         if not recipient_email:
             raise HTTPException(
@@ -146,7 +143,9 @@ async def create_delivery(
         draft_current_body = draft.current_body or ""
         draft_seq_enrollment_id = draft.sequence_enrollment_id
 
-        existing_delivery = await session.scalar(select(DeliveryModel).filter_by(idempotency_key=idempotency_key))
+        existing_delivery = await session.scalar(
+            select(DeliveryModel).filter_by(idempotency_key=idempotency_key)
+        )
         if existing_delivery:
             if existing_delivery.status in ("sent", "delivered", "running", "queued"):
                 return _model_to_delivery(existing_delivery)
@@ -171,11 +170,10 @@ async def create_delivery(
                 idempotency_key=idempotency_key,
                 created_by=principal.user_id,
                 created_at=now_dt,
-                updated_at=now_dt
+                updated_at=now_dt,
             )
             session.add(delivery_model)
             await session.flush()
-
 
     # 6. Execute Provider Send Operation
     send_req = EmailDeliverySendRequest(
@@ -207,22 +205,34 @@ async def create_delivery(
         d_model.updated_at = datetime.now(UTC)
 
         if new_status == "sent" and draft_seq_enrollment_id:
-            enrollment = await session.scalar(select(SequenceEnrollmentModel).filter_by(id=draft_seq_enrollment_id))
+            enrollment = await session.scalar(
+                select(SequenceEnrollmentModel).filter_by(id=draft_seq_enrollment_id)
+            )
             if enrollment and enrollment.status == "active":
                 enrollment.current_step_number += 1
-                next_step = await session.scalar(select(SequenceStepModel).filter_by(sequence_id=enrollment.sequence_id, step_number=enrollment.current_step_number))
+                next_step = await session.scalar(
+                    select(SequenceStepModel).filter_by(
+                        sequence_id=enrollment.sequence_id,
+                        step_number=enrollment.current_step_number,
+                    )
+                )
 
                 if next_step:
-                    enrollment.next_step_due_at = datetime.now(UTC) + timedelta(days=next_step.delay_days)
+                    enrollment.next_step_due_at = datetime.now(UTC) + timedelta(
+                        days=next_step.delay_days
+                    )
                     job = JobModel(
                         id=uuid4(),
                         workspace_id=principal.workspace_id,
                         job_type="execute_sequence_step",
-                        payload={"enrollment_id": str(enrollment.id), "step_number": enrollment.current_step_number},
+                        payload={
+                            "enrollment_id": str(enrollment.id),
+                            "step_number": enrollment.current_step_number,
+                        },
                         status="pending",
                         available_at=enrollment.next_step_due_at,
                         created_at=datetime.now(UTC),
-                        updated_at=datetime.now(UTC)
+                        updated_at=datetime.now(UTC),
                     )
                     session.add(job)
                 else:
@@ -245,9 +255,9 @@ async def list_deliveries(
         q = select(DeliveryModel).filter_by(workspace_id=principal.workspace_id)
         if status_filter != "all":
             q = q.filter_by(status=status_filter)
-        
+
         q = q.order_by(DeliveryModel.created_at.desc()).offset(offset).limit(limit)
-        
+
         result = await session.scalars(q)
         return [_model_to_delivery(d) for d in result]
 
@@ -259,7 +269,9 @@ async def get_delivery_detail(
     session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
     async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
-        delivery = await session.scalar(select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id))
+        delivery = await session.scalar(
+            select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id)
+        )
         if not delivery:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -275,13 +287,15 @@ async def cancel_delivery(
     session: AsyncSession = Depends(get_db_session),
 ) -> EmailDelivery:
     async with tenant_transaction_context(session, principal.user_id, principal.workspace_id):
-        delivery = await session.scalar(select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id))
+        delivery = await session.scalar(
+            select(DeliveryModel).filter_by(id=delivery_id, workspace_id=principal.workspace_id)
+        )
         if not delivery:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="delivery_record_not_found",
             )
-        
+
         if delivery.status not in ("queued", "running"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -316,6 +330,7 @@ async def resend_webhook_handler(
             )
         try:
             import resend
+
             options: resend.VerifyWebhookOptions = {
                 "payload": body_str,
                 "headers": cast(
@@ -340,6 +355,7 @@ async def resend_webhook_handler(
 
     try:
         import json
+
         payload_json = json.loads(body_str)
     except Exception:
         payload_json = {}
@@ -351,22 +367,27 @@ async def resend_webhook_handler(
     if event_type == "email.received":
         from app.adapters.reply_classifier import DeterministicReplyClassifier
         from app.api.conversations import InboundReplyPayload, ingest_inbound_reply
-        
+
         sender = str(data.get("from") or data.get("sender") or "")
         recipient = str(data.get("to") or data.get("recipient") or "")
         subject = str(data.get("subject") or "")
         text_body = str(data.get("text") or data.get("html") or "")
-        in_reply_to = str(data.get("headers", {}).get("in-reply-to") or data.get("in_reply_to") or "")
+        in_reply_to = str(
+            data.get("headers", {}).get("in-reply-to") or data.get("in_reply_to") or ""
+        )
 
         if not text_body and provider_msg_id and settings.resend_api_key:
             try:
                 import resend
+
                 resend.api_key = settings.resend_api_key
                 recv_detail = resend.EmailsReceiving.get(provider_msg_id)
                 if isinstance(recv_detail, dict):
                     text_body = str(recv_detail.get("text") or recv_detail.get("html") or "")
                 elif hasattr(recv_detail, "text"):
-                    text_body = str(getattr(recv_detail, "text", "") or getattr(recv_detail, "html", ""))
+                    text_body = str(
+                        getattr(recv_detail, "text", "") or getattr(recv_detail, "html", "")
+                    )
             except Exception:
                 pass
 
@@ -395,10 +416,39 @@ async def resend_webhook_handler(
 
     new_status = status_mapping.get(event_type)
     if new_status and provider_msg_id:
-        delivery = await session.scalar(select(DeliveryModel).filter_by(provider_message_id=provider_msg_id))
-        if delivery:
-            delivery.status = new_status
-            delivery.updated_at = datetime.now(UTC)
-            await session.commit()
+        # We must lookup the delivery's workspace_id using the admin client because
+        # the webhook does not have an active tenant context, and RLS will hide the record.
+        from app.auth import _clients
+
+        try:
+            _, admin_client = _clients(settings)
+            resp = (
+                admin_client.table("deliveries")
+                .select("id, workspace_id")
+                .eq("provider_message_id", provider_msg_id)
+                .limit(1)
+                .execute()
+            )
+            data = resp.data
+        except Exception:
+            data = []
+
+        if data and len(data) > 0:
+            delivery_id = str(data[0]["id"])
+            workspace_id = str(data[0]["workspace_id"])
+
+            from uuid import UUID
+
+            from app.db import tenant_transaction_context
+
+            # Now we use the secure tenant context to perform the actual update using SQLAlchemy
+            async with tenant_transaction_context(session, UUID(delivery_id), UUID(workspace_id)):
+                delivery = await session.scalar(
+                    select(DeliveryModel).filter_by(id=UUID(delivery_id))
+                )
+                if delivery:
+                    delivery.status = new_status
+                    delivery.updated_at = datetime.now(UTC)
+                    await session.commit()
 
     return {"received": True, "event": event_type, "status": "processed"}

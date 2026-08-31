@@ -101,8 +101,8 @@ export default function ConversationDetailPage({ params }: ConversationDetailPag
           <h3 className="text-base font-semibold">Conversation Thread Not Found</h3>
           <p className="mt-1 text-xs">{error || "Unable to locate conversation record"}</p>
           <div className="mt-4">
-            <Link href="/conversations" className="text-xs font-semibold text-purple-700 underline">
-              Return to Conversations Inbox
+            <Link href="/inbox?tab=replies" className="text-xs font-semibold text-purple-700 underline">
+              Return to Inbox
             </Link>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function ConversationDetailPage({ params }: ConversationDetailPag
       {/* Back Button */}
       <div>
         <Link
-          href="/conversations"
+          href="/inbox?tab=replies"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

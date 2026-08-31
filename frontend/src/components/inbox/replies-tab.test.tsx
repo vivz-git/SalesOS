@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import ConversationsPage from "./page";
+import { RepliesTab as ConversationsPage } from "./replies-tab";
 import * as conversationsApi from "@/lib/api/conversations";
 
 vi.mock("@/lib/workspace-context", () => ({

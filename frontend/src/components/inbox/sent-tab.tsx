@@ -7,7 +7,7 @@ import { fetchDeliveries, type EmailDelivery, type DeliveryStatus } from "@/lib/
 import { DeliveryStatusBadge } from "@/components/deliveries/delivery-status-badge";
 import { Send, Eye, ShieldAlert, AlertCircle, RefreshCw } from "lucide-react";
 
-export default function DeliveriesListPage() {
+export function SentTab() {
   const { activeWorkspace } = useWorkspace();
   const [deliveries, setDeliveries] = useState<EmailDelivery[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");

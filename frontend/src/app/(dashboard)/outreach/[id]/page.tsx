@@ -254,11 +254,11 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
               <>
                 <button
                   type="button"
-                  onClick={() => handleStatusAction("approve")}
+                  onClick={() => setDeliveryModalOpen(true)}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors"
                 >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Approve
+                  <Send className="h-3.5 w-3.5" />
+                  Approve & Send
                 </button>
                 <button
                   type="button"
@@ -401,16 +401,27 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
           isOpen={deliveryModalOpen}
           draftSubject={draft.current_subject || "(Untitled Subject)"}
           realProspectEmail={contact?.email || undefined}
+          isApproved={isApproved}
           onClose={() => setDeliveryModalOpen(false)}
           onConfirm={async (testRecipientEmail) => {
             if (!activeWorkspace) return;
+
+            // Chain approve and send
+            if (draft.status !== "approved") {
+              await approveDraft(activeWorkspace.id, draft.id);
+            }
+
             const { createDelivery } = await import("@/lib/api/deliveries");
             const delivery = await createDelivery(
               activeWorkspace.id,
               draft.id,
               testRecipientEmail || undefined
             );
-            setActionMessage(`Email delivery initiated (${delivery.status})! View in Deliveries log.`);
+
+            // Reload the draft data to reflect the new approved status
+            loadDraftData();
+
+            setActionMessage(`Draft approved & email delivery initiated (${delivery.status})!`);
             setTimeout(() => setActionMessage(null), 5000);
           }}
         />

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Sidebar } from "./sidebar";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/campaigns",
+  usePathname: () => "/prospects",
 }));
 
 describe("Sidebar Component", () => {
@@ -19,12 +19,9 @@ describe("Sidebar Component", () => {
     );
 
     expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /campaigns/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /accounts/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /contacts/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /approval queue/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /conversations/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /reports/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /prospects/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /approvals/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /inbox/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /settings/i })).toBeInTheDocument();
   });
 });

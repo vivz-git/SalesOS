@@ -125,17 +125,17 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
     return (
       <div className="space-y-4">
         <Link
-          href="/accounts"
+          href="/prospects"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Accounts</span>
+          <span>Back to Prospects</span>
         </Link>
 
         <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-8 text-center shadow-sm">
           <p className="text-sm font-semibold text-red-600">{error || "Account not found."}</p>
           <Button variant="outline" size="sm" onClick={() => router.push("/accounts")} className="mt-4">
-            Return to Accounts List
+            Return to Prospects
           </Button>
         </div>
       </div>
@@ -146,11 +146,11 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Link
-          href="/accounts"
+          href="/prospects"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Accounts</span>
+          <span>Back to Prospects</span>
         </Link>
       </div>
 

@@ -127,11 +127,11 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
     return (
       <div className="space-y-4">
         <Link
-          href="/contacts"
+          href="/prospects"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Contacts</span>
+          <span>Back to Prospects</span>
         </Link>
 
         <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-8 text-center shadow-sm">
@@ -148,11 +148,11 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Link
-          href="/contacts"
+          href="/prospects"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Contacts</span>
+          <span>Back to Prospects</span>
         </Link>
       </div>
 

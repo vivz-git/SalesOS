@@ -65,9 +65,20 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
   async function handleConfirmAction(notes: string) {
     if (!activeWorkspace || !draftId || !modalAction) return;
     try {
-      if (modalAction === "approve") {
+      if (modalAction === "approve" || modalAction === "approve-and-send") {
+        if (draft.status === "draft") {
+          const { submitDraftForReview } = await import("@/lib/api/outreach");
+          await submitDraftForReview(activeWorkspace.id, draftId);
+        }
         await approveApprovalItem(activeWorkspace.id, draftId, notes);
-        setActionMessage("Draft approved successfully");
+
+        if (modalAction === "approve-and-send") {
+          const { createDelivery } = await import("@/lib/api/deliveries");
+          await createDelivery(activeWorkspace.id, draftId, undefined);
+          setActionMessage("Draft approved and sent successfully");
+        } else {
+          setActionMessage("Draft approved successfully");
+        }
       } else if (modalAction === "reject") {
         await rejectApprovalItem(activeWorkspace.id, draftId, notes);
         setActionMessage("Draft rejected");
@@ -112,7 +123,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
 
   const { draft, research_brief, evidence_sources, current_version } = detail;
   const review_history = detail.recent_history || detail.review_history || [];
-  const isReadyForReview = draft.status === "ready_for_review";
+  const isReadyForReview = draft.status === "ready_for_review" || (draft.status === "draft" && draft.current_body !== null);
 
   const contactName =
     detail.contact_name ||
@@ -189,11 +200,19 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
               <>
                 <button
                   type="button"
+                  onClick={() => setModalAction("approve-and-send")}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 shadow-2xs transition-colors"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Approve & Send</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setModalAction("approve")}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 shadow-2xs transition-colors"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  <span>Approve Draft</span>
+                  <span>Approve Only</span>
                 </button>
                 <button
                   type="button"

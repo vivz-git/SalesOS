@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, RotateCcw, Loader2, X } from "lucide-react";
 
-export type ApprovalActionType = "approve" | "reject" | "return-to-draft";
+export type ApprovalActionType = "approve" | "reject" | "return-to-draft" | "approve-and-send";
 
 interface ApprovalActionModalProps {
   isOpen: boolean;
@@ -34,6 +34,14 @@ export function ApprovalActionModal({
       btnColor: "bg-emerald-600 hover:bg-emerald-700 text-white",
       icon: CheckCircle2,
       btnLabel: "Confirm Approval",
+    },
+    "approve-and-send": {
+      title: "Approve & Send Outreach",
+      description: "Approve this draft and immediately queue it for external email delivery.",
+      badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
+      btnColor: "bg-purple-600 hover:bg-purple-700 text-white",
+      icon: CheckCircle2,
+      btnLabel: "Approve & Send",
     },
     reject: {
       title: "Reject Outreach Draft",

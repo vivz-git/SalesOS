@@ -23,6 +23,7 @@ import {
   type ContactCreatePayload,
 } from "@/lib/api/contacts";
 import { useWorkspace } from "@/lib/workspace-context";
+import { createResearchBrief, triggerResearchJob } from "@/lib/api/research";
 
 const PAGE_SIZE = 12;
 
@@ -34,7 +35,7 @@ const STATUS_TABS = [
   { label: "Archived", value: "archived" },
 ];
 
-export default function ContactsPage() {
+export default function ContactsView() {
   const { activeWorkspace } = useWorkspace();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -87,7 +88,20 @@ export default function ContactsPage() {
 
   async function handleCreateContact(payload: ContactCreatePayload) {
     if (!activeWorkspace) return;
-    await createContact(activeWorkspace.id, payload);
+    const contact = await createContact(activeWorkspace.id, payload);
+
+    if (contact.account_id) {
+      try {
+        const brief = await createResearchBrief(activeWorkspace.id, {
+          account_id: contact.account_id,
+          contact_id: contact.id,
+        });
+        await triggerResearchJob(activeWorkspace.id, brief.id);
+      } catch (err) {
+        console.error('Failed to automatically trigger research:', err);
+      }
+    }
+
     await loadContacts();
   }
 
@@ -97,7 +111,7 @@ export default function ContactsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Contacts</h1>
+          <h2 className="text-lg font-bold tracking-tight text-zinc-900">People</h2>
           <p className="mt-1 text-sm text-zinc-500">
             Decision-maker directory, job titles, departments, and primary account contacts.
           </p>

@@ -16,6 +16,7 @@ import {
   Settings,
   Users,
   X,
+  Inbox,
 } from "lucide-react";
 
 export interface NavItem {
@@ -26,14 +27,9 @@ export interface NavItem {
 
 export const NAVIGATION_ITEMS: NavItem[] = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Campaigns", href: "/campaigns", icon: Megaphone },
-  { name: "Accounts", href: "/accounts", icon: Building2 },
-  { name: "Contacts", href: "/contacts", icon: Users },
-  { name: "Outreach Drafts", href: "/outreach", icon: FileText },
-  { name: "Approval Queue", href: "/approvals", icon: CheckCircle2 },
-  { name: "Deliveries", href: "/deliveries", icon: Send },
-  { name: "Conversations", href: "/conversations", icon: MessageSquare },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Prospects", href: "/prospects", icon: Users },
+  { name: "Approvals", href: "/approvals", icon: CheckCircle2 },
+  { name: "Inbox", href: "/inbox", icon: Inbox },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

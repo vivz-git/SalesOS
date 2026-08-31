@@ -64,8 +64,8 @@ export default function DeliveryDetailPage({ params }: DeliveryDetailPageProps) 
           <h3 className="text-base font-semibold">Delivery Record Not Found</h3>
           <p className="mt-1 text-xs">{error || "Unable to locate delivery record"}</p>
           <div className="mt-4">
-            <Link href="/deliveries" className="text-xs font-semibold text-purple-700 underline">
-              Return to Deliveries List
+            <Link href="/inbox?tab=sent" className="text-xs font-semibold text-purple-700 underline">
+              Return to Inbox
             </Link>
           </div>
         </div>
@@ -80,11 +80,11 @@ export default function DeliveryDetailPage({ params }: DeliveryDetailPageProps) 
       {/* Back Button */}
       <div>
         <Link
-          href="/deliveries"
+          href="/inbox?tab=sent"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Back to Deliveries</span>
+          <span>Back to Inbox</span>
         </Link>
       </div>
 

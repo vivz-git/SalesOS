@@ -26,7 +26,7 @@ const STATUS_TABS = [
   { label: "Archived", value: "archived" },
 ];
 
-export default function AccountsPage() {
+export default function AccountsView() {
   const { activeWorkspace } = useWorkspace();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -88,7 +88,7 @@ export default function AccountsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Accounts</h1>
+          <h2 className="text-lg font-bold tracking-tight text-zinc-900">Companies</h2>
           <p className="mt-1 text-sm text-zinc-500">
             Target company profiles, qualification status, and campaign assignments.
           </p>

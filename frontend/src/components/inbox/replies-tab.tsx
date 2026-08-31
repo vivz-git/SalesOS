@@ -25,7 +25,7 @@ import {
   X,
 } from "lucide-react";
 
-export default function ConversationsPage() {
+export function RepliesTab() {
   const { activeWorkspace } = useWorkspace();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");

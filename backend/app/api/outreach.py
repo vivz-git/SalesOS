@@ -73,7 +73,8 @@ class OutreachDraftCreate(BaseModel):
     sequence_step_number: int | None = None
     research_brief_id: UUID | None = None
     subject: str | None = Field(default=None, max_length=255)
-    body: str = Field(..., min_length=1, max_length=10000)
+    body: str | None = Field(default=None, max_length=10000)
+    auto_generate: bool = Field(default=False)
     generation_source: GenerationSource = Field(default="human")
     provider: str | None = Field(default=None, max_length=100)
     model: str | None = Field(default=None, max_length=100)
@@ -83,7 +84,8 @@ class OutreachDraftCreate(BaseModel):
 
 class OutreachDraftRevise(BaseModel):
     subject: str | None = Field(default=None, max_length=255)
-    body: str = Field(..., min_length=1, max_length=10000)
+    body: str | None = Field(default=None, max_length=10000)
+    auto_generate: bool = Field(default=False)
     generation_source: GenerationSource = Field(default="human")
     provider: str | None = Field(default=None, max_length=100)
     model: str | None = Field(default=None, max_length=100)
@@ -158,7 +160,7 @@ async def create_outreach_draft_orm(
         current_version_id=None,  # Set to None initially to avoid circular dependency, then update
         current_version_number=1,
         current_subject=payload.subject.strip() if payload.subject else None,
-        current_body=payload.body.strip(),
+        current_body=payload.body.strip() if payload.body else "",
         status="draft",
         created_by=principal.user_id,
         created_at=now_dt,
@@ -173,7 +175,7 @@ async def create_outreach_draft_orm(
         draft_id=draft_id,
         version_number=1,
         subject=payload.subject.strip() if payload.subject else None,
-        body=payload.body.strip(),
+        body=payload.body.strip() if payload.body else "",
         generation_source=payload.generation_source,
         provider=payload.provider,
         model=payload.model,
@@ -300,7 +302,7 @@ async def revise_outreach_draft(
             draft_id=draft_id,
             version_number=next_version_num,
             subject=payload.subject.strip() if payload.subject else None,
-            body=payload.body.strip(),
+            body=payload.body.strip() if payload.body else "",
             generation_source=payload.generation_source,
             provider=payload.provider,
             model=payload.model,
@@ -316,7 +318,7 @@ async def revise_outreach_draft(
         model.current_version_id = version_id
         model.current_version_number = next_version_num
         model.current_subject = payload.subject.strip() if payload.subject else None
-        model.current_body = payload.body.strip()
+        model.current_body = payload.body.strip() if payload.body else ""
         model.updated_at = now_dt
 
         await session.flush()

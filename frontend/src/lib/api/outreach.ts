@@ -15,7 +15,7 @@ export interface DraftVersion {
   draft_id: string;
   version_number: number;
   subject: string | null;
-  body: string;
+  body?: string;
   generation_source: GenerationSource;
   provider: string | null;
   model: string | null;
@@ -50,7 +50,7 @@ export interface OutreachDraftCreatePayload {
   contact_id: string;
   research_brief_id?: string;
   subject?: string;
-  body: string;
+  body?: string;
   generation_source?: GenerationSource;
   provider?: string;
   model?: string;
@@ -60,7 +60,7 @@ export interface OutreachDraftCreatePayload {
 
 export interface OutreachDraftRevisePayload {
   subject?: string;
-  body: string;
+  body?: string;
   generation_source?: GenerationSource;
   provider?: string;
   model?: string;

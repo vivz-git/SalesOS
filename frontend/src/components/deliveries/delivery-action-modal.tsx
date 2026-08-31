@@ -7,6 +7,7 @@ interface DeliveryActionModalProps {
   isOpen: boolean;
   draftSubject?: string;
   realProspectEmail?: string;
+  isApproved?: boolean;
   onClose: () => void;
   onConfirm: (testRecipientEmail: string | null) => Promise<void>;
 }
@@ -15,6 +16,7 @@ export function DeliveryActionModal({
   isOpen,
   draftSubject,
   realProspectEmail,
+  isApproved = true,
   onClose,
   onConfirm,
 }: DeliveryActionModalProps) {
@@ -51,8 +53,12 @@ export function DeliveryActionModal({
               <Send className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900">Send Outbound Email</h2>
-              <p className="text-xs text-zinc-500">Dispatch this approved draft via Resend.</p>
+              <h2 className="text-lg font-bold text-zinc-900">
+                {isApproved ? "Send Outbound Email" : "Approve & Send Outbound Email"}
+              </h2>
+              <p className="text-xs text-zinc-500">
+                {isApproved ? "Dispatch this approved draft via Resend." : "Approve this draft and dispatch it via Resend."}
+              </p>
             </div>
           </div>
           <button

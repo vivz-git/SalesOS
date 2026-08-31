@@ -155,8 +155,8 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
 
         <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-8 text-center shadow-sm">
           <p className="text-sm font-semibold text-red-600">{error || "Contact not found."}</p>
-          <Button variant="outline" size="sm" onClick={() => router.push("/contacts")} className="mt-4">
-            Return to Contacts Directory
+          <Button variant="outline" size="sm" onClick={() => router.push("/prospects")} className="mt-4">
+            Return to Prospects
           </Button>
         </div>
       </div>

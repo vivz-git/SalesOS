@@ -689,3 +689,48 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
         reports_list_resp = await client.get("/v1/reports/weekly", headers=headers)
         assert reports_list_resp.status_code == 200
         assert len(reports_list_resp.json()) >= 1
+
+@pytest.mark.asyncio
+async def test_campaign_free_draft_creation(e2e_harness: dict[str, Any]) -> None:
+    workspace_id = e2e_harness["workspace_id"]
+    user_id = e2e_harness["user_id"]
+    headers = {"X-SalesOS-Workspace-Id": str(workspace_id), "Authorization": f"Bearer {user_id}"}
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        # Create Account and Contact
+        acc_resp = await client.post("/v1/accounts", json={"name": "Test Account", "domain": "test.com"}, headers=headers)
+        account_id = acc_resp.json()["id"]
+
+        contact_resp = await client.post("/v1/contacts", json={"account_id": account_id, "first_name": "No", "last_name": "Campaign", "email": "nocampaign@test.com"}, headers=headers)
+        contact_id = contact_resp.json()["id"]
+
+        # Create Draft WITHOUT campaign_id
+        create_draft_payload = {
+            "contact_id": contact_id,
+            "subject": "Campaign Free Subject",
+            "body": "Campaign Free Body",
+            "generation_source": "human",
+        }
+        draft_create_resp = await client.post(
+            "/v1/outreach/drafts", json=create_draft_payload, headers=headers
+        )
+        assert draft_create_resp.status_code == 201
+        draft = draft_create_resp.json()
+        assert draft["status"] == "draft"
+        assert draft.get("campaign_id") is None
+
+        draft_id = draft["id"]
+
+        # Generate AI Draft
+        gen_resp = await client.post(
+            f"/v1/outreach/drafts/{draft_id}/actions/generate", headers=headers
+        )
+        assert gen_resp.status_code == 200
+        gen_draft = gen_resp.json()
+        assert gen_draft["id"] == draft_id
+        assert gen_draft["status"] == "draft"
+        assert gen_draft.get("campaign_id") is None
+        assert gen_draft["current_body"] is not None
+        assert len(gen_draft["current_body"]) > 0

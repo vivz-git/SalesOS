@@ -49,7 +49,7 @@ class DraftVersion(BaseModel):
 class OutreachDraft(BaseModel):
     id: UUID
     workspace_id: UUID
-    campaign_id: UUID
+    campaign_id: UUID | None = None
     contact_id: UUID
     sequence_enrollment_id: UUID | None = None
     sequence_step_number: int | None = None
@@ -67,7 +67,7 @@ class OutreachDraft(BaseModel):
 
 
 class OutreachDraftCreate(BaseModel):
-    campaign_id: UUID
+    campaign_id: UUID | None = None
     contact_id: UUID
     sequence_enrollment_id: UUID | None = None
     sequence_step_number: int | None = None
@@ -494,7 +494,11 @@ async def generate_outreach_draft_action(
             )
 
         # 1. Load context
-        campaign = await session.get(CampaignModel, model.campaign_id)
+        campaign = (
+            await session.get(CampaignModel, model.campaign_id)
+            if model.campaign_id
+            else None
+        )
         contact = await session.get(ContactModel, model.contact_id)
         account = None
         if contact and contact.account_id:

@@ -188,7 +188,7 @@ export default function ApprovalsPage() {
                 </p>
 
                 <div className="flex items-center gap-4 text-xs text-zinc-500 flex-wrap">
-                  <span>Campaign: <span className="font-mono text-zinc-700">{draft.campaign_id.slice(0, 8)}...</span></span>
+                  <span>Campaign: <span className="font-mono text-zinc-700">{draft.campaign_id ? draft.campaign_id.slice(0, 8) + '...' : 'None'}</span></span>
                   <span>Contact: <span className="font-mono text-zinc-700">{draft.contact_id.slice(0, 8)}...</span></span>
                   {draft.created_at && (
                     <span>Created: {new Date(draft.created_at).toLocaleDateString()}</span>

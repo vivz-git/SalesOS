@@ -232,8 +232,8 @@ class OutreachDraftModel(Base):
     workspace_id: Mapped[UUID] = mapped_column(
         ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False
     )
-    campaign_id: Mapped[UUID] = mapped_column(
-        ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
+    campaign_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("campaigns.id", ondelete="SET NULL")
     )
     contact_id: Mapped[UUID] = mapped_column(
         ForeignKey("contacts.id", ondelete="CASCADE"), nullable=False

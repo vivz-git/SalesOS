@@ -97,6 +97,34 @@ describe("outreach API client", () => {
     expect(res.current_subject).toBe("Hello");
   });
 
+
+  it("creates a campaign-free outreach draft", async () => {
+    const mockCreated = {
+      id: "d-3",
+      workspace_id: workspaceId,
+      contact_id: "ct-1",
+      current_subject: "Hello Campaign Free",
+      current_body: "World Campaign Free",
+      status: "draft",
+      current_version_number: 1,
+    };
+
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockCreated,
+    });
+
+    const res = await createOutreachDraft(workspaceId, {
+      contact_id: "ct-1",
+      subject: "Hello Campaign Free",
+      body: "World Campaign Free",
+    });
+
+    expect(res.id).toBe("d-3");
+    expect(res.current_subject).toBe("Hello Campaign Free");
+    expect(res.campaign_id).toBeUndefined();
+  });
+
   it("revises an outreach draft", async () => {
     const mockRevised = {
       id: "d-2",

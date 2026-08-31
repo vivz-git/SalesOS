@@ -30,7 +30,7 @@ export interface DraftVersion {
 export interface OutreachDraft {
   id: string;
   workspace_id: string;
-  campaign_id: string;
+  campaign_id?: string | null;
   contact_id: string;
   research_brief_id: string | null;
   current_version_id: string | null;
@@ -46,7 +46,7 @@ export interface OutreachDraft {
 }
 
 export interface OutreachDraftCreatePayload {
-  campaign_id: string;
+  campaign_id?: string | null;
   contact_id: string;
   research_brief_id?: string;
   subject?: string;

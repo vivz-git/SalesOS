@@ -20,6 +20,7 @@ import {
 import { fetchAccount, type Account } from "@/lib/api/accounts";
 import { ContactForm } from "@/components/contacts/contact-form";
 import { ContactStatusBadge } from "@/components/contacts/contact-status-badge";
+import { ContactResearchSection } from "@/components/contacts/contact-research-section";
 import { Button } from "@/components/ui/button";
 import {
   archiveContact,
@@ -30,6 +31,7 @@ import {
   type ContactCreatePayload,
 } from "@/lib/api/contacts";
 import { useWorkspace } from "@/lib/workspace-context";
+import { createOutreachDraft, generateOutreachDraft } from "@/lib/api/outreach";
 
 interface ContactDetailsProps {
   params: Promise<{ id: string }>;
@@ -72,6 +74,23 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
   useEffect(() => {
     loadContact();
   }, [loadContact]);
+
+
+  async function handleGenerateDraft() {
+    if (!activeWorkspace || !contact) return;
+    try {
+      setActionLoading(true);
+      const draft = await createOutreachDraft(activeWorkspace.id, {
+        contact_id: contact.id,
+        generation_source: "ai_generated",
+      });
+      await generateOutreachDraft(activeWorkspace.id, draft.id);
+      router.push(`/approvals/${draft.id}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to generate draft.");
+      setActionLoading(false);
+    }
+  }
 
   async function handleArchive() {
     if (!activeWorkspace || !contact) return;
@@ -180,6 +199,18 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
           </div>
 
           <div className="flex items-center gap-2">
+
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleGenerateDraft}
+              disabled={actionLoading}
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              <span>Generate Personalized Email</span>
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -216,6 +247,12 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
             )}
           </div>
         </div>
+
+        <ContactResearchSection
+          contactId={contact.id}
+          onGenerate={handleGenerateDraft}
+          isGenerating={actionLoading}
+        />
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Direct Communication Channels */}

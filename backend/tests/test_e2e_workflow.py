@@ -676,6 +676,7 @@ async def test_complete_11_stage_acceptance_workflow(e2e_harness: dict[str, Any]
 
         assert metrics["campaigns_count"] >= 1
         assert metrics["accounts_researched_count"] >= 1
+        assert metrics["contacts_enrolled_count"] == 0
         assert metrics["drafts_generated_count"] >= 1
         assert metrics["drafts_approved_count"] >= 1
         assert metrics["approval_rate"] > 0.0

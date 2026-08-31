@@ -13,7 +13,6 @@ from app.db import get_db_session
 from app.models import (
     AccountModel,
     CampaignModel,
-    ContactModel,
     ConversationModel,
     DeliveryModel,
     OutreachDraftModel,
@@ -82,15 +81,9 @@ async def compute_workspace_metrics(principal: Principal, settings: Settings, se
         select(func.count()).select_from(AccountModel).filter_by(workspace_id=ws_id).filter(AccountModel.deleted_at.is_(None))
     )) or 0
 
-    contacts_cnt = (await session.scalar(
-        select(func.count()).select_from(ContactModel).filter_by(workspace_id=ws_id).filter(ContactModel.deleted_at.is_(None))
-    )) or 0
-
     contacts_enrolled = (await session.scalar(
         select(func.count()).select_from(SequenceEnrollmentModel).filter_by(workspace_id=ws_id)
     )) or 0
-    if contacts_enrolled == 0:
-        contacts_enrolled = contacts_cnt
 
     # 2. Drafts & Approval Rate
     drafts_gen = (await session.scalar(

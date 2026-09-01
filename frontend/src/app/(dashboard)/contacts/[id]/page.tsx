@@ -1,5 +1,5 @@
-import { Info } from "lucide-react";
 "use client";
+import { Info } from "lucide-react";
 
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";

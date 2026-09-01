@@ -97,9 +97,9 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl space-y-6 p-6">
-        <div className="h-6 w-32 animate-pulse rounded bg-zinc-200"></div>
-        <div className="h-24 animate-pulse rounded-xl bg-zinc-100 border border-zinc-200"></div>
-        <div className="h-64 animate-pulse rounded-xl bg-zinc-100 border border-zinc-200"></div>
+        <div className="h-6 w-32 animate-pulse rounded bg-slate-200"></div>
+        <div className="h-24 animate-pulse rounded-lg bg-slate-100 border border-slate-200"></div>
+        <div className="h-64 animate-pulse rounded-lg bg-slate-100 border border-slate-200"></div>
       </div>
     );
   }
@@ -107,12 +107,12 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
   if (error || !detail) {
     return (
       <div className="mx-auto max-w-5xl p-6">
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-800">
+        <div className="rounded-lg border border-rose-200 bg-rose-50 p-6 text-center text-rose-800">
           <AlertCircle className="mx-auto h-8 w-8 text-rose-600 mb-2" />
           <h3 className="text-base font-semibold">Error Loading Approval Item</h3>
           <p className="mt-1 text-xs">{error || "Item not found"}</p>
           <div className="mt-4">
-            <Link href="/approvals" className="text-xs font-semibold text-purple-700 underline">
+            <Link href="/approvals" className="text-xs font-semibold text-indigo-600 underline">
               Return to Approval Queue
             </Link>
           </div>
@@ -149,7 +149,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
       <div>
         <Link
           href="/approvals"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span>Back to Approval Queue</span>
@@ -157,40 +157,40 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
       </div>
 
       {/* Zero Delivery & Safety Notice */}
-      <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-xs text-blue-900 flex items-center justify-between">
+      <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-3.5 text-xs text-blue-900 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ShieldAlert className="h-4 w-4 text-blue-600 shrink-0" />
           <span>
-            <strong>Human Governance Boundary:</strong> Approving this draft updates its governed state to <code className="font-mono font-semibold">approved</code>. No automatic emails or external dispatches will occur.
+            <strong>Send Safety:</strong> Approving this draft updates its governed state to approved. No automatic emails or external dispatches will occur.
           </span>
         </div>
       </div>
 
       {/* Feedback Banner */}
       {actionMessage && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs font-semibold text-emerald-900">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3.5 text-xs font-semibold text-emerald-900">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
           <span>{actionMessage}</span>
         </div>
       )}
 
       {/* Main Header Banner */}
-      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-2xs space-y-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
                 {draft.current_subject || "(Untitled Subject)"}
               </h1>
               <DraftStatusBadge status={draft.status as DraftStatus} />
-              <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-mono text-zinc-700 font-semibold">
+              <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-700 font-semibold">
                 Version v{draft.current_version_number}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-xs text-zinc-500 flex-wrap">
-              <span>Contact: <strong className="text-zinc-800">{contactName}</strong> ({contactTitle || "No Title"})</span>
-              <span>Account: <strong className="text-zinc-800">{accountName || "N/A"}</strong></span>
-              <span>Campaign: <strong className="text-zinc-800">{campaignName}</strong></span>
+            <div className="flex items-center gap-4 text-[13px] text-slate-500 flex-wrap">
+              <span>Contact: <strong className="text-slate-800">{contactName}</strong> ({contactTitle || "No Title"})</span>
+              <span>Account: <strong className="text-slate-800">{accountName || "N/A"}</strong></span>
+              <span>Campaign: <strong className="text-slate-800">{campaignName}</strong></span>
             </div>
           </div>
 
@@ -201,7 +201,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
                 <button
                   type="button"
                   onClick={() => setModalAction("approve-and-send")}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 shadow-2xs transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent-hover shadow-sm transition-colors"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Approve & Send</span>
@@ -209,7 +209,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
                 <button
                   type="button"
                   onClick={() => setModalAction("approve")}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 shadow-2xs transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent-hover shadow-sm transition-colors"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Approve Only</span>
@@ -244,26 +244,26 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
         {/* Left Column: Email Content & Evidence */}
         <div className="space-y-6 lg:col-span-2">
           {/* Email Subject & Body Card */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
-              <h2 className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-purple-600" />
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-slate-400" />
                 Outreach Message Preview
               </h2>
-              <span className="text-xs font-mono text-zinc-500">v{draft.current_version_number}</span>
+              <span className="text-xs font-mono text-slate-500">v{draft.current_version_number}</span>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Subject Line</label>
-                <div className="mt-1 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs font-semibold text-zinc-900">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Subject Line</label>
+                <div className="mt-1 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-900">
                   {draft.current_subject || "(No subject)"}
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Email Body</label>
-                <div className="mt-1 whitespace-pre-wrap rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-xs font-normal text-zinc-800 leading-relaxed min-h-[160px]">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Email Body</label>
+                <div className="mt-1 whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-4 text-[13px] text-slate-800 leading-relaxed leading-relaxed min-h-[160px]">
                   {draft.current_body || "(No body content)"}
                 </div>
               </div>
@@ -277,10 +277,10 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
 
           {/* Evidence Sources */}
           {evidence_sources && evidence_sources.length > 0 && (
-            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-2xs space-y-3">
-              <h2 className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" />
-                Grounded Evidence Sources ({evidence_sources.length})
+            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-3">
+              <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-slate-400" />
+                Research Used ({evidence_sources.length})
               </h2>
               <div className="space-y-2.5">
                 {evidence_sources.map((src, idx) => {
@@ -288,22 +288,22 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
                   const url = (src.url as string) || null;
                   const snippet = (src.snippet as string) || null;
                   return (
-                    <div key={idx} className="rounded-lg border border-zinc-100 bg-zinc-50 p-3 text-xs space-y-1">
+                    <div key={idx} className="rounded-md border border-slate-100 bg-slate-50 p-3 text-xs space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-zinc-900">{title}</span>
+                        <span className="font-semibold text-slate-900">{title}</span>
                         {url && (
                           <a
                             href={url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-medium text-purple-600 hover:underline"
+                            className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:underline"
                           >
                             <span>Visit Source</span>
                             <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
                       </div>
-                      {snippet && <p className="text-zinc-600 text-[11px] line-clamp-2">{snippet}</p>}
+                      {snippet && <p className="text-slate-500 text-[13px] text-[11px] line-clamp-2">{snippet}</p>}
                     </div>
                   );
                 })}
@@ -315,29 +315,29 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
         {/* Right Column: Prospect/Account, AI Metadata & Audit */}
         <div className="space-y-6">
           {/* Prospect & Account Background */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 text-zinc-500" />
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-slate-500" />
               Prospect Context
             </h2>
             <div className="space-y-2 text-xs">
               <div>
-                <span className="text-zinc-500">Name:</span>{" "}
-                <strong className="text-zinc-900">{contactName}</strong>
+                <span className="text-slate-500">Name:</span>{" "}
+                <strong className="text-slate-900">{contactName}</strong>
               </div>
               {contactTitle && (
                 <div>
-                  <span className="text-zinc-500">Title:</span>{" "}
-                  <span className="text-zinc-800">{contactTitle}</span>
+                  <span className="text-slate-500">Title:</span>{" "}
+                  <span className="text-slate-800">{contactTitle}</span>
                 </div>
               )}
               {accountName && (
-                <div className="pt-2 border-t border-zinc-100 flex items-center gap-1.5">
-                  <Building className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                  <span className="text-zinc-500">Account:</span>{" "}
-                  <strong className="text-zinc-900">{accountName}</strong>
+                <div className="pt-2 border-t border-slate-100 flex items-center gap-1.5">
+                  <Building className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span className="text-slate-500">Account:</span>{" "}
+                  <strong className="text-slate-900">{accountName}</strong>
                   {accountDomain && (
-                    <span className="text-[11px] font-mono text-zinc-400">({accountDomain})</span>
+                    <span className="text-[11px] font-mono text-slate-400">({accountDomain})</span>
                   )}
                 </div>
               )}
@@ -346,28 +346,28 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
 
           {/* Campaign Context */}
           {campaignName && (
-            <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs space-y-2">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                <Target className="h-3.5 w-3.5 text-zinc-500" />
+            <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Target className="h-3.5 w-3.5 text-slate-500" />
                 Campaign Target
               </h2>
               <div className="text-xs space-y-1">
-                <div className="font-semibold text-zinc-900">{campaignName}</div>
+                <div className="font-semibold text-slate-900">{campaignName}</div>
                 {targetSegment && (
-                  <div className="text-zinc-600 text-[11px]">Segment: {targetSegment}</div>
+                  <div className="text-slate-500 text-[13px] text-[11px]">Segment: {targetSegment}</div>
                 )}
               </div>
             </div>
           )}
 
-          {/* AI Provenance Metadata */}
+          {/* AI Details */}
           {current_version?.provider && (
-            <div className="rounded-xl border border-purple-200 bg-purple-50/60 p-5 shadow-2xs space-y-2.5">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-purple-700 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-purple-600" />
-                AI Provenance Metadata
+            <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-2.5">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-slate-600" />
+                AI Details
               </h2>
-              <div className="space-y-1 text-xs text-purple-950 font-mono">
+              <div className="space-y-1 text-xs text-slate-950 font-mono">
                 <div>Provider: <strong>{current_version.provider}</strong></div>
                 <div>Model: <strong>{current_version.model || "llama-3.3-70b-versatile"}</strong></div>
                 <div>Prompt Version: <strong>{current_version.prompt_version || "v1.0.0"}</strong></div>
@@ -377,17 +377,17 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
           )}
 
           {/* Review Audit History Log */}
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-zinc-500" />
-              Review Audit Trail ({review_history.length})
+          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-slate-500" />
+              Review History ({review_history.length})
             </h2>
             {review_history.length === 0 ? (
-              <p className="text-xs text-zinc-400 italic">No review decisions logged yet.</p>
+              <p className="text-xs text-slate-400 italic">No review decisions logged yet.</p>
             ) : (
               <div className="space-y-2.5">
                 {review_history.map((rev) => (
-                  <div key={rev.id} className="rounded-lg border border-zinc-100 bg-zinc-50 p-2.5 text-xs space-y-1">
+                  <div key={rev.id} className="rounded-md border border-slate-100 bg-slate-50 p-2.5 text-xs space-y-1">
                     <div className="flex items-center justify-between">
                       <span
                         className={`font-semibold capitalize text-[11px] ${
@@ -400,12 +400,12 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
                       >
                         {rev.decision.replace(/_/g, " ")} (v{rev.version_number})
                       </span>
-                      <span className="text-[10px] text-zinc-400 font-mono">
+                      <span className="text-[10px] text-slate-400 font-mono">
                         {new Date(rev.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
                     </div>
-                    <div className="text-[11px] text-zinc-600">Reviewer: {rev.reviewer_email || rev.reviewer_id}</div>
-                    {rev.notes && <p className="text-[11px] text-zinc-700 bg-white p-1.5 rounded border border-zinc-200">{rev.notes}</p>}
+                    <div className="text-[11px] text-slate-500 text-[13px]">Reviewer: {rev.reviewer_email || rev.reviewer_id}</div>
+                    {rev.notes && <p className="text-[11px] text-slate-700 bg-white p-1.5 rounded border border-slate-200">{rev.notes}</p>}
                   </div>
                 ))}
               </div>

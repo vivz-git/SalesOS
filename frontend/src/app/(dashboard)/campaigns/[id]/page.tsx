@@ -98,8 +98,8 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
   if (loading) {
     return (
       <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900 border-t-transparent" />
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
           <span>Loading campaign details...</span>
         </div>
       </div>
@@ -111,7 +111,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
       <div className="space-y-4">
         <Link
           href="/campaigns"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Campaigns</span>
@@ -132,7 +132,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
       <div className="flex items-center justify-between">
         <Link
           href="/campaigns"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Campaigns</span>
@@ -143,11 +143,11 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900">{campaign.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{campaign.name}</h1>
               <CampaignStatusBadge status={campaign.status} />
             </div>
             {campaign.target_segment && (
-              <p className="mt-1 text-sm font-medium text-zinc-500">
+              <p className="mt-1 text-sm font-medium text-slate-500">
                 Target Segment: {campaign.target_segment}
               </p>
             )}
@@ -170,7 +170,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
                 size="sm"
                 onClick={() => handleStatusAction(activateCampaign)}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-accent-foreground"
               >
                 <PlayCircle className="h-3.5 w-3.5" />
                 <span>Activate</span>
@@ -207,7 +207,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
                 size="sm"
                 onClick={() => handleStatusAction(restoreCampaign)}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-zinc-700"
+                className="flex items-center gap-1.5 text-slate-700"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Restore Draft</span>
@@ -218,32 +218,32 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Description & Notes
             </h2>
-            <div className="rounded-lg border bg-zinc-50 p-4 text-sm text-zinc-700 min-h-24">
+            <div className="rounded-lg border bg-slate-50 p-4 text-sm text-slate-700 min-h-24">
               {campaign.description || "No campaign description provided."}
             </div>
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               ICP & Messaging Brief
             </h2>
-            <div className="rounded-lg border bg-zinc-50 p-4 text-sm text-zinc-700 min-h-24">
+            <div className="rounded-lg border bg-slate-50 p-4 text-sm text-slate-700 min-h-24">
               {campaign.icp_definition || "No ICP definition provided."}
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700">
-            <CheckCircle className="h-4 w-4 text-zinc-500" />
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+            <CheckCircle className="h-4 w-4 text-slate-500" />
             <span>Governed Execution Boundary</span>
           </div>
-          <p className="mt-1 text-xs text-zinc-500">
-            Campaign ID: <code className="rounded bg-zinc-100 px-1 py-0.5">{campaign.id}</code> • Status:{" "}
-            <span className="font-semibold capitalize text-zinc-900">{campaign.status}</span>. External outreach dispatch is protected by human approval gates.
+          <p className="mt-1 text-xs text-slate-500">
+            Campaign ID: <code className="rounded bg-slate-100 px-1 py-0.5">{campaign.id}</code> • Status:{" "}
+            <span className="font-semibold capitalize text-slate-900">{campaign.status}</span>. External outreach dispatch is protected by human approval gates.
           </p>
         </div>
 

@@ -24,6 +24,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function RepliesTab() {
   const { activeWorkspace } = useWorkspace();
@@ -97,7 +98,7 @@ export function RepliesTab() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-purple-600" />
+            <MessageSquare className="h-6 w-6 text-indigo-600" aria-hidden="true" />
             <span>Conversations Inbox</span>
           </h1>
           <p className="mt-1 text-xs text-zinc-500">
@@ -106,16 +107,17 @@ export function RepliesTab() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            type="button"
+            variant="default"
             onClick={() => {
               setModalError(null);
               setShowSimulateModal(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-purple-700 transition-colors shadow-2xs"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             <span>Simulate Inbound Reply</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -131,10 +133,12 @@ export function RepliesTab() {
           ].map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setStatusFilter(tab.id)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap ${
+              aria-pressed={statusFilter === tab.id}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                 statusFilter === tab.id
-                  ? "bg-purple-100 text-purple-900"
+                  ? "bg-indigo-50 text-indigo-900"
                   : "text-zinc-600 hover:bg-zinc-100"
               }`}
             >
@@ -152,16 +156,19 @@ export function RepliesTab() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadData()}
-              className="w-full rounded-lg border border-zinc-200 bg-zinc-50 pl-8 pr-3 py-1.5 text-xs text-zinc-900 focus:border-purple-500 focus:bg-white focus:outline-hidden"
+              className="w-full rounded-lg border border-zinc-200 bg-zinc-50 pl-8 pr-3 py-1.5 text-xs text-zinc-900 focus:border-slate-400 focus:bg-white focus:outline-none"
             />
           </div>
 
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={loadData}
-            className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900"
+            aria-label="Refresh threads"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-          </button>
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+          </Button>
         </div>
       </div>
 
@@ -235,9 +242,9 @@ export function RepliesTab() {
                   <td className="px-4 py-3.5 text-right">
                     <Link
                       href={`/conversations/${conv.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 hover:text-purple-900 hover:underline"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-900 hover:underline"
                     >
-                      <Eye className="h-3.5 w-3.5" />
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
                       <span>View Thread</span>
                     </Link>
                   </td>
@@ -254,19 +261,21 @@ export function RepliesTab() {
           <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 shadow-xl space-y-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <Send className="h-5 w-5 text-purple-600" />
+                <Send className="h-5 w-5 text-indigo-600" aria-hidden="true" />
                 <h3 className="text-base font-bold text-zinc-900">
                   Simulate Inbound Prospect Reply
                 </h3>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => !simulating && setShowSimulateModal(false)}
                 disabled={simulating}
-                className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 disabled:opacity-50"
+                aria-label="Close modal"
               >
-                <X className="h-5 w-5" />
-              </button>
+                <X className="h-5 w-5" aria-hidden="true" />
+              </Button>
             </div>
             <p className="text-xs text-zinc-500">
               Test inbound reply ingestion and automatic intent classification.
@@ -319,28 +328,30 @@ export function RepliesTab() {
               )}
 
               <div className="flex items-center justify-end gap-2 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => setShowSimulateModal(false)}
                   disabled={simulating}
-                  className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-600 hover:bg-zinc-100 disabled:opacity-50"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="default"
+                  size="sm"
                   disabled={simulating}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 transition-colors disabled:opacity-50"
                 >
                   {simulating ? (
                     <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                       <span>Processing...</span>
                     </>
                   ) : (
                     <span>Ingest & Classify Reply</span>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

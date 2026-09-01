@@ -113,8 +113,8 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
   if (loading) {
     return (
       <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900 border-t-transparent" />
+        <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
           <span>Loading company profile...</span>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
       <div className="space-y-4">
         <Link
           href="/prospects"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Prospects</span>
@@ -147,7 +147,7 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
       <div className="flex items-center justify-between">
         <Link
           href="/prospects"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 hover:text-zinc-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Prospects</span>
@@ -158,7 +158,7 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900">{account.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{account.name}</h1>
               <AccountStatusBadge status={account.status} />
             </div>
             {account.domain && (
@@ -204,7 +204,7 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
                 size="sm"
                 onClick={handleRestore}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-zinc-700"
+                className="flex items-center gap-1.5 text-slate-700"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Restore Account</span>
@@ -215,30 +215,30 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Company Details */}
-          <div className="rounded-lg border bg-zinc-50 p-5 space-y-3">
-            <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+          <div className="rounded-lg border bg-slate-50 p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Company Attributes
             </h2>
 
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
-                <span className="font-semibold text-zinc-500 block">Industry</span>
-                <span className="text-zinc-900 font-medium">
+                <span className="font-semibold text-slate-500 block">Industry</span>
+                <span className="text-slate-900 font-medium">
                   {account.industry || "Not specified"}
                 </span>
               </div>
 
               <div>
-                <span className="font-semibold text-zinc-500 block">Company Size</span>
-                <span className="text-zinc-900 font-medium">
+                <span className="font-semibold text-slate-500 block">Company Size</span>
+                <span className="text-slate-900 font-medium">
                   {account.employee_count ? `${account.employee_count} employees` : "Not specified"}
                 </span>
               </div>
 
               <div className="col-span-2">
-                <span className="font-semibold text-zinc-500 block">Location</span>
-                <span className="text-zinc-900 font-medium flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5 text-zinc-400" />
+                <span className="font-semibold text-slate-500 block">Location</span>
+                <span className="text-slate-900 font-medium flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
                   {[account.city, account.state, account.country].filter(Boolean).join(", ") ||
                     "Location not specified"}
                 </span>
@@ -247,34 +247,34 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
           </div>
 
           {/* Assigned Campaign */}
-          <div className="rounded-lg border bg-zinc-50 p-5 space-y-3">
-            <h2 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+          <div className="rounded-lg border bg-slate-50 p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Campaign Association
             </h2>
 
             {campaign ? (
               <Link
                 href={`/campaigns/${campaign.id}`}
-                className="group block rounded-md border border-zinc-200 bg-white p-3 shadow-xs hover:border-zinc-300"
+                className="group block rounded-md border border-slate-200 bg-white p-3 shadow-xs hover:border-slate-300"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Megaphone className="h-4 w-4 text-zinc-600 group-hover:text-zinc-900" />
-                    <span className="text-sm font-bold text-zinc-900 group-hover:text-zinc-700">
+                    <Megaphone className="h-4 w-4 text-slate-600 group-hover:text-slate-900" />
+                    <span className="text-sm font-bold text-slate-900 group-hover:text-slate-700">
                       {campaign.name}
                     </span>
                   </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                     Status: {campaign.status}
                   </span>
                 </div>
                 {campaign.target_segment && (
-                  <p className="mt-1 text-xs text-zinc-500">{campaign.target_segment}</p>
+                  <p className="mt-1 text-xs text-slate-500">{campaign.target_segment}</p>
                 )}
               </Link>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-zinc-300 p-4 text-center">
-                <p className="text-xs font-medium text-zinc-500">No campaign currently assigned.</p>
+              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-slate-300 p-4 text-center">
+                <p className="text-xs font-medium text-slate-500">No campaign currently assigned.</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -288,14 +288,14 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-zinc-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700">
-            <Building2 className="h-4 w-4 text-zinc-500" />
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+            <Building2 className="h-4 w-4 text-slate-500" />
             <span>Target Account Profile</span>
           </div>
-          <p className="mt-1 text-xs text-zinc-500">
-            Account ID: <code className="rounded bg-zinc-100 px-1 py-0.5">{account.id}</code> • Workspace:{" "}
-            <span className="font-semibold text-zinc-900">{activeWorkspace?.name}</span>. Target company context is preserved across campaign pipelines.
+          <p className="mt-1 text-xs text-slate-500">
+            Account ID: <code className="rounded bg-slate-100 px-1 py-0.5">{account.id}</code> • Workspace:{" "}
+            <span className="font-semibold text-slate-900">{activeWorkspace?.name}</span>. Target company context is preserved across campaign pipelines.
           </p>
         </div>
       </div>

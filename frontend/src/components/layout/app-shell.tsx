@@ -1,54 +1,54 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode } from"react";
 
-import { Sidebar } from "@/components/layout/sidebar";
-import { Topbar } from "@/components/layout/topbar";
-import { WorkspaceOnboarding } from "@/components/workspace/workspace-onboarding";
-import { useWorkspace } from "@/lib/workspace-context";
+import { Sidebar } from"@/components/layout/sidebar";
+import { Topbar } from"@/components/layout/topbar";
+import { WorkspaceOnboarding } from"@/components/workspace/workspace-onboarding";
+import { useWorkspace } from"@/lib/workspace-context";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { workspaces, activeWorkspace, loading } = useWorkspace();
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+ const { workspaces, activeWorkspace, loading } = useWorkspace();
+ const [collapsed, setCollapsed] = useState(false);
+ const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (loading) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-zinc-50 p-6">
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900 border-t-transparent" />
-          <span>Loading SalesOS workspace...</span>
-        </div>
-      </main>
-    );
-  }
+ if (loading) {
+ return (
+ <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
+ <div className="flex items-center gap-2 text-sm text-slate-500">
+ <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent"/>
+ <span>Loading SalesOS workspace...</span>
+ </div>
+ </main>
+ );
+ }
 
-  if (workspaces.length === 0) {
-    return <WorkspaceOnboarding />;
-  }
+ if (workspaces.length === 0) {
+ return <WorkspaceOnboarding />;
+ }
 
-  return (
-    <div className="flex min-h-screen bg-zinc-50 font-sans text-zinc-900">
-      <Sidebar
-        collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed((prev) => !prev)}
-        mobileOpen={mobileOpen}
-        onCloseMobile={() => setMobileOpen(false)}
-      />
+ return (
+ <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+ <Sidebar
+ collapsed={collapsed}
+ onToggleCollapse={() => setCollapsed((prev) => !prev)}
+ mobileOpen={mobileOpen}
+ onCloseMobile={() => setMobileOpen(false)}
+ />
 
-      <div className="flex flex-1 flex-col overflow-x-hidden">
-        <Topbar onToggleMobileSidebar={() => setMobileOpen(true)} />
+ <div className="flex flex-1 flex-col overflow-x-hidden">
+ <Topbar onToggleMobileSidebar={() => setMobileOpen(true)} />
 
-        <main className="flex-1 p-4 md:p-6">
-          {activeWorkspace ? (
-            children
-          ) : (
-            <div className="rounded-xl border bg-white p-6 shadow-sm">
-              <p className="text-sm text-zinc-600">Please select or create a workspace.</p>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
+ <main className="flex-1 p-4 md:p-6">
+ {activeWorkspace ? (
+ children
+ ) : (
+ <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+ <p className="text-sm text-slate-600">Please select or create a workspace.</p>
+ </div>
+ )}
+ </main>
+ </div>
+ </div>
+ );
 }

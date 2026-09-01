@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useWorkspace } from "@/lib/workspace-context";
 import { generateOutreachDraft, type OutreachDraft } from "@/lib/api/outreach";
 import { Sparkles, Loader2, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface GenerateDraftButtonProps {
   draftId: string;
@@ -41,11 +42,12 @@ export function GenerateDraftButton({
 
   return (
     <div className="inline-flex flex-col items-end gap-1">
-      <button
+      <Button
         type="button"
         onClick={handleGenerate}
         disabled={disabled || generating || !activeWorkspace}
-        className={`inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-purple-700 transition-colors disabled:opacity-50 ${className}`}
+        className={className}
+        size="sm"
       >
         {generating ? (
           <>
@@ -58,7 +60,7 @@ export function GenerateDraftButton({
             <span>Generate AI Draft</span>
           </>
         )}
-      </button>
+      </Button>
 
       {error && (
         <span className="flex items-center gap-1 text-[11px] font-medium text-rose-600">

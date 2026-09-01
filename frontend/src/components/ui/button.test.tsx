@@ -1,11 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { render, screen } from"@testing-library/react";
+import { describe, expect, it } from"vitest";
 
-import { Button } from "./button";
+import { Button } from"./button";
 
 describe("Button", () => {
-  it("renders its label", () => {
-    render(<Button>Continue</Button>);
-    expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
-  });
+ it("renders its label", () => {
+ render(<Button>Continue</Button>);
+ expect(screen.getByRole("button", { name:"Continue"})).toBeInTheDocument();
+ });
 });

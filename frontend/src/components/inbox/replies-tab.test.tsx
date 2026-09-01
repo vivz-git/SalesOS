@@ -12,7 +12,7 @@ vi.mock("@/lib/workspace-context", () => ({
   }),
 }));
 
-describe("ConversationsPage - Simulate Inbound Reply", () => {
+describe("ConversationsPage - Add Test Reply", () => {
   const mockConversations: conversationsApi.Conversation[] = [
     {
       id: "conv-1",
@@ -41,17 +41,17 @@ describe("ConversationsPage - Simulate Inbound Reply", () => {
     vi.restoreAllMocks();
   });
 
-  it("opens simulate inbound reply modal when button is clicked", async () => {
+  it("opens add test reply modal when button is clicked", async () => {
     render(<ConversationsPage />);
 
     await waitFor(() => {
       expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
     });
 
-    const simulateBtn = screen.getByRole("button", { name: /simulate inbound reply/i });
+    const simulateBtn = screen.getByRole("button", { name: /add test reply/i });
     fireEvent.click(simulateBtn);
 
-    expect(screen.getByText("Simulate Inbound Prospect Reply")).toBeInTheDocument();
+    expect(screen.getByText("Add Test Reply")).toBeInTheDocument();
     expect(screen.getByDisplayValue("alex.buyer@targetcompany.com")).toBeInTheDocument();
   });
 
@@ -69,9 +69,9 @@ describe("ConversationsPage - Simulate Inbound Reply", () => {
       expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /simulate inbound reply/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add test reply/i }));
 
-    const submitBtn = screen.getByRole("button", { name: /ingest & classify reply/i });
+    const submitBtn = screen.getByRole("button", { name: /add reply/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
@@ -82,7 +82,7 @@ describe("ConversationsPage - Simulate Inbound Reply", () => {
     resolveIngest(mockConversations[0]);
 
     await waitFor(() => {
-      expect(screen.queryByText("Simulate Inbound Prospect Reply")).not.toBeInTheDocument();
+      expect(screen.queryByText("Add Test Reply")).not.toBeInTheDocument();
       expect(screen.getByText(/Inbound prospect reply was successfully ingested and classified/i)).toBeInTheDocument();
     });
   });
@@ -98,17 +98,17 @@ describe("ConversationsPage - Simulate Inbound Reply", () => {
       expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /simulate inbound reply/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add test reply/i }));
 
-    const submitBtn = screen.getByRole("button", { name: /ingest & classify reply/i });
+    const submitBtn = screen.getByRole("button", { name: /add reply/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
       expect(
         screen.getByText("Contact or workspace could not be resolved for inbound message")
       ).toBeInTheDocument();
-      expect(screen.getByText("Simulate Inbound Prospect Reply")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /ingest & classify reply/i })).not.toBeDisabled();
+      expect(screen.getByText("Add Test Reply")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /add reply/i })).not.toBeDisabled();
     });
   });
 });

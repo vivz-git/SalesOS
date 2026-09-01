@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Send, Loader2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DeliveryActionModalProps {
   isOpen: boolean;
@@ -49,7 +50,7 @@ export function DeliveryActionModal({
       <div className="w-full max-w-lg rounded-xl border border-zinc-200 bg-white p-6 shadow-xl space-y-5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="rounded-lg border p-2 bg-purple-100 text-purple-800 border-purple-200">
+            <div className="rounded-lg border p-2 bg-indigo-50 text-indigo-700 border-indigo-200">
               <Send className="h-5 w-5" />
             </div>
             <div>
@@ -61,14 +62,16 @@ export function DeliveryActionModal({
               </p>
             </div>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
             disabled={submitting}
-            className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 disabled:opacity-50"
+            aria-label="Close modal"
           >
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
 
         {draftSubject && (
@@ -97,7 +100,7 @@ export function DeliveryActionModal({
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
               placeholder="e.g. you@yourdomain.com"
-              className="w-full rounded-lg border border-zinc-300 p-2.5 text-xs text-zinc-900 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none"
+              className="w-full rounded-lg border border-zinc-300 p-2.5 text-xs text-zinc-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
             />
           </div>
 
@@ -115,18 +118,20 @@ export function DeliveryActionModal({
           )}
 
           <div className="flex justify-end gap-2.5 pt-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClose}
               disabled={submitting}
-              className="rounded-lg border border-zinc-300 px-3.5 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="default"
+              size="sm"
               disabled={submitting}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-purple-700 transition-colors disabled:opacity-50"
             >
               {submitting ? (
                 <>
@@ -136,7 +141,7 @@ export function DeliveryActionModal({
               ) : (
                 <span>Confirm {isSendingToRealProspect ? "Live Send" : "Test Send"}</span>
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

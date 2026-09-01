@@ -1,17 +1,17 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen } from"@testing-library/react";
+import { describe, expect, it, vi } from"vitest";
 
-import { Breadcrumbs } from "./breadcrumbs";
+import { Breadcrumbs } from"./breadcrumbs";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/campaigns",
+ usePathname: () =>"/campaigns",
 }));
 
 describe("Breadcrumbs Component", () => {
-  it("renders home and current route segment accurately", () => {
-    render(<Breadcrumbs />);
+ it("renders home and current route segment accurately", () => {
+ render(<Breadcrumbs />);
 
-    expect(screen.getByText("Home")).toBeInTheDocument();
-    expect(screen.getByText("Campaigns")).toBeInTheDocument();
-  });
+ expect(screen.getByText("Home")).toBeInTheDocument();
+ expect(screen.getByText("Campaigns")).toBeInTheDocument();
+ });
 });

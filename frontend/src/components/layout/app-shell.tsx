@@ -36,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
  onCloseMobile={() => setMobileOpen(false)}
  />
 
- <div className="flex flex-1 flex-col overflow-x-hidden">
+ <div className="flex min-w-0 flex-1 flex-col">
  <Topbar onToggleMobileSidebar={() => setMobileOpen(true)} />
 
  <main className="flex-1 p-4 md:p-6">

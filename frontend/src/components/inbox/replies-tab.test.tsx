@@ -45,7 +45,7 @@ describe("ConversationsPage - Add Test Reply", () => {
     render(<ConversationsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
+      expect(screen.getAllByText("Alex Buyer").length).toBeGreaterThan(0);
     });
 
     const simulateBtn = screen.getByRole("button", { name: /add test reply/i, hidden: true });
@@ -66,7 +66,7 @@ describe("ConversationsPage - Add Test Reply", () => {
     render(<ConversationsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
+      expect(screen.getAllByText("Alex Buyer").length).toBeGreaterThan(0);
     });
 
     fireEvent.click(screen.getByRole("button", { name: /add test reply/i, hidden: true }));
@@ -95,7 +95,7 @@ describe("ConversationsPage - Add Test Reply", () => {
     render(<ConversationsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
+      expect(screen.getAllByText("Alex Buyer").length).toBeGreaterThan(0);
     });
 
     fireEvent.click(screen.getByRole("button", { name: /add test reply/i, hidden: true }));

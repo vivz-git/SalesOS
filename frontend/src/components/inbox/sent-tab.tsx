@@ -81,7 +81,7 @@ export function SentTab() {
  )}
 
  {/* Table Card */}
- <div className="rounded-lg border border-salesos-border bg-salesos-surface shadow-sm overflow-hidden">
+ <div className="rounded-lg border border-salesos-border bg-salesos-surface shadow-sm">
  {loading ? (
  <div className="p-12 text-center text-xs text-salesos-text-secondary/60">Loading delivery records...</div>
  ) : deliveries.length === 0 ? (
@@ -91,46 +91,76 @@ export function SentTab() {
  <p className="text-salesos-text-secondary/60">Approved outreach drafts sent by users will appear here.</p>
  </div>
  ) : (
- <table className="w-full text-left text-xs text-salesos-text-secondary">
- <thead className="border-b border-salesos-border bg-salesos-surface-muted text-[11px] font-semibold uppercase tracking-wider text-salesos-text-secondary">
- <tr>
- <th className="px-4 py-3">Recipient</th>
- <th className="px-4 py-3">Subject Line</th>
- <th className="px-4 py-3">Provider & ID</th>
- <th className="px-4 py-3">Status</th>
- <th className="px-4 py-3">Sent At</th>
- <th className="px-4 py-3 text-right">Action</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-salesos-border">
- {deliveries.map((item) => (
- <tr key={item.id} className="hover:bg-salesos-surface-muted/80 transition-colors">
- <td className="px-4 py-3.5 text-[13px] font-medium text-salesos-text truncate max-w-[180px]">{item.recipient_email}</td>
- <td className="px-4 py-3.5 text-[13px] text-salesos-text-secondary max-w-xs truncate">
- {item.subject ||"(No subject)"}
- </td>
- <td className="px-4 py-3.5 text-[11px] text-salesos-text-secondary whitespace-nowrap">
- <span className="capitalize text-[13px] text-salesos-text-secondary">{item.provider}</span>
- </td>
- <td className="px-4 py-3.5">
- <DeliveryStatusBadge status={item.status as DeliveryStatus} />
- </td>
- <td className="px-4 py-3.5 text-[11px] text-salesos-text-secondary whitespace-nowrap">
- {new Date(item.created_at).toLocaleString()}
- </td>
- <td className="px-4 py-3.5 text-right">
- <Link
- href={`/deliveries/${item.id}`}
- className="inline-flex items-center gap-1 text-xs font-semibold text-salesos-brand hover:text-salesos-brand-hover hover:underline"
- >
- <Eye className="h-3.5 w-3.5"/>
- <span>Details</span>
- </Link>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
+ <>
+   {/* Mobile card layout — shown below md */}
+   <div className="divide-y divide-salesos-border md:hidden">
+     {deliveries.map((item) => (
+       <div key={item.id} className="p-4 space-y-2">
+         <div className="flex items-start justify-between gap-2">
+           <div className="min-w-0">
+             <div className="text-sm font-medium text-salesos-text truncate" title={item.recipient_email}>{item.recipient_email}</div>
+             <div className="text-[11px] text-salesos-text-secondary truncate mt-0.5">{item.subject || "(No subject)"}</div>
+           </div>
+           <Link href={`/deliveries/${item.id}`} className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-salesos-brand hover:text-salesos-brand-hover hover:underline">
+             <Eye className="h-3.5 w-3.5"/>
+             <span>Details</span>
+           </Link>
+         </div>
+         <div className="flex flex-wrap items-center gap-2">
+           <DeliveryStatusBadge status={item.status as DeliveryStatus} />
+           <span className="text-[11px] text-salesos-text-secondary/70 capitalize">{item.provider}</span>
+           <span className="text-[11px] text-salesos-text-secondary/60">{new Date(item.created_at).toLocaleDateString()}</span>
+         </div>
+       </div>
+     ))}
+   </div>
+
+   {/* Desktop/tablet table — shown at md+ with horizontal scroll */}
+   <div className="hidden md:block w-full overflow-x-auto">
+     <table className="min-w-[680px] w-full text-left text-xs text-salesos-text-secondary">
+     <thead className="border-b border-salesos-border bg-salesos-surface-muted text-[11px] font-semibold uppercase tracking-wider text-salesos-text-secondary">
+     <tr>
+     <th className="px-4 py-3">Recipient</th>
+     <th className="px-4 py-3">Subject Line</th>
+     <th className="px-4 py-3">Provider</th>
+     <th className="px-4 py-3">Status</th>
+     <th className="px-4 py-3 whitespace-nowrap">Sent At</th>
+     <th className="px-4 py-3 text-right">Action</th>
+     </tr>
+     </thead>
+     <tbody className="divide-y divide-salesos-border">
+     {deliveries.map((item) => (
+     <tr key={item.id} className="hover:bg-salesos-surface-muted/80 transition-colors">
+     <td className="px-4 py-3.5 max-w-[180px]">
+       <div className="text-[13px] font-medium text-salesos-text truncate" title={item.recipient_email}>{item.recipient_email}</div>
+     </td>
+     <td className="px-4 py-3.5 text-[13px] text-salesos-text-secondary max-w-[200px] truncate">
+     {item.subject || "(No subject)"}
+     </td>
+     <td className="px-4 py-3.5 text-[11px] text-salesos-text-secondary whitespace-nowrap">
+     <span className="capitalize text-[13px] text-salesos-text-secondary">{item.provider}</span>
+     </td>
+     <td className="px-4 py-3.5">
+     <DeliveryStatusBadge status={item.status as DeliveryStatus} />
+     </td>
+     <td className="px-4 py-3.5 text-[11px] text-salesos-text-secondary whitespace-nowrap">
+     {new Date(item.created_at).toLocaleString()}
+     </td>
+     <td className="px-4 py-3.5 text-right">
+     <Link
+     href={`/deliveries/${item.id}`}
+     className="inline-flex items-center gap-1 text-xs font-semibold text-salesos-brand hover:text-salesos-brand-hover hover:underline"
+     >
+     <Eye className="h-3.5 w-3.5"/>
+     <span>Details</span>
+     </Link>
+     </td>
+     </tr>
+     ))}
+     </tbody>
+     </table>
+   </div>
+ </>
  )}
  </div>
  </div>

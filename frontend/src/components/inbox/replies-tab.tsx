@@ -11,7 +11,6 @@ import {
 } from "@/lib/api/conversations";
 import { ReplyClassificationBadge } from "@/components/conversations/reply-classification-badge";
 import {
-  MessageSquare,
   Search,
   RefreshCw,
   Eye,
@@ -19,7 +18,6 @@ import {
   ShieldAlert,
   Inbox,
   Send,
-  Plus,
   CheckCircle2,
   Loader2,
   X,
@@ -142,8 +140,19 @@ export function RepliesTab() {
           >
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
           </Button>
+
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowSimulateModal(true)}
+            aria-label="Add Test Reply"
+          >
+            <span>Add Test Reply</span>
+          </Button>
         </div>
       </div>
+
 
       {error && (
         <div className="flex items-center gap-2 rounded-xl border border-salesos-danger/20 bg-salesos-danger/10 p-4 text-xs text-salesos-danger">
@@ -160,7 +169,7 @@ export function RepliesTab() {
       )}
 
       {/* Conversation Thread Table */}
-      <div className="rounded-xl border border-salesos-border bg-salesos-surface shadow-2xs overflow-hidden">
+      <div className="rounded-xl border border-salesos-border bg-salesos-surface shadow-2xs">
         {loading ? (
           <div className="p-12 text-center text-xs text-salesos-text-secondary/60">Loading conversation threads...</div>
         ) : conversations.length === 0 ? (
@@ -170,31 +179,29 @@ export function RepliesTab() {
             <p className="text-salesos-text-secondary/60">Inbound email replies from target contacts will appear here.</p>
           </div>
         ) : (
-          <table className="w-full text-left text-xs text-salesos-text-secondary">
-            <thead className="border-b border-salesos-border bg-salesos-surface-muted text-[11px] font-semibold uppercase tracking-wider text-salesos-text-secondary">
-              <tr>
-                <th className="px-4 py-3">Prospect</th>
-                <th className="px-4 py-3">Account</th>
-                <th className="px-4 py-3">Intent Classification</th>
-                <th className="px-4 py-3">Thread Status</th>
-                <th className="px-4 py-3">Last Message</th>
-                <th className="px-4 py-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-salesos-border">
+          <>
+            {/* Mobile card layout — shown below md */}
+            <div className="divide-y divide-salesos-border md:hidden">
               {conversations.map((conv) => (
-                <tr key={conv.id} className="hover:bg-salesos-surface-muted/80 transition-colors">
-                  <td className="px-4 py-3.5">
-                    <div className="font-semibold text-salesos-text">{conv.contact_name || "Unknown Prospect"}</div>
-                    <div className="text-[11px] text-salesos-text-secondary">{conv.contact_email || conv.contact_id}</div>
-                  </td>
-                  <td className="px-4 py-3.5 font-medium text-salesos-text">
-                    {conv.account_name || "Target Account"}
-                  </td>
-                  <td className="px-4 py-3.5">
+                <div key={conv.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-salesos-text text-sm truncate">{conv.contact_name || "Unknown Prospect"}</div>
+                      <div className="text-[11px] text-salesos-text-secondary truncate" title={conv.contact_email || conv.contact_id}>
+                        {conv.contact_email || conv.contact_id}
+                      </div>
+                      <div className="text-[11px] text-salesos-text-secondary/70 mt-0.5">{conv.account_name || "Target Account"}</div>
+                    </div>
+                    <Link
+                      href={`/conversations/${conv.id}`}
+                      className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-salesos-brand hover:text-salesos-brand-hover hover:underline"
+                    >
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>View</span>
+                    </Link>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
                     <ReplyClassificationBadge state={conv.current_reply_state as ReplyState} />
-                  </td>
-                  <td className="px-4 py-3.5 capitalize whitespace-nowrap">
                     {conv.status === "needs_human_action" ? (
                       <span className="inline-flex items-center gap-1 rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
                         <AlertCircle className="h-3 w-3" /> Needs Review
@@ -208,23 +215,75 @@ export function RepliesTab() {
                         {conv.status}
                       </span>
                     )}
-                  </td>
-                  <td className="px-4 py-3.5 font-mono text-[11px] text-salesos-text-secondary whitespace-nowrap">
-                    {new Date(conv.last_message_at).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <Link
-                      href={`/conversations/${conv.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-salesos-brand hover:text-salesos-brand-hover hover:underline"
-                    >
-                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>View Thread</span>
-                    </Link>
-                  </td>
-                </tr>
+                    <span className="text-[11px] text-salesos-text-secondary/60">
+                      {new Date(conv.last_message_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Table layout — shown at md+ with horizontal scroll */}
+            <div className="hidden md:block w-full overflow-x-auto">
+              <table className="min-w-[700px] w-full text-left text-xs text-salesos-text-secondary">
+                <thead className="border-b border-salesos-border bg-salesos-surface-muted text-[11px] font-semibold uppercase tracking-wider text-salesos-text-secondary">
+                  <tr>
+                    <th className="px-4 py-3">Prospect</th>
+                    <th className="px-4 py-3">Account</th>
+                    <th className="px-4 py-3">Intent</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 whitespace-nowrap">Last Message</th>
+                    <th className="px-4 py-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-salesos-border">
+                  {conversations.map((conv) => (
+                    <tr key={conv.id} className="hover:bg-salesos-surface-muted/80 transition-colors">
+                      <td className="px-4 py-3.5 max-w-[180px]">
+                        <div className="font-semibold text-salesos-text truncate">{conv.contact_name || "Unknown Prospect"}</div>
+                        <div className="text-[11px] text-salesos-text-secondary truncate" title={conv.contact_email || conv.contact_id}>
+                          {conv.contact_email || conv.contact_id}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 font-medium text-salesos-text whitespace-nowrap">
+                        {conv.account_name || "Target Account"}
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <ReplyClassificationBadge state={conv.current_reply_state as ReplyState} />
+                      </td>
+                      <td className="px-4 py-3.5 capitalize whitespace-nowrap">
+                        {conv.status === "needs_human_action" ? (
+                          <span className="inline-flex items-center gap-1 rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
+                            <AlertCircle className="h-3 w-3" /> Needs Review
+                          </span>
+                        ) : conv.status === "opt_out" ? (
+                          <span className="inline-flex items-center gap-1 rounded bg-rose-100 px-2 py-0.5 text-xs font-semibold text-salesos-danger">
+                            <ShieldAlert className="h-3 w-3" /> Opt-Out
+                          </span>
+                        ) : (
+                          <span className="rounded bg-salesos-surface-muted px-2 py-0.5 text-xs font-semibold text-salesos-text-secondary capitalize">
+                            {conv.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 font-mono text-[11px] text-salesos-text-secondary whitespace-nowrap">
+                        {new Date(conv.last_message_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <Link
+                          href={`/conversations/${conv.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-salesos-brand hover:text-salesos-brand-hover hover:underline"
+                        >
+                          <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span>View Thread</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

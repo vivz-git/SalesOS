@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 "use client";
 
 import { use, useCallback, useEffect, useState } from "react";
@@ -359,10 +360,17 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
             <UserCheck className="h-4 w-4 text-salesos-text-secondary" />
             <span>Decision Maker Record</span>
           </div>
-          <p className="mt-1 text-xs text-salesos-text-secondary">
-            Contact ID: <code className="rounded bg-salesos-surface-muted px-1 py-0.5">{contact.id}</code> • Workspace:{" "}
-            <span className="font-semibold text-salesos-text">{activeWorkspace?.name}</span>. Decision maker provenance is maintained across research workflows.
-          </p>
+          <details className="mt-2 group">
+            <summary className="text-[11px] font-medium text-salesos-text-secondary cursor-pointer hover:text-salesos-text list-none flex items-center gap-1">
+              <Info className="h-3 w-3" />
+              <span>Technical Details</span>
+            </summary>
+            <p className="mt-2 text-[11px] text-salesos-text-secondary/80 bg-salesos-surface-muted/50 p-2 rounded border border-salesos-border">
+              Contact ID: <code className="font-mono">{contact.id}</code><br/>
+              Workspace: {activeWorkspace?.name}<br/>
+              Decision maker provenance is maintained across research workflows.
+            </p>
+          </details>
         </div>
       </div>
 

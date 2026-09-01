@@ -5,14 +5,14 @@
   --font-sans: var(--font-plus-jakarta-sans), system-ui, sans-serif;
 
   /* Premium SalesOS Semantic Tokens (Olive, Ivory, Walnut, Butter) */
-  --color-salesos-canvas: #F7F5EE;
-  --color-salesos-surface: #FFFDF8;
-  --color-salesos-surface-muted: #EEE9D8;
+  --color-salesos-canvas: #F5F4F0;
+  --color-salesos-surface: #FFFFFF;
+  --color-salesos-surface-muted: #EAE9E4;
 
   --color-salesos-text: #24231E;
   --color-salesos-text-secondary: #69685C;
 
-  --color-salesos-border: #DDD8C8;
+  --color-salesos-border: #E0DFD8;
 
   --color-salesos-brand: #3F5B45;
   --color-salesos-brand-hover: #334A39;

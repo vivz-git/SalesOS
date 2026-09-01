@@ -93,31 +93,7 @@ export function RepliesTab() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-salesos-text">Replies</h1>
-          <p className="mt-1 text-xs text-salesos-text-secondary">
-            Prospect reply tracking, automated intent classification, opt-outs, and human escalation.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="default"
-            onClick={() => {
-              setModalError(null);
-              setShowSimulateModal(true);
-            }}
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            <span>Add Test Reply</span>
-          </Button>
-        </div>
-      </div>
-
+    <div className="space-y-6">
       {/* Filter Toolbar */}
       <div className="flex flex-col gap-3 rounded-xl border border-salesos-border bg-salesos-surface p-4 shadow-2xs md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-1.5 overflow-x-auto">

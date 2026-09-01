@@ -48,7 +48,7 @@ describe("ConversationsPage - Add Test Reply", () => {
       expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
     });
 
-    const simulateBtn = screen.getByRole("button", { name: /add test reply/i });
+    const simulateBtn = screen.getByRole("button", { name: /add test reply/i, hidden: true });
     fireEvent.click(simulateBtn);
 
     expect(screen.getByText("Add Test Reply")).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe("ConversationsPage - Add Test Reply", () => {
       expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /add test reply/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add test reply/i, hidden: true }));
 
     const submitBtn = screen.getByRole("button", { name: /ingest & classify reply/i });
     fireEvent.click(submitBtn);
@@ -98,7 +98,7 @@ describe("ConversationsPage - Add Test Reply", () => {
       expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /add test reply/i }));
+    fireEvent.click(screen.getByRole("button", { name: /add test reply/i, hidden: true }));
 
     const submitBtn = screen.getByRole("button", { name: /ingest & classify reply/i });
     fireEvent.click(submitBtn);

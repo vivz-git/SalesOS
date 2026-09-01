@@ -33,7 +33,7 @@ export function SentTab() {
  }, [activeWorkspace, statusFilter, refreshKey]);
 
  return (
- <div className="mx-auto max-w-6xl space-y-6 p-6">
+ <div className="space-y-6">
  {/* Filter Toolbar */}
  <div className="flex items-center justify-between gap-4 rounded-lg border border-salesos-border bg-salesos-surface p-3 shadow-sm">
  <div className="flex items-center gap-1.5 overflow-x-auto">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useBreadcrumbOverride } from "@/lib/breadcrumb-store";
 import Link from"next/link";
 import { usePathname } from"next/navigation";
 import { ChevronRight, Home } from"lucide-react";
@@ -18,6 +19,7 @@ const ROUTE_NAME_MAP: Record<string, string> = {
 export function Breadcrumbs() {
  const pathname = usePathname() ||"/";
  const segments = pathname.split("/").filter(Boolean);
+  const overrideLabel = useBreadcrumbOverride();
 
  return (
  <nav aria-label="Breadcrumb"className="flex items-center gap-1 text-xs text-salesos-text-secondary">

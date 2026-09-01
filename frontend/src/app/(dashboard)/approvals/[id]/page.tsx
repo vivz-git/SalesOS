@@ -161,7 +161,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
         <div className="flex items-center gap-2">
           <ShieldAlert className="h-4 w-4 text-blue-600 shrink-0" />
           <span>
-            <strong>Send Safety:</strong> Approving this draft updates its governed state to approved. No automatic emails or external dispatches will occur.
+            <strong>Send Safety:</strong> Safe to approve. No automatic emails will be sent.
           </span>
         </div>
       </div>
@@ -209,7 +209,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
                 <button
                   type="button"
                   onClick={() => setModalAction("approve")}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent-hover shadow-sm transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-colors"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Approve Only</span>
@@ -362,18 +362,18 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
 
           {/* AI Details */}
           {current_version?.provider && (
-            <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm space-y-2.5">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <details className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm group">
+              <summary className="text-xs font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 cursor-pointer list-none">
                 <Sparkles className="h-3.5 w-3.5 text-slate-600" />
                 AI Details
-              </h2>
-              <div className="space-y-1 text-xs text-slate-950 font-mono">
+              </summary>
+              <div className="mt-4 space-y-1 text-xs text-slate-700">
                 <div>Provider: <strong>{current_version.provider}</strong></div>
                 <div>Model: <strong>{current_version.model || "llama-3.3-70b-versatile"}</strong></div>
                 <div>Prompt Version: <strong>{current_version.prompt_version || "v1.0.0"}</strong></div>
                 <div>Source: <strong>{current_version.generation_source}</strong></div>
               </div>
-            </div>
+            </details>
           )}
 
           {/* Review Audit History Log */}

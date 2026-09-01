@@ -13,7 +13,6 @@ import {
 } from"@/lib/api/hubspot";
 import { HubspotStatusBadge } from"@/components/integrations/hubspot-status-badge";
 import {
- Settings,
  Link2,
  RefreshCw,
  Unlink,
@@ -97,10 +96,7 @@ export default function SettingsPage() {
  <div className="mx-auto max-w-5xl space-y-6 p-6">
  {/* Header */}
  <div>
- <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
- <Settings className="h-6 w-6 text-indigo-600"/>
- <span>Workspace Settings & Integrations</span>
- </h1>
+ <h1 className="text-2xl font-bold tracking-tight text-slate-900">Workspace Settings & Integrations</h1>
  <p className="mt-1 text-xs text-slate-500">
  Manage workspace settings, tenant authorization, and external CRM integrations.
  </p>

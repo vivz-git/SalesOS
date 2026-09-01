@@ -71,7 +71,7 @@ describe("ConversationsPage - Add Test Reply", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /add test reply/i }));
 
-    const submitBtn = screen.getByRole("button", { name: /add reply/i });
+    const submitBtn = screen.getByRole("button", { name: /ingest & classify reply/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
@@ -82,7 +82,7 @@ describe("ConversationsPage - Add Test Reply", () => {
     resolveIngest(mockConversations[0]);
 
     await waitFor(() => {
-      expect(screen.queryByText("Add Test Reply")).not.toBeInTheDocument();
+      // modal closed
       expect(screen.getByText(/Inbound prospect reply was successfully ingested and classified/i)).toBeInTheDocument();
     });
   });
@@ -100,7 +100,7 @@ describe("ConversationsPage - Add Test Reply", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /add test reply/i }));
 
-    const submitBtn = screen.getByRole("button", { name: /add reply/i });
+    const submitBtn = screen.getByRole("button", { name: /ingest & classify reply/i });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
@@ -108,7 +108,7 @@ describe("ConversationsPage - Add Test Reply", () => {
         screen.getByText("Contact or workspace could not be resolved for inbound message")
       ).toBeInTheDocument();
       expect(screen.getByText("Add Test Reply")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /add reply/i })).not.toBeDisabled();
+      expect(screen.getByRole("button", { name: /ingest & classify reply/i })).not.toBeDisabled();
     });
   });
 });

@@ -97,11 +97,8 @@ export function RepliesTab() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-indigo-600" aria-hidden="true" />
-            <span>Conversations Inbox</span>
-          </h1>
-          <p className="mt-1 text-xs text-zinc-500">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Replies</h1>
+          <p className="mt-1 text-xs text-slate-500">
             Prospect reply tracking, automated intent classification, opt-outs, and human escalation.
           </p>
         </div>
@@ -116,13 +113,13 @@ export function RepliesTab() {
             }}
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
-            <span>Simulate Inbound Reply</span>
+            <span>Add Test Reply</span>
           </Button>
         </div>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-2xs md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-2xs md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-1.5 overflow-x-auto">
           {[
             { id: "all", label: "All Threads" },
@@ -139,7 +136,7 @@ export function RepliesTab() {
               className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
                 statusFilter === tab.id
                   ? "bg-indigo-50 text-indigo-900"
-                  : "text-zinc-600 hover:bg-zinc-100"
+                  : "text-slate-600 hover:bg-slate-100"
               }`}
             >
               {tab.label}
@@ -149,14 +146,14 @@ export function RepliesTab() {
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1 md:w-56">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-zinc-400" />
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
               placeholder="Search prospects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadData()}
-              className="w-full rounded-lg border border-zinc-200 bg-zinc-50 pl-8 pr-3 py-1.5 text-xs text-zinc-900 focus:border-slate-400 focus:bg-white focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:border-slate-400 focus:bg-white focus:outline-none"
             />
           </div>
 
@@ -187,18 +184,18 @@ export function RepliesTab() {
       )}
 
       {/* Conversation Thread Table */}
-      <div className="rounded-xl border border-zinc-200 bg-white shadow-2xs overflow-hidden">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-xs text-zinc-400">Loading conversation threads...</div>
+          <div className="p-12 text-center text-xs text-slate-400">Loading conversation threads...</div>
         ) : conversations.length === 0 ? (
-          <div className="p-12 text-center text-xs text-zinc-500 space-y-2">
-            <Inbox className="mx-auto h-8 w-8 text-zinc-300" />
-            <p className="font-semibold text-zinc-800">No Conversations Found</p>
-            <p className="text-zinc-400">Inbound email replies from target contacts will appear here.</p>
+          <div className="p-12 text-center text-xs text-slate-500 space-y-2">
+            <Inbox className="mx-auto h-8 w-8 text-slate-300" />
+            <p className="font-semibold text-slate-800">No Conversations Found</p>
+            <p className="text-slate-400">Inbound email replies from target contacts will appear here.</p>
           </div>
         ) : (
-          <table className="w-full text-left text-xs text-zinc-700">
-            <thead className="border-b border-zinc-200 bg-zinc-50 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="px-4 py-3">Prospect</th>
                 <th className="px-4 py-3">Account</th>
@@ -208,20 +205,20 @@ export function RepliesTab() {
                 <th className="px-4 py-3 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-slate-100">
               {conversations.map((conv) => (
-                <tr key={conv.id} className="hover:bg-zinc-50/80 transition-colors">
+                <tr key={conv.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-4 py-3.5">
-                    <div className="font-semibold text-zinc-900">{conv.contact_name || "Unknown Prospect"}</div>
-                    <div className="text-[11px] text-zinc-500">{conv.contact_email || conv.contact_id}</div>
+                    <div className="font-semibold text-slate-900">{conv.contact_name || "Unknown Prospect"}</div>
+                    <div className="text-[11px] text-slate-500">{conv.contact_email || conv.contact_id}</div>
                   </td>
-                  <td className="px-4 py-3.5 font-medium text-zinc-800">
+                  <td className="px-4 py-3.5 font-medium text-slate-800">
                     {conv.account_name || "Target Account"}
                   </td>
                   <td className="px-4 py-3.5">
                     <ReplyClassificationBadge state={conv.current_reply_state as ReplyState} />
                   </td>
-                  <td className="px-4 py-3.5 capitalize">
+                  <td className="px-4 py-3.5 capitalize whitespace-nowrap">
                     {conv.status === "needs_human_action" ? (
                       <span className="inline-flex items-center gap-1 rounded bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
                         <AlertCircle className="h-3 w-3" /> Needs Review
@@ -231,12 +228,12 @@ export function RepliesTab() {
                         <ShieldAlert className="h-3 w-3" /> Opt-Out
                       </span>
                     ) : (
-                      <span className="rounded bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700 capitalize">
+                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 capitalize">
                         {conv.status}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 font-mono text-[11px] text-zinc-500">
+                  <td className="px-4 py-3.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">
                     {new Date(conv.last_message_at).toLocaleString()}
                   </td>
                   <td className="px-4 py-3.5 text-right">
@@ -258,11 +255,11 @@ export function RepliesTab() {
       {/* Inbound Test Modal */}
       {showSimulateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 shadow-xl space-y-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <Send className="h-5 w-5 text-indigo-600" aria-hidden="true" />
-                <h3 className="text-base font-bold text-zinc-900">
+                <h3 className="text-base font-bold text-slate-900">
                   Simulate Inbound Prospect Reply
                 </h3>
               </div>
@@ -277,45 +274,45 @@ export function RepliesTab() {
                 <X className="h-5 w-5" aria-hidden="true" />
               </Button>
             </div>
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-slate-500">
               Test inbound reply ingestion and automatic intent classification.
             </p>
 
             <form onSubmit={handleSimulateInbound} className="space-y-4">
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="font-semibold text-zinc-700">Sender Email</label>
+                  <label className="font-semibold text-slate-700">Sender Email</label>
                   <input
                     type="email"
                     value={simSender}
                     onChange={(e) => setSimSender(e.target.value)}
                     disabled={simulating}
                     required
-                    className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs disabled:bg-zinc-50"
+                    className="mt-1 w-full rounded-lg border border-slate-200 p-2 text-xs disabled:bg-slate-50"
                   />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-zinc-700">Subject</label>
+                  <label className="font-semibold text-slate-700">Subject</label>
                   <input
                     type="text"
                     value={simSubject}
                     onChange={(e) => setSimSubject(e.target.value)}
                     disabled={simulating}
                     required
-                    className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs disabled:bg-zinc-50"
+                    className="mt-1 w-full rounded-lg border border-slate-200 p-2 text-xs disabled:bg-slate-50"
                   />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-zinc-700">Reply Message Body</label>
+                  <label className="font-semibold text-slate-700">Reply Message Body</label>
                   <textarea
                     rows={3}
                     value={simBody}
                     onChange={(e) => setSimBody(e.target.value)}
                     disabled={simulating}
                     required
-                    className="mt-1 w-full rounded-lg border border-zinc-200 p-2 text-xs disabled:bg-zinc-50"
+                    className="mt-1 w-full rounded-lg border border-slate-200 p-2 text-xs disabled:bg-slate-50"
                   />
                 </div>
               </div>

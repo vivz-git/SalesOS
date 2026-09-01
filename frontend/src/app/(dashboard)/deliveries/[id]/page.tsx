@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
 import { fetchDeliveryDetail, cancelDelivery, type EmailDelivery } from "@/lib/api/deliveries";
 import { DeliveryStatusBadge } from "@/components/deliveries/delivery-status-badge";
-import { ArrowLeft, Send, AlertCircle, CheckCircle2, ShieldAlert, Key, Mail, Clock } from "lucide-react";
+import { ArrowLeft, AlertCircle, CheckCircle2, ShieldAlert, Key, Mail, Clock } from "lucide-react";
 
 interface DeliveryDetailPageProps {
   params: Promise<{ id: string }>;
@@ -100,9 +100,8 @@ export default function DeliveryDetailPage({ params }: DeliveryDetailPageProps) 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                <Send className="h-5 w-5 text-indigo-600" />
-                <span>Outbound Delivery Record</span>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                Outbound Delivery Record
               </h1>
               <DeliveryStatusBadge status={delivery.status} />
             </div>
@@ -168,25 +167,30 @@ export default function DeliveryDetailPage({ params }: DeliveryDetailPageProps) 
               <Key className="h-3.5 w-3.5 text-slate-500" />
               <span>Delivery Metadata</span>
             </h2>
-            <div className="space-y-2 font-mono text-[11px]">
+            <div className="space-y-2 text-[11px]">
               <div>
                 <span className="text-slate-500">Provider:</span>{" "}
                 <strong className="text-slate-900 capitalize">{delivery.provider}</strong>
               </div>
               <div>
-                <span className="text-slate-500">Message ID:</span>{" "}
-                <span className="text-slate-800">{delivery.provider_message_id || "N/A"}</span>
-              </div>
-              <div>
                 <span className="text-slate-500">Version No:</span>{" "}
-                <span className="text-slate-800">v{delivery.version_number}</span>
+                <strong className="text-slate-900">v{delivery.version_number}</strong>
               </div>
-              <div className="pt-2 border-t border-slate-100">
-                <span className="text-slate-500">Idempotency Key:</span>
-                <p className="text-[10px] text-slate-700 bg-slate-50 p-1.5 rounded border border-slate-200 mt-1 truncate">
-                  {delivery.idempotency_key}
-                </p>
-              </div>
+              <details className="pt-2 border-t border-slate-100 group">
+                <summary className="text-slate-500 cursor-pointer list-none font-medium">View Technical IDs</summary>
+                <div className="mt-2 space-y-2 font-mono">
+                  <div>
+                    <span className="text-slate-500">Message ID:</span>{" "}
+                    <span className="text-slate-800">{delivery.provider_message_id || "N/A"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Idempotency Key:</span>
+                    <p className="text-[10px] text-slate-700 bg-slate-50 p-1.5 rounded border border-slate-200 mt-1 truncate">
+                      {delivery.idempotency_key}
+                    </p>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 

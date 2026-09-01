@@ -3,6 +3,7 @@
 import { useEffect, useState } from"react";
 import Link from"next/link";
 import { useWorkspace } from"@/lib/workspace-context";
+import { fetchContacts } from "@/lib/api/contacts";
 import { fetchOutreachDrafts, type OutreachDraft, type DraftStatus } from"@/lib/api/outreach";
 import { DraftStatusBadge } from"@/components/outreach/draft-status-badge";
 import { Plus, Search, FileText, AlertCircle, RefreshCw, ChevronRight } from"lucide-react";
@@ -14,6 +15,7 @@ export default function ApprovalsPage() {
  const [error, setError] = useState<string | null>(null);
  const [statusFilter, setStatusFilter] = useState<string>("all");
  const [searchQuery, setSearchQuery] = useState<string>("");
+ const [contactsMap, setContactsMap] = useState<Record<string, string>>({});
 
  async function loadDrafts() {
  if (!activeWorkspace) return;
@@ -24,6 +26,12 @@ export default function ApprovalsPage() {
  const filter = statusFilter ==="all"? undefined : statusFilter;
  const data = await fetchOutreachDrafts(activeWorkspace.id, { status: filter });
  setDrafts(data);
+ const contacts = await fetchContacts(activeWorkspace.id);
+ const map: Record<string, string> = {};
+ for (const contact of contacts) {
+  map[contact.id] = contact.first_name + (contact.last_name ? " " + contact.last_name : "");
+ }
+ setContactsMap(map);
  } catch (err: unknown) {
  setError(err instanceof Error ? err.message :"Failed to load outreach drafts");
  } finally {
@@ -188,8 +196,8 @@ export default function ApprovalsPage() {
  </p>
 
  <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
- <span>Campaign: <span className="font-mono text-slate-700">{draft.campaign_id ? draft.campaign_id.slice(0, 8) + '...' : 'None'}</span></span>
- <span>Contact: <span className="font-mono text-slate-700">{draft.contact_id.slice(0, 8)}...</span></span>
+ {draft.campaign_id && <span>Campaign: <span className="font-medium text-slate-700">Active Campaign</span></span>}
+ <span>Prospect: <span className="font-medium text-slate-700">{contactsMap[draft.contact_id] || "Unknown Prospect"}</span></span>
  {draft.created_at && (
  <span>Created: {new Date(draft.created_at).toLocaleDateString()}</span>
  )}

@@ -75,10 +75,7 @@ export default function ReportsPage() {
  {/* Header */}
  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
  <div>
- <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
- <BarChart3 className="h-6 w-6 text-indigo-600"/>
- <span>Weekly Performance & Activity Digest</span>
- </h1>
+ <h1 className="text-2xl font-bold tracking-tight text-slate-900\">Weekly Performance & Activity Digest</h1>
  <p className="mt-1 text-xs text-slate-500">
  Weekly workspace activity, delivery rates, and conversion metrics.
  </p>

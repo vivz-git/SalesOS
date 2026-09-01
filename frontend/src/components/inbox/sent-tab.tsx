@@ -105,17 +105,17 @@ export function SentTab() {
  <tbody className="divide-y divide-slate-100">
  {deliveries.map((item) => (
  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
- <td className="px-4 py-3.5 text-[13px] font-medium text-slate-900">{item.recipient_email}</td>
+ <td className="px-4 py-3.5 text-[13px] font-medium text-slate-900 truncate max-w-[180px]">{item.recipient_email}</td>
  <td className="px-4 py-3.5 text-[13px] text-slate-700 max-w-xs truncate">
  {item.subject ||"(No subject)"}
  </td>
- <td className="px-4 py-3.5 text-[11px] text-slate-500">
+ <td className="px-4 py-3.5 text-[11px] text-slate-500 whitespace-nowrap">
  <span className="capitalize text-[13px] text-slate-600">{item.provider}</span>
  </td>
  <td className="px-4 py-3.5">
  <DeliveryStatusBadge status={item.status as DeliveryStatus} />
  </td>
- <td className="px-4 py-3.5 text-[11px] text-slate-500">
+ <td className="px-4 py-3.5 text-[11px] text-slate-500 whitespace-nowrap">
  {new Date(item.created_at).toLocaleString()}
  </td>
  <td className="px-4 py-3.5 text-right">

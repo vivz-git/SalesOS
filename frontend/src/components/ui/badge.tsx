@@ -7,12 +7,12 @@ const badgeVariants = cva(
  {
  variants: {
  variant: {
- default:"bg-slate-100 text-slate-700",
- success:"bg-emerald-50 text-emerald-800",
- warning:"bg-amber-50 text-amber-800",
- error:"bg-red-50 text-red-700",
- info:"bg-blue-50 text-blue-800",
- accent:"bg-indigo-50 text-indigo-800",
+ default:"bg-salesos-surface-muted text-salesos-text-secondary",
+ success:"bg-salesos-success/10 text-salesos-success",
+ warning:"bg-salesos-warning/10 text-salesos-warning",
+ error:"bg-salesos-danger/10 text-salesos-danger",
+ info:"bg-salesos-info/10 text-salesos-info",
+ accent:"bg-salesos-brand-subtle text-salesos-brand",
  },
  },
  defaultVariants: { variant:"default"},

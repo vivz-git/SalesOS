@@ -31,7 +31,7 @@ export function ApprovalActionModal({
  approve: {
  title:"Approve Outreach Draft",
  description:"This will mark the draft as approved. No external delivery or email sending will occur.",
- badgeColor:"bg-emerald-100 text-emerald-800 border-emerald-200",
+ badgeColor:"bg-emerald-100 text-salesos-success border-salesos-success/20",
  btnVariant: "default",
  icon: CheckCircle2,
  btnLabel:"Confirm Approval",
@@ -39,7 +39,7 @@ export function ApprovalActionModal({
 "approve-and-send": {
  title:"Approve & Send Outreach",
  description:"Approve this draft and immediately queue it for external email delivery.",
- badgeColor:"bg-indigo-100 text-indigo-800 border-indigo-200",
+ badgeColor:"bg-salesos-brand-subtle text-salesos-brand border-salesos-brand/20",
  btnVariant: "default",
  icon: CheckCircle2,
  btnLabel:"Approve & Send",
@@ -47,7 +47,7 @@ export function ApprovalActionModal({
  reject: {
  title:"Reject Outreach Draft",
  description:"Mark this draft as rejected. The draft will remain in audit history.",
- badgeColor:"bg-rose-100 text-rose-800 border-rose-200",
+ badgeColor:"bg-rose-100 text-salesos-danger border-salesos-danger/20",
  btnVariant: "destructive",
  icon: XCircle,
  btnLabel:"Confirm Rejection",
@@ -55,7 +55,7 @@ export function ApprovalActionModal({
 "return-to-draft": {
  title:"Return to Draft / Request Revision",
  description:"Return this item to draft state so sales reps or AI can generate further revisions.",
- badgeColor:"bg-amber-100 text-amber-800 border-amber-200",
+ badgeColor:"bg-amber-100 text-salesos-warning border-amber-200",
  btnVariant: "secondary",
  icon: RotateCcw,
  btnLabel:"Return to Draft",
@@ -81,15 +81,15 @@ export function ApprovalActionModal({
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
- <div className="w-full max-w-lg rounded-xl border border-slate-200 bg-white p-6 shadow-xl space-y-5">
+ <div className="w-full max-w-lg rounded-xl border border-salesos-border bg-salesos-surface p-6 shadow-xl space-y-5">
  <div className="flex items-start justify-between">
  <div className="flex items-center gap-2.5">
  <div className={`rounded-lg border p-2 ${config.badgeColor}`} aria-hidden="true">
  <IconComponent className="h-5 w-5"/>
  </div>
  <div>
- <h2 className="text-lg font-bold text-slate-900">{config.title}</h2>
- <p className="text-xs text-slate-500">{config.description}</p>
+ <h2 className="text-lg font-bold text-salesos-text">{config.title}</h2>
+ <p className="text-xs text-salesos-text-secondary">{config.description}</p>
  </div>
  </div>
  <Button
@@ -104,17 +104,17 @@ export function ApprovalActionModal({
  </div>
 
  {draftSubject && (
- <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
- <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400 block mb-0.5">
+ <div className="rounded-lg bg-salesos-surface-muted border border-salesos-border p-3">
+ <span className="text-[11px] font-medium uppercase tracking-wide text-salesos-text-secondary/60 block mb-0.5">
  Target Draft
  </span>
- <p className="text-[13px] font-semibold text-slate-800 truncate">{draftSubject}</p>
+ <p className="text-[13px] font-semibold text-salesos-text truncate">{draftSubject}</p>
  </div>
  )}
 
  <form onSubmit={handleSubmit} className="space-y-4">
  <div className="space-y-1.5">
- <label htmlFor="notes"className="text-xs font-semibold text-slate-700">
+ <label htmlFor="notes"className="text-xs font-semibold text-salesos-text-secondary">
  Reviewer Notes / Feedback (Optional)
  </label>
  <textarea
@@ -123,12 +123,12 @@ export function ApprovalActionModal({
  value={notes}
  onChange={(e) => setNotes(e.target.value)}
  placeholder="Add optional review feedback or rejection reason..."
- className="w-full rounded-lg border border-slate-300 p-2.5 text-xs text-slate-900 focus:border-slate-400 focus:outline-none"
+ className="w-full rounded-lg border border-salesos-border p-2.5 text-xs text-salesos-text focus:border-slate-400 focus:outline-none"
  />
  </div>
 
  {error && (
- <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-xs font-medium text-rose-700">
+ <div className="rounded-lg bg-salesos-danger/10 border border-salesos-danger/20 p-2.5 text-xs font-medium text-salesos-danger">
  {error}
  </div>
  )}

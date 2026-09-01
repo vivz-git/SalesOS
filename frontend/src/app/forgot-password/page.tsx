@@ -51,13 +51,13 @@ export default function ForgotPasswordPage() {
  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
  <CheckCircle2 className="h-6 w-6 text-green-600"aria-hidden="true"/>
  </div>
- <p className="text-sm text-slate-500">
+ <p className="text-sm text-salesos-text-secondary">
  Click the link in your email to reset your password. Check your
  spam folder if you don&apos;t see it within a few minutes.
  </p>
  <Link
  href="/login"
- className="text-sm font-medium text-slate-900 hover:underline"
+ className="text-sm font-medium text-salesos-text hover:underline"
  >
  Back to sign in
  </Link>
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
  <div className="grid gap-1">
  <label
  htmlFor="email"
- className="text-sm font-medium text-slate-700"
+ className="text-sm font-medium text-salesos-text-secondary"
  >
  Email
  </label>
@@ -89,12 +89,12 @@ export default function ForgotPasswordPage() {
  placeholder="you@company.com"
  value={email}
  onChange={(e) => setEmail(e.target.value)}
- className="rounded-md border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-slate-400 disabled:opacity-50"
+ className="rounded-md border border-salesos-border px-3 py-2 text-sm outline-none placeholder:text-salesos-text-secondary/60 disabled:opacity-50"
  />
  </div>
 
  {error && (
- <p className="text-sm text-red-600"role="alert">
+ <p className="text-sm text-salesos-danger"role="alert">
  {error}
  </p>
  )}
@@ -111,11 +111,11 @@ export default function ForgotPasswordPage() {
  </Button>
  </form>
 
- <p className="mt-4 text-center text-sm text-slate-500">
+ <p className="mt-4 text-center text-sm text-salesos-text-secondary">
  Remember your password?{""}
  <Link
  href="/login"
- className="font-medium text-slate-900 hover:underline"
+ className="font-medium text-salesos-text hover:underline"
  >
  Sign in
  </Link>

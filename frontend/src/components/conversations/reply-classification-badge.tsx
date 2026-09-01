@@ -9,7 +9,7 @@ interface ReplyClassificationBadgeProps {
 export function ReplyClassificationBadge({ state, className =""}: ReplyClassificationBadgeProps) {
  if (!state) {
  return (
- <span className={`inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500 ${className}`}>
+ <span className={`inline-flex items-center gap-1 rounded-md bg-salesos-surface-muted px-2 py-0.5 text-[11px] font-medium text-salesos-text-secondary ${className}`}>
  <span>Unclassified</span>
  </span>
  );
@@ -18,15 +18,15 @@ export function ReplyClassificationBadge({ state, className =""}: ReplyClassific
  switch (state) {
  case"interested":
  return (
- <span className={`inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800 ${className}`}>
- <Calendar className="h-3 w-3 text-emerald-600"/>
+ <span className={`inline-flex items-center gap-1 rounded-md bg-salesos-success/10 px-2 py-0.5 text-[11px] font-medium text-salesos-success ${className}`}>
+ <Calendar className="h-3 w-3 text-salesos-success"/>
  <span>Interested</span>
  </span>
  );
  case"not_now":
  return (
- <span className={`inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ${className}`}>
- <Clock className="h-3 w-3 text-amber-600"/>
+ <span className={`inline-flex items-center gap-1 rounded-md bg-salesos-warning/10 px-2 py-0.5 text-[11px] font-medium text-salesos-warning ${className}`}>
+ <Clock className="h-3 w-3 text-salesos-warning"/>
  <span>Not Now</span>
  </span>
  );
@@ -39,15 +39,15 @@ export function ReplyClassificationBadge({ state, className =""}: ReplyClassific
  );
  case"unsubscribe":
  return (
- <span className={`inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-800 ${className}`}>
- <ShieldAlert className="h-3 w-3 text-rose-600"/>
+ <span className={`inline-flex items-center gap-1 rounded-md bg-salesos-danger/10 px-2 py-0.5 text-[11px] font-medium text-salesos-danger ${className}`}>
+ <ShieldAlert className="h-3 w-3 text-salesos-danger"/>
  <span>Opt-Out</span>
  </span>
  );
  case"out_of_office":
  return (
- <span className={`inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 ${className}`}>
- <Clock className="h-3 w-3 text-slate-600"/>
+ <span className={`inline-flex items-center gap-1 rounded-md bg-salesos-surface-muted px-2 py-0.5 text-[11px] font-medium text-salesos-text-secondary ${className}`}>
+ <Clock className="h-3 w-3 text-salesos-text-secondary"/>
  <span>Out of Office</span>
  </span>
  );

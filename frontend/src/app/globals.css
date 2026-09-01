@@ -4,30 +4,43 @@
   /* Font */
   --font-sans: var(--font-plus-jakarta-sans), system-ui, sans-serif;
 
-  /* Brand accent — used for primary actions and active states ONLY */
-  --color-accent: #4F46E5;
-  --color-accent-hover: #4338CA;
+  /* Premium SalesOS Semantic Tokens (Olive, Ivory, Walnut, Butter) */
+  --color-salesos-canvas: #F7F5EE;
+  --color-salesos-surface: #FFFDF8;
+  --color-salesos-surface-muted: #EEE9D8;
+
+  --color-salesos-text: #24231E;
+  --color-salesos-text-secondary: #69685C;
+
+  --color-salesos-border: #DDD8C8;
+
+  --color-salesos-brand: #3F5B45;
+  --color-salesos-brand-hover: #334A39;
+  --color-salesos-focus: #6F896F;
+  --color-salesos-brand-subtle: #E6EBDD;
+
+  --color-salesos-success: #3F7654;
+  --color-salesos-warning: #A2762B;
+  --color-salesos-danger: #A4493D;
+  --color-salesos-info: #B69A55;
+
+  --color-salesos-butter: #E9D98A;
+  --color-salesos-walnut: #6B5743;
+
+  /* Fallbacks */
+  --color-accent: var(--color-salesos-brand);
+  --color-accent-hover: var(--color-salesos-brand-hover);
   --color-accent-foreground: #ffffff;
-
-  /* Surfaces */
-  --color-background: #F8FAFC;
-  --color-foreground: #0F172A;
-  --color-card: #ffffff;
-  --color-card-foreground: #0F172A;
-
-  /* Borders & separators */
-  --color-border: #E2E8F0;
-
-  /* Muted / secondary text */
-  --color-muted: #F1F5F9;
-  --color-muted-foreground: #64748B;
-
-  /* Destructive */
-  --color-destructive: #DC2626;
+  --color-background: var(--color-salesos-canvas);
+  --color-foreground: var(--color-salesos-text);
+  --color-card: var(--color-salesos-surface);
+  --color-card-foreground: var(--color-salesos-text);
+  --color-border: var(--color-salesos-border);
+  --color-muted: var(--color-salesos-surface-muted);
+  --color-muted-foreground: var(--color-salesos-text-secondary);
+  --color-destructive: var(--color-salesos-danger);
   --color-destructive-foreground: #ffffff;
-
-  /* Focus ring */
-  --color-ring: #4F46E5;
+  --color-ring: var(--color-salesos-focus);
 }
 
 *,

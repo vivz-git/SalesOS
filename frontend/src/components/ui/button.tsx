@@ -11,22 +11,22 @@ const buttonVariants = cva(
  variant: {
  // Primary — ONE per screen, dominant action
  primary:
-"bg-accent text-accent-foreground hover:bg-accent-hover shadow-sm",
+"bg-salesos-brand text-white hover:bg-salesos-brand-hover shadow-sm",
  // Alias so existing code using variant="default"gets the primary style
  default:
-"bg-accent text-accent-foreground hover:bg-accent-hover shadow-sm",
+"bg-salesos-brand text-white hover:bg-salesos-brand-hover shadow-sm",
  // Secondary — supporting actions
  secondary:
-"border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900",
+"border border-salesos-border bg-salesos-surface text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text",
  // Alias for existing outline usage
  outline:
-"border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900",
+"border border-salesos-border bg-salesos-surface text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text",
  // Destructive — for delete / reject actions
  destructive:
-"border border-red-200 bg-red-50 text-red-700 hover:bg-red-100",
+"border border-salesos-danger/20 bg-salesos-danger/10 text-salesos-danger hover:bg-salesos-danger/20",
  // Ghost — for icon-only or low-hierarchy actions
  ghost:
-"text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+"text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text",
  },
  size: {
  default:"h-9 px-4 py-2",

@@ -51,7 +51,7 @@ export function Sidebar({
  <div className="flex h-full flex-col justify-between py-4">
  <div>
  <div className="flex items-center justify-between px-4 pb-4">
- <Link href="/"className="flex items-center gap-2 font-bold text-slate-900">
+ <Link href="/"className="flex items-center gap-2 font-bold text-salesos-text">
  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-xs font-black text-white">
  OS
  </span>
@@ -61,7 +61,7 @@ export function Sidebar({
  <button
  type="button"
  onClick={onCloseMobile}
- className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 md:hidden"
+ className="rounded-md p-1 text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text md:hidden"
  aria-label="Close menu"
  >
  <X className="h-5 w-5"/>
@@ -80,12 +80,12 @@ export function Sidebar({
  onClick={onCloseMobile}
  className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
  active
- ?"bg-accent text-white"
- :"text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+ ? "bg-salesos-surface-muted text-salesos-text font-semibold"
+ :"text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text"
  }`}
  title={collapsed ? item.name : undefined}
  >
- <Icon className={`h-5 w-5 shrink-0 ${active ?"text-white":"text-slate-500 group-hover:text-slate-900"}`} />
+ <Icon className={`h-5 w-5 shrink-0 ${active ? "text-salesos-text" : "text-salesos-text-secondary group-hover:text-salesos-text"}`} />
  {!collapsed && <span>{item.name}</span>}
  </Link>
  );
@@ -93,11 +93,11 @@ export function Sidebar({
  </nav>
  </div>
 
- <div className="hidden border-t border-slate-200 p-2 md:block">
+ <div className="hidden border-t border-salesos-border p-2 md:block">
  <button
  type="button"
  onClick={onToggleCollapse}
- className="flex w-full items-center justify-center rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+ className="flex w-full items-center justify-center rounded-lg p-2 text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text"
  aria-label={collapsed ?"Expand sidebar":"Collapse sidebar"}
  >
  {collapsed ? <ChevronRight className="h-5 w-5"/> : <ChevronLeft className="h-5 w-5"/>}
@@ -110,7 +110,7 @@ export function Sidebar({
  <>
  {/* Desktop Sidebar */}
  <aside
- className={`hidden border-r border-slate-200 bg-white transition-all duration-300 md:block ${
+ className={`hidden border-r border-salesos-border bg-salesos-surface transition-all duration-300 md:block ${
  collapsed ?"w-16":"w-64"
  }`}
  >
@@ -124,7 +124,7 @@ export function Sidebar({
  className="fixed inset-0 bg-black/30 transition-opacity"
  onClick={onCloseMobile}
  />
- <aside className="relative z-50 h-full w-64 border-r border-slate-200 bg-white shadow-xl">
+ <aside className="relative z-50 h-full w-64 border-r border-salesos-border bg-salesos-surface shadow-xl">
  {content}
  </aside>
  </div>

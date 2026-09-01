@@ -23,7 +23,7 @@ export function getPasswordStrength(password: string): StrengthResult {
 
  const levels: Array<{ label: string; color: string }> = [
  { label:"", color:""},
- { label:"Weak", color:"bg-red-500"},
+ { label:"Weak", color:"bg-salesos-danger/100"},
  { label:"Fair", color:"bg-orange-400"},
  { label:"Good", color:"bg-yellow-400"},
  { label:"Strong", color:"bg-green-500"},
@@ -49,15 +49,15 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
  key={i}
  className={cn(
 "h-1 flex-1 rounded-full transition-colors duration-200",
- i < filled ? color :"bg-slate-200",
+ i < filled ? color :"bg-salesos-surface-muted",
  )}
  />
  ))}
  </div>
  {label && (
- <p className="text-xs text-slate-500">
+ <p className="text-xs text-salesos-text-secondary">
  Password strength:{""}
- <span className="font-medium text-slate-700">{label}</span>
+ <span className="font-medium text-salesos-text-secondary">{label}</span>
  </p>
  )}
  </div>

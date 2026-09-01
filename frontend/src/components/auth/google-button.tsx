@@ -26,7 +26,7 @@ export function GoogleButton() {
  onClick={handleClick}
  disabled={loading}
  aria-label="Continue with Google"
- className="inline-flex w-full items-center justify-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-50"
+ className="inline-flex w-full items-center justify-center gap-3 rounded-md border border-salesos-border bg-salesos-surface px-4 py-2 text-sm font-medium text-salesos-text transition-colors hover:bg-salesos-surface-muted disabled:pointer-events-none disabled:opacity-50"
  >
  {loading ? (
  <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-slate-900"/>

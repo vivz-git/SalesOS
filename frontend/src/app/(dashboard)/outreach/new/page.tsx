@@ -86,7 +86,7 @@ export default function NewOutreachDraftPage() {
  <div>
  <Link
  href="/outreach"
- className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors focus:outline-none rounded-sm"
+ className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text transition-colors focus:outline-none rounded-sm"
  >
  <ArrowLeft className="h-4 w-4"/>
  Back to Outreach Drafts
@@ -95,25 +95,25 @@ export default function NewOutreachDraftPage() {
 
  {/* Header */}
  <div>
- <h1 className="text-2xl font-bold tracking-tight text-slate-900">Create Outreach Draft</h1>
- <p className="mt-1 text-sm text-slate-500">
+ <h1 className="text-2xl font-bold tracking-tight text-salesos-text">Create Outreach Draft</h1>
+ <p className="mt-1 text-sm text-salesos-text-secondary">
  Prepare a new message draft for a prospect. Messages are stored as drafts for human review.
  </p>
  </div>
 
  {error && (
- <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
- <AlertCircle className="h-5 w-5 text-red-600 shrink-0"/>
+ <div className="flex items-center gap-2 rounded-xl border border-salesos-danger/20 bg-salesos-danger/10 p-4 text-sm text-salesos-danger">
+ <AlertCircle className="h-5 w-5 text-salesos-danger shrink-0"/>
  <span>{error}</span>
  </div>
  )}
 
  {/* Form */}
- <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+ <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-salesos-border bg-salesos-surface p-6 shadow-sm">
  <div className="grid gap-6 sm:grid-cols-2">
  {/* Campaign Selector */}
  <div className="space-y-2">
- <label htmlFor="campaign_select"className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
+ <label htmlFor="campaign_select"className="text-xs font-semibold text-salesos-text uppercase tracking-wider">
  Campaign <span className="text-red-500">*</span>
  </label>
  <select
@@ -121,7 +121,7 @@ export default function NewOutreachDraftPage() {
  value={selectedCampaignId}
  onChange={(e) => setSelectedCampaignId(e.target.value)}
  disabled={loadingData}
- className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+ className="w-full rounded-lg border border-salesos-border bg-salesos-surface p-2.5 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  required
  >
  {campaigns.length === 0 ? (
@@ -138,7 +138,7 @@ export default function NewOutreachDraftPage() {
 
  {/* Contact Selector */}
  <div className="space-y-2">
- <label htmlFor="contact_select"className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
+ <label htmlFor="contact_select"className="text-xs font-semibold text-salesos-text uppercase tracking-wider">
  Contact <span className="text-red-500">*</span>
  </label>
  <select
@@ -146,7 +146,7 @@ export default function NewOutreachDraftPage() {
  value={selectedContactId}
  onChange={(e) => setSelectedContactId(e.target.value)}
  disabled={loadingData}
- className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+ className="w-full rounded-lg border border-salesos-border bg-salesos-surface p-2.5 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  required
  >
  {contacts.length === 0 ? (
@@ -164,8 +164,8 @@ export default function NewOutreachDraftPage() {
 
  {/* Research Brief Selector (Optional) */}
  <div className="space-y-2">
- <label htmlFor="brief_select"className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 uppercase tracking-wider">
- <FileText className="h-3.5 w-3.5 text-slate-500"/>
+ <label htmlFor="brief_select"className="flex items-center gap-1.5 text-xs font-semibold text-salesos-text uppercase tracking-wider">
+ <FileText className="h-3.5 w-3.5 text-salesos-text-secondary"/>
  Attach Research Brief (Optional)
  </label>
  <select
@@ -173,7 +173,7 @@ export default function NewOutreachDraftPage() {
  value={selectedBriefId}
  onChange={(e) => setSelectedBriefId(e.target.value)}
  disabled={loadingData}
- className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none"
+ className="w-full rounded-lg border border-salesos-border bg-salesos-surface p-2.5 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="">No research brief attached</option>
  {researchBriefs.map((b) => (
@@ -185,17 +185,17 @@ export default function NewOutreachDraftPage() {
  </div>
 
  {/* Submit Actions */}
- <div className="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
+ <div className="flex items-center justify-end gap-3 border-t border-salesos-border pt-4">
  <Link
  href="/outreach"
- className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none"
+ className="rounded-lg border border-salesos-border px-4 py-2 text-xs font-semibold text-salesos-text-secondary hover:bg-salesos-surface-muted focus:outline-none"
  >
  Cancel
  </Link>
  <button
  type="submit"
  disabled={submitting || loadingData}
- className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-accent-foreground hover:bg-accent-hover disabled:opacity-50 focus:outline-none"
+ className="inline-flex items-center gap-1.5 rounded-lg bg-salesos-brand px-4 py-2 text-xs font-semibold text-white hover:bg-salesos-brand-hover disabled:opacity-50 focus:outline-none"
  >
  <Send className="h-3.5 w-3.5"/>
  {submitting ?"Generating Draft...":"Generate Draft"}

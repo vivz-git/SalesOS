@@ -133,8 +133,8 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
 
   if (loading) {
     return (
-      <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-salesos-surface p-6 shadow-sm">
+        <div className="flex items-center gap-2 text-sm text-salesos-text-secondary">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
           <span>Loading contact profile...</span>
         </div>
@@ -147,14 +147,14 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
       <div className="space-y-4">
         <Link
           href="/prospects"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Prospects</span>
         </Link>
 
-        <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-8 text-center shadow-sm">
-          <p className="text-sm font-semibold text-red-600">{error || "Contact not found."}</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border bg-salesos-surface p-8 text-center shadow-sm">
+          <p className="text-sm font-semibold text-salesos-danger">{error || "Contact not found."}</p>
           <Button variant="outline" size="sm" onClick={() => router.push("/prospects")} className="mt-4">
             Return to Prospects
           </Button>
@@ -168,22 +168,22 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
       <div className="flex items-center justify-between">
         <Link
           href="/prospects"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Prospects</span>
         </Link>
       </div>
 
-      <div className="rounded-xl border bg-white p-6 shadow-sm space-y-6">
+      <div className="rounded-xl border bg-salesos-surface p-6 shadow-sm space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-2xl font-bold tracking-tight text-salesos-text">
                 {contact.first_name} {contact.last_name}
               </h1>
               {contact.is_primary && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-amber-600/20 ring-inset">
+                <span className="inline-flex items-center gap-1 rounded-full bg-salesos-warning/10 px-2.5 py-0.5 text-xs font-semibold text-salesos-warning ring-1 ring-amber-600/20 ring-inset">
                   <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
                   Primary Contact
                 </span>
@@ -192,7 +192,7 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
             </div>
 
             {contact.title && (
-              <p className="mt-1 text-sm font-medium text-slate-600">
+              <p className="mt-1 text-sm font-medium text-salesos-text-secondary">
                 {contact.title} {contact.department ? `• ${contact.department}` : ""}
               </p>
             )}
@@ -205,7 +205,7 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
               size="sm"
               onClick={handleGenerateDraft}
               disabled={actionLoading}
-              className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-white"
+              className="flex items-center gap-1.5 bg-salesos-brand hover:bg-salesos-brand-hover text-white"
             >
               <Mail className="h-3.5 w-3.5" />
               <span>Generate Personalized Email</span>
@@ -228,7 +228,7 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
                 size="sm"
                 onClick={handleArchive}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-red-600 border-red-200 hover:bg-red-50"
+                className="flex items-center gap-1.5 text-salesos-danger border-salesos-danger/20 hover:bg-salesos-danger/10"
               >
                 <Archive className="h-3.5 w-3.5" />
                 <span>Archive</span>
@@ -239,7 +239,7 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
                 size="sm"
                 onClick={handleRestore}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-slate-700"
+                className="flex items-center gap-1.5 text-salesos-text-secondary"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Restore Contact</span>
@@ -256,91 +256,91 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Direct Communication Channels */}
-          <div className="rounded-lg border bg-slate-50 p-5 space-y-3">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="rounded-lg border bg-salesos-surface-muted p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-salesos-text-secondary uppercase tracking-wider">
               Communication Channels
             </h2>
 
             <div className="space-y-2 text-xs">
               <div>
-                <span className="font-semibold text-slate-500 block">Work Email</span>
+                <span className="font-semibold text-salesos-text-secondary block">Work Email</span>
                 {contact.email ? (
                   <a
                     href={`mailto:${contact.email}`}
-                    className="text-indigo-600 hover:underline font-medium flex items-center gap-1 mt-0.5"
+                    className="text-salesos-brand hover:underline font-medium flex items-center gap-1 mt-0.5"
                   >
-                    <Mail className="h-3.5 w-3.5 text-indigo-500" />
+                    <Mail className="h-3.5 w-3.5 text-salesos-brand" />
                     <span>{contact.email}</span>
                   </a>
                 ) : (
-                  <span className="text-slate-400">Not provided</span>
+                  <span className="text-salesos-text-secondary/60">Not provided</span>
                 )}
               </div>
 
               <div>
-                <span className="font-semibold text-slate-500 block">Phone</span>
+                <span className="font-semibold text-salesos-text-secondary block">Phone</span>
                 {contact.phone ? (
                   <a
                     href={`tel:${contact.phone}`}
-                    className="text-slate-900 font-medium flex items-center gap-1 mt-0.5"
+                    className="text-salesos-text font-medium flex items-center gap-1 mt-0.5"
                   >
-                    <Phone className="h-3.5 w-3.5 text-slate-400" />
+                    <Phone className="h-3.5 w-3.5 text-salesos-text-secondary/60" />
                     <span>{contact.phone}</span>
                   </a>
                 ) : (
-                  <span className="text-slate-400">Not provided</span>
+                  <span className="text-salesos-text-secondary/60">Not provided</span>
                 )}
               </div>
 
               <div>
-                <span className="font-semibold text-slate-500 block">LinkedIn Profile</span>
+                <span className="font-semibold text-salesos-text-secondary block">LinkedIn Profile</span>
                 {contact.linkedin_url ? (
                   <a
                     href={contact.linkedin_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-indigo-600 hover:underline font-medium flex items-center gap-1 mt-0.5"
+                    className="text-salesos-brand hover:underline font-medium flex items-center gap-1 mt-0.5"
                   >
-                    <Linkedin className="h-3.5 w-3.5 text-indigo-500" />
+                    <Linkedin className="h-3.5 w-3.5 text-salesos-brand" />
                     <span>View LinkedIn Profile</span>
                     <ExternalLink className="h-3 w-3 text-indigo-400" />
                   </a>
                 ) : (
-                  <span className="text-slate-400">Not provided</span>
+                  <span className="text-salesos-text-secondary/60">Not provided</span>
                 )}
               </div>
             </div>
           </div>
 
           {/* Associated Target Account */}
-          <div className="rounded-lg border bg-slate-50 p-5 space-y-3">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="rounded-lg border bg-salesos-surface-muted p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-salesos-text-secondary uppercase tracking-wider">
               Target Company Association
             </h2>
 
             {account ? (
               <Link
                 href={`/accounts/${account.id}`}
-                className="group block rounded-md border border-slate-200 bg-white p-3 shadow-xs hover:border-slate-300"
+                className="group block rounded-md border border-salesos-border bg-salesos-surface p-3 shadow-xs hover:border-salesos-border"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-slate-600 group-hover:text-slate-900" />
-                    <span className="text-sm font-bold text-slate-900 group-hover:text-slate-700">
+                    <Building2 className="h-4 w-4 text-salesos-text-secondary group-hover:text-salesos-text" />
+                    <span className="text-sm font-bold text-salesos-text group-hover:text-salesos-text-secondary">
                       {account.name}
                     </span>
                   </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-salesos-text-secondary/60">
                     Status: {account.status}
                   </span>
                 </div>
                 {account.domain && (
-                  <p className="mt-1 text-xs text-slate-500">{account.domain}</p>
+                  <p className="mt-1 text-xs text-salesos-text-secondary">{account.domain}</p>
                 )}
               </Link>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-slate-300 p-4 text-center">
-                <p className="text-xs font-medium text-slate-500">No account currently assigned.</p>
+              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-salesos-border p-4 text-center">
+                <p className="text-xs font-medium text-salesos-text-secondary">No account currently assigned.</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -354,14 +354,14 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-            <UserCheck className="h-4 w-4 text-slate-500" />
+        <div className="rounded-lg border border-salesos-border bg-salesos-surface p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-salesos-text-secondary">
+            <UserCheck className="h-4 w-4 text-salesos-text-secondary" />
             <span>Decision Maker Record</span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">
-            Contact ID: <code className="rounded bg-slate-100 px-1 py-0.5">{contact.id}</code> • Workspace:{" "}
-            <span className="font-semibold text-slate-900">{activeWorkspace?.name}</span>. Decision maker provenance is maintained across research workflows.
+          <p className="mt-1 text-xs text-salesos-text-secondary">
+            Contact ID: <code className="rounded bg-salesos-surface-muted px-1 py-0.5">{contact.id}</code> • Workspace:{" "}
+            <span className="font-semibold text-salesos-text">{activeWorkspace?.name}</span>. Decision maker provenance is maintained across research workflows.
           </p>
         </div>
       </div>

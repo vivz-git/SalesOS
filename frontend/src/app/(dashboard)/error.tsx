@@ -16,9 +16,9 @@ export default function DashboardError({
  }, [error]);
 
  return (
- <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-8 text-center shadow-sm">
- <h2 className="text-lg font-semibold text-slate-900">Something went wrong</h2>
- <p className="mt-1 text-sm text-slate-500">{error.message ||"An unexpected error occurred."}</p>
+ <div className="flex flex-col items-center justify-center rounded-xl border bg-salesos-surface p-8 text-center shadow-sm">
+ <h2 className="text-lg font-semibold text-salesos-text">Something went wrong</h2>
+ <p className="mt-1 text-sm text-salesos-text-secondary">{error.message ||"An unexpected error occurred."}</p>
  <Button onClick={reset} className="mt-4">
  Try again
  </Button>

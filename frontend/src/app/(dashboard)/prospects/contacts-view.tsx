@@ -111,8 +111,8 @@ export default function ContactsView() {
  <div className="space-y-6">
  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
  <div>
- <h2 className="text-lg font-bold tracking-tight text-slate-900">People</h2>
- <p className="mt-1 text-sm text-slate-500">
+ <h2 className="text-lg font-bold tracking-tight text-salesos-text">People</h2>
+ <p className="mt-1 text-sm text-salesos-text-secondary">
  Decision-maker directory, job titles, departments, and primary account contacts.
  </p>
  </div>
@@ -123,7 +123,7 @@ export default function ContactsView() {
  </Button>
  </div>
 
- <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-3">
+ <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-salesos-border pb-3">
  <div className="flex items-center gap-1 overflow-x-auto">
  {STATUS_TABS.map((tab) => {
  const isActive = statusFilter === tab.value;
@@ -137,8 +137,8 @@ export default function ContactsView() {
  }}
  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
  isActive
- ?"bg-accent text-white"
- :"text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+ ?"bg-salesos-brand text-white"
+ :"text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text"
  }`}
  >
  {tab.label}
@@ -154,7 +154,7 @@ export default function ContactsView() {
  setAccountFilter(e.target.value);
  setPage(1);
  }}
- className="rounded-md border border-slate-300 px-3 py-1.5 text-[13px] text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="rounded-md border border-salesos-border px-3 py-1.5 text-[13px] text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="">All Accounts</option>
  {accounts.map((a) => (
@@ -165,7 +165,7 @@ export default function ContactsView() {
  </select>
 
  <div className="relative w-full sm:w-56">
- <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"/>
+ <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-salesos-text-secondary/60"/>
  <input
  type="text"
  value={searchQuery}
@@ -174,33 +174,33 @@ export default function ContactsView() {
  setPage(1);
  }}
  placeholder="Search decision makers..."
- className="w-full rounded-md border border-slate-300 pl-8 pr-3 py-1.5 text-[13px] text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="w-full rounded-md border border-salesos-border pl-8 pr-3 py-1.5 text-[13px] text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
  </div>
  </div>
 
  {loading ? (
- <div className="flex h-48 w-full items-center justify-center rounded-lg border bg-white p-6 shadow-sm">
- <div className="flex items-center gap-2 text-sm text-slate-500">
+ <div className="flex h-48 w-full items-center justify-center rounded-lg border bg-salesos-surface p-6 shadow-sm">
+ <div className="flex items-center gap-2 text-sm text-salesos-text-secondary">
  <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent"/>
  <span>Loading decision makers...</span>
  </div>
  </div>
  ) : error ? (
- <div className="flex flex-col items-center justify-center rounded-lg border bg-white p-6 text-center shadow-sm">
- <p className="text-sm font-medium text-red-600">{error}</p>
+ <div className="flex flex-col items-center justify-center rounded-lg border bg-salesos-surface p-6 text-center shadow-sm">
+ <p className="text-sm font-medium text-salesos-danger">{error}</p>
  <Button variant="secondary"size="sm"onClick={loadContacts} className="mt-3">
  Retry
  </Button>
  </div>
  ) : contacts.length === 0 ? (
- <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
- <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+ <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-salesos-border bg-salesos-surface p-12 text-center shadow-sm">
+ <div className="flex h-12 w-12 items-center justify-center rounded-full bg-salesos-surface-muted text-salesos-text-secondary">
  <Users className="h-6 w-6"/>
  </div>
- <h3 className="mt-4 text-sm font-bold text-slate-900">No contacts found</h3>
- <p className="mt-1 text-[13px] text-slate-500">
+ <h3 className="mt-4 text-sm font-bold text-salesos-text">No contacts found</h3>
+ <p className="mt-1 text-[13px] text-salesos-text-secondary">
  {searchQuery || accountFilter
  ?"No contact matched your search or account filter."
  :"Get started by adding your first decision maker."}
@@ -219,12 +219,12 @@ export default function ContactsView() {
  <Link
  key={contact.id}
  href={`/contacts/${contact.id}`}
- className="group flex flex-col justify-between rounded-lg border border-slate-200 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-md"
+ className="group flex flex-col justify-between rounded-lg border border-salesos-border bg-salesos-surface p-5 shadow-xs transition-all hover:border-salesos-border hover:shadow-md"
  >
  <div>
  <div className="flex items-start justify-between gap-2">
  <div className="flex items-center gap-1.5">
- <h3 className="text-base font-bold text-slate-900 group-hover:text-slate-700">
+ <h3 className="text-base font-bold text-salesos-text group-hover:text-salesos-text-secondary">
  {contact.first_name} {contact.last_name}
  </h3>
  {contact.is_primary && (
@@ -237,24 +237,24 @@ export default function ContactsView() {
  </div>
 
  {contact.title && (
- <p className="mt-1 text-[13px] font-semibold text-slate-700">{contact.title}</p>
+ <p className="mt-1 text-[13px] font-semibold text-salesos-text-secondary">{contact.title}</p>
  )}
 
  {linkedAccount && (
- <p className="mt-1 text-[13px] text-slate-500 font-medium">
+ <p className="mt-1 text-[13px] text-salesos-text-secondary font-medium">
  Company: {linkedAccount.name}
  </p>
  )}
 
  {contact.email && (
- <p className="mt-2 flex items-center gap-1 text-[13px] text-slate-600">
- <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0"/>
+ <p className="mt-2 flex items-center gap-1 text-[13px] text-salesos-text-secondary">
+ <Mail className="h-3.5 w-3.5 text-salesos-text-secondary/60 shrink-0"/>
  <span className="truncate">{contact.email}</span>
  </p>
  )}
  </div>
 
- <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-400">
+ <div className="mt-4 flex items-center justify-between border-t border-salesos-border pt-3 text-[11px] text-salesos-text-secondary/60">
  <span>View Details & Actions →</span>
  </div>
  </Link>
@@ -264,9 +264,9 @@ export default function ContactsView() {
  )}
 
  {/* Pagination Controls */}
- <div className="flex items-center justify-between border-t border-slate-200 pt-4">
- <span className="text-[13px] text-slate-500">
- Showing page <span className="font-semibold text-slate-900">{page}</span>
+ <div className="flex items-center justify-between border-t border-salesos-border pt-4">
+ <span className="text-[13px] text-salesos-text-secondary">
+ Showing page <span className="font-semibold text-salesos-text">{page}</span>
  </span>
  <div className="flex items-center gap-2">
  <Button

@@ -76,13 +76,13 @@ export function ContactForm({
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
- <div className="w-full max-w-lg rounded-xl border bg-white p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+ <div className="w-full max-w-lg rounded-xl border bg-salesos-surface p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
  <div className="flex items-center justify-between border-b pb-3">
- <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+ <h2 className="text-lg font-bold text-salesos-text">{title}</h2>
  <button
  type="button"
  onClick={onClose}
- className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+ className="rounded-md p-1 text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text"
  aria-label="Close modal"
  >
  <X className="h-5 w-5"/>
@@ -90,7 +90,7 @@ export function ContactForm({
  </div>
 
  {error && (
- <div className="rounded-md bg-red-50 p-3 text-xs font-medium text-red-700">
+ <div className="rounded-md bg-salesos-danger/10 p-3 text-xs font-medium text-salesos-danger">
  {error}
  </div>
  )}
@@ -98,7 +98,7 @@ export function ContactForm({
  <form onSubmit={handleSubmit} className="space-y-4">
  <div className="grid gap-4 sm:grid-cols-2">
  <div>
- <label htmlFor="first-name"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="first-name"className="block text-xs font-semibold text-salesos-text-secondary">
  First Name <span className="text-red-500">*</span>
  </label>
  <input
@@ -108,12 +108,12 @@ export function ContactForm({
  value={firstName}
  onChange={(e) => setFirstName(e.target.value)}
  placeholder="e.g. Jane"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div>
- <label htmlFor="last-name"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="last-name"className="block text-xs font-semibold text-salesos-text-secondary">
  Last Name <span className="text-red-500">*</span>
  </label>
  <input
@@ -123,20 +123,20 @@ export function ContactForm({
  value={lastName}
  onChange={(e) => setLastName(e.target.value)}
  placeholder="e.g. Doe"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
  </div>
 
  <div>
- <label htmlFor="contact-account"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="contact-account"className="block text-xs font-semibold text-salesos-text-secondary">
  Target Company Account
  </label>
  <select
  id="contact-account"
  value={accountId}
  onChange={(e) => setAccountId(e.target.value)}
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="">No Account Assigned</option>
  {accounts.map((a) => (
@@ -149,7 +149,7 @@ export function ContactForm({
 
  <div className="grid gap-4 sm:grid-cols-2">
  <div>
- <label htmlFor="contact-email"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="contact-email"className="block text-xs font-semibold text-salesos-text-secondary">
  Work Email
  </label>
  <input
@@ -158,12 +158,12 @@ export function ContactForm({
  value={email}
  onChange={(e) => setEmail(e.target.value)}
  placeholder="e.g. jane.doe@acme.com"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div>
- <label htmlFor="contact-phone"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="contact-phone"className="block text-xs font-semibold text-salesos-text-secondary">
  Phone Number
  </label>
  <input
@@ -172,14 +172,14 @@ export function ContactForm({
  value={phone}
  onChange={(e) => setPhone(e.target.value)}
  placeholder="e.g. +1-555-0199"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
  </div>
 
  <div className="grid gap-4 sm:grid-cols-2">
  <div>
- <label htmlFor="contact-title"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="contact-title"className="block text-xs font-semibold text-salesos-text-secondary">
  Job Title
  </label>
  <input
@@ -188,12 +188,12 @@ export function ContactForm({
  value={jobTitle}
  onChange={(e) => setJobTitle(e.target.value)}
  placeholder="e.g. VP of Engineering"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div>
- <label htmlFor="contact-department"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="contact-department"className="block text-xs font-semibold text-salesos-text-secondary">
  Department
  </label>
  <input
@@ -202,13 +202,13 @@ export function ContactForm({
  value={department}
  onChange={(e) => setDepartment(e.target.value)}
  placeholder="e.g. Engineering"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
  </div>
 
  <div>
- <label htmlFor="contact-linkedin"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="contact-linkedin"className="block text-xs font-semibold text-salesos-text-secondary">
  LinkedIn Profile URL
  </label>
  <input
@@ -217,20 +217,20 @@ export function ContactForm({
  value={linkedinUrl}
  onChange={(e) => setLinkedinUrl(e.target.value)}
  placeholder="e.g. https://linkedin.com/in/janedoe"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div className="grid gap-4 sm:grid-cols-2">
  <div>
- <label htmlFor="contact-status"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="contact-status"className="block text-xs font-semibold text-salesos-text-secondary">
  Status
  </label>
  <select
  id="contact-status"
  value={status}
  onChange={(e) => setStatus(e.target.value as ContactStatus)}
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="active">Active</option>
  <option value="unresponsive">Unresponsive</option>
@@ -245,9 +245,9 @@ export function ContactForm({
  type="checkbox"
  checked={isPrimary}
  onChange={(e) => setIsPrimary(e.target.checked)}
- className="h-4 w-4 rounded border-slate-300 text-slate-900"
+ className="h-4 w-4 rounded border-salesos-border text-salesos-text"
  />
- <label htmlFor="is-primary"className="text-xs font-semibold text-slate-700">
+ <label htmlFor="is-primary"className="text-xs font-semibold text-salesos-text-secondary">
  Primary Account Contact
  </label>
  </div>

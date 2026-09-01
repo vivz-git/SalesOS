@@ -49,12 +49,12 @@ export function UserNav() {
  <div className="flex items-center gap-3">
  {identity ? (
  <div className="flex items-center gap-2 text-xs">
- <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+ <div className="flex h-7 w-7 items-center justify-center rounded-full bg-salesos-surface-muted text-salesos-text-secondary">
  <User className="h-4 w-4"/>
  </div>
  <div className="hidden flex-col sm:flex">
- <span className="font-medium text-slate-900">{identity.email}</span>
- <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+ <span className="font-medium text-salesos-text">{identity.email}</span>
+ <span className="text-[10px] font-semibold text-salesos-text-secondary uppercase tracking-wider">
  Role: {identity.role}
  </span>
  </div>

@@ -72,13 +72,13 @@ export function AccountForm({
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
- <div className="w-full max-w-lg rounded-xl border bg-white p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+ <div className="w-full max-w-lg rounded-xl border bg-salesos-surface p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
  <div className="flex items-center justify-between border-b pb-3">
- <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+ <h2 className="text-lg font-bold text-salesos-text">{title}</h2>
  <button
  type="button"
  onClick={onClose}
- className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+ className="rounded-md p-1 text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text"
  aria-label="Close modal"
  >
  <X className="h-5 w-5"/>
@@ -86,14 +86,14 @@ export function AccountForm({
  </div>
 
  {error && (
- <div className="rounded-md bg-red-50 p-3 text-xs font-medium text-red-700">
+ <div className="rounded-md bg-salesos-danger/10 p-3 text-xs font-medium text-salesos-danger">
  {error}
  </div>
  )}
 
  <form onSubmit={handleSubmit} className="space-y-4">
  <div>
- <label htmlFor="account-name"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="account-name"className="block text-xs font-semibold text-salesos-text-secondary">
  Company Name <span className="text-red-500">*</span>
  </label>
  <input
@@ -103,13 +103,13 @@ export function AccountForm({
  value={name}
  onChange={(e) => setName(e.target.value)}
  placeholder="e.g. Acme Corp"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div className="grid gap-4 sm:grid-cols-2">
  <div>
- <label htmlFor="account-domain"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="account-domain"className="block text-xs font-semibold text-salesos-text-secondary">
  Website Domain
  </label>
  <input
@@ -118,19 +118,19 @@ export function AccountForm({
  value={domain}
  onChange={(e) => setDomain(e.target.value)}
  placeholder="e.g. acme.com"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div>
- <label htmlFor="account-campaign"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="account-campaign"className="block text-xs font-semibold text-salesos-text-secondary">
  Assigned Campaign
  </label>
  <select
  id="account-campaign"
  value={campaignId}
  onChange={(e) => setCampaignId(e.target.value)}
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="">No Campaign Assigned</option>
  {campaigns.map((c) => (
@@ -144,7 +144,7 @@ export function AccountForm({
 
  <div className="grid gap-4 sm:grid-cols-2">
  <div>
- <label htmlFor="account-industry"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="account-industry"className="block text-xs font-semibold text-salesos-text-secondary">
  Industry
  </label>
  <input
@@ -153,12 +153,12 @@ export function AccountForm({
  value={industry}
  onChange={(e) => setIndustry(e.target.value)}
  placeholder="e.g. B2B SaaS"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div>
- <label htmlFor="account-employees"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="account-employees"className="block text-xs font-semibold text-salesos-text-secondary">
  Employee Count
  </label>
  <input
@@ -167,14 +167,14 @@ export function AccountForm({
  value={employeeCount}
  onChange={(e) => setEmployeeCount(e.target.value)}
  placeholder="e.g. 50-200"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
  </div>
 
  <div className="grid gap-4 sm:grid-cols-2">
  <div>
- <label htmlFor="account-city"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="account-city"className="block text-xs font-semibold text-salesos-text-secondary">
  City
  </label>
  <input
@@ -183,12 +183,12 @@ export function AccountForm({
  value={city}
  onChange={(e) => setCity(e.target.value)}
  placeholder="e.g. San Francisco"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div>
- <label htmlFor="account-country"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="account-country"className="block text-xs font-semibold text-salesos-text-secondary">
  Country
  </label>
  <input
@@ -197,20 +197,20 @@ export function AccountForm({
  value={country}
  onChange={(e) => setCountry(e.target.value)}
  placeholder="e.g. USA"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
  </div>
 
  <div>
- <label htmlFor="account-status"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="account-status"className="block text-xs font-semibold text-salesos-text-secondary">
  Account Status
  </label>
  <select
  id="account-status"
  value={status}
  onChange={(e) => setStatus(e.target.value as AccountStatus)}
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="target">Target</option>
  <option value="qualified">Qualified</option>

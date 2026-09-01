@@ -145,9 +145,9 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
   if (loading) {
     return (
       <div className="mx-auto max-w-5xl space-y-6 p-6">
-        <div className="h-6 w-32 animate-pulse rounded bg-slate-200"></div>
-        <div className="h-24 animate-pulse rounded-xl bg-slate-100"></div>
-        <div className="h-64 animate-pulse rounded-xl bg-slate-100"></div>
+        <div className="h-6 w-32 animate-pulse rounded bg-salesos-surface-muted"></div>
+        <div className="h-24 animate-pulse rounded-xl bg-salesos-surface-muted"></div>
+        <div className="h-64 animate-pulse rounded-xl bg-salesos-surface-muted"></div>
       </div>
     );
   }
@@ -155,8 +155,8 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
   if (error && !draft) {
     return (
       <div className="mx-auto max-w-5xl p-6">
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-800">
-          <AlertCircle className="mx-auto h-8 w-8 text-rose-600 mb-2" />
+        <div className="rounded-xl border border-salesos-danger/20 bg-salesos-danger/10 p-6 text-center text-salesos-danger">
+          <AlertCircle className="mx-auto h-8 w-8 text-salesos-danger mb-2" />
           <h3 className="text-base font-semibold">Error Loading Draft</h3>
           <p className="mt-1 text-xs">{error}</p>
           <div className="mt-4">
@@ -180,7 +180,7 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
       <div>
         <Link
           href="/outreach"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Outreach Drafts
@@ -189,40 +189,40 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
 
       {/* Action Notification Message */}
       {actionMessage && (
-        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs font-semibold text-emerald-900">
+        <div className="flex items-center justify-between rounded-xl border border-salesos-success/20 bg-salesos-success/10 p-3.5 text-xs font-semibold text-emerald-900">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-salesos-success shrink-0" />
             <span>{actionMessage}</span>
           </div>
-          <button type="button" onClick={() => setActionMessage(null)} className="text-emerald-700 hover:text-emerald-950">
+          <button type="button" onClick={() => setActionMessage(null)} className="text-salesos-success hover:text-emerald-950">
             <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800">
-          <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+        <div className="flex items-center gap-2 rounded-xl border border-salesos-danger/20 bg-salesos-danger/10 p-4 text-xs font-semibold text-salesos-danger">
+          <AlertCircle className="h-4 w-4 text-salesos-danger shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Header Banner */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs space-y-4">
+      <div className="rounded-xl border border-salesos-border bg-salesos-surface p-6 shadow-2xs space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-xl font-bold tracking-tight text-salesos-text">
                 {draft.current_subject || "(Untitled Subject)"}
               </h1>
               <DraftStatusBadge status={draft.status as DraftStatus} />
-              <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-700">
+              <span className="rounded bg-salesos-surface-muted px-2 py-0.5 text-xs font-mono text-salesos-text-secondary">
                 Current Version: v{draft.current_version_number}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
-              <span>Campaign: <span className="font-mono text-slate-700">{draft.campaign_id}</span></span>
-              <span>Contact: <span className="font-mono text-slate-700">{draft.contact_id}</span></span>
+            <div className="flex items-center gap-4 text-xs text-salesos-text-secondary flex-wrap">
+              <span>Campaign: <span className="font-mono text-salesos-text-secondary">{draft.campaign_id}</span></span>
+              <span>Contact: <span className="font-mono text-salesos-text-secondary">{draft.contact_id}</span></span>
             </div>
           </div>
 
@@ -243,7 +243,7 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
               <button
                 type="button"
                 onClick={() => handleStatusAction("submit")}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent-hover transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-salesos-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-salesos-brand-hover transition-colors"
               >
                 <Clock className="h-3.5 w-3.5" />
                 Submit for Review
@@ -255,7 +255,7 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
                 <button
                   type="button"
                   onClick={() => setDeliveryModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent-hover transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-salesos-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-salesos-brand-hover transition-colors"
                 >
                   <Send className="h-3.5 w-3.5" />
                   Approve & Send
@@ -263,7 +263,7 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
                 <button
                   type="button"
                   onClick={() => handleStatusAction("reject")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-salesos-danger/20 bg-salesos-danger/10 px-3 py-1.5 text-xs font-semibold text-salesos-danger hover:bg-rose-100 transition-colors"
                 >
                   <XCircle className="h-3.5 w-3.5" />
                   Reject
@@ -275,7 +275,7 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
               <button
                 type="button"
                 onClick={() => setDeliveryModalOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent-hover shadow-sm transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-salesos-brand px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-salesos-brand-hover shadow-sm transition-colors"
               >
                 <Send className="h-3.5 w-3.5" />
                 <span>Send Outbound Email</span>
@@ -286,7 +286,7 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
               <button
                 type="button"
                 onClick={() => handleStatusAction("archive")}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-salesos-border px-3 py-1.5 text-xs font-semibold text-salesos-text-secondary hover:bg-salesos-surface-muted transition-colors"
               >
                 <Archive className="h-3.5 w-3.5" />
                 Archive
@@ -300,20 +300,20 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Left Column: Draft Content / Revision Editor */}
         <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div className="rounded-xl border border-salesos-border bg-salesos-surface p-6 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between border-b border-salesos-border pb-3">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-slate-500" />
-                <h2 className="text-sm font-semibold text-slate-900">Message Content (v{draft.current_version_number})</h2>
+                <FileText className="h-4 w-4 text-salesos-text-secondary" />
+                <h2 className="text-sm font-semibold text-salesos-text">Message Content (v{draft.current_version_number})</h2>
               </div>
 
               {!isEditing && !isArchived && !isApproved && (
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  className="inline-flex items-center gap-1 rounded-lg border border-salesos-border px-2.5 py-1 text-xs font-semibold text-salesos-text-secondary hover:bg-salesos-surface-muted"
                 >
-                  <Edit3 className="h-3.5 w-3.5 text-slate-500" />
+                  <Edit3 className="h-3.5 w-3.5 text-salesos-text-secondary" />
                   Revise Content
                 </button>
               )}
@@ -322,24 +322,24 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
             {isEditing ? (
               <form onSubmit={handleSaveRevision} className="space-y-4">
                 <div className="space-y-1">
-                  <label htmlFor="edit_subject" className="text-xs font-semibold text-slate-700">Subject</label>
+                  <label htmlFor="edit_subject" className="text-xs font-semibold text-salesos-text-secondary">Subject</label>
                   <input
                     id="edit_subject"
                     type="text"
                     value={editSubject}
                     onChange={(e) => setEditSubject(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 p-2 text-xs text-slate-900 focus:border-slate-900 focus:outline-none"
+                    className="w-full rounded-lg border border-salesos-border p-2 text-xs text-salesos-text focus:border-salesos-focus focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label htmlFor="edit_body" className="text-xs font-semibold text-slate-700">Message Body</label>
+                  <label htmlFor="edit_body" className="text-xs font-semibold text-salesos-text-secondary">Message Body</label>
                   <textarea
                     id="edit_body"
                     rows={10}
                     value={editBody}
                     onChange={(e) => setEditBody(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 p-3 text-xs font-mono text-slate-900 focus:border-slate-900 focus:outline-none"
+                    className="w-full rounded-lg border border-salesos-border p-3 text-xs font-mono text-salesos-text focus:border-salesos-focus focus:outline-none"
                     required
                   />
                 </div>
@@ -348,14 +348,14 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                    className="rounded-lg border border-salesos-border px-3 py-1.5 text-xs font-semibold text-salesos-text-secondary hover:bg-salesos-surface-muted"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={savingRevision}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-slate-800 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
                   >
                     <Save className="h-3.5 w-3.5" />
                     {savingRevision ? "Saving New Version..." : "Save Revision (Create v" + (draft.current_version_number + 1) + ")"}
@@ -366,14 +366,14 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
               <div className="space-y-3">
                 {draft.current_subject && (
                   <div>
-                    <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Subject</span>
-                    <p className="text-sm font-medium text-slate-900 mt-0.5">{draft.current_subject}</p>
+                    <span className="text-[11px] font-semibold tracking-wider text-salesos-text-secondary uppercase">Subject</span>
+                    <p className="text-sm font-medium text-salesos-text mt-0.5">{draft.current_subject}</p>
                   </div>
                 )}
 
                 <div>
-                  <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">Body</span>
-                  <div className="mt-1 rounded-lg border border-slate-100 bg-slate-50/70 p-4 text-xs font-mono text-slate-800 whitespace-pre-wrap leading-relaxed">
+                  <span className="text-[11px] font-semibold tracking-wider text-salesos-text-secondary uppercase">Body</span>
+                  <div className="mt-1 rounded-lg border border-salesos-border bg-salesos-surface-muted/70 p-4 text-xs font-mono text-salesos-text whitespace-pre-wrap leading-relaxed">
                     {draft.current_body || "(Empty message content)"}
                   </div>
                 </div>
@@ -382,7 +382,7 @@ export default function DraftDetailPage({ params }: DraftDetailPageProps) {
           </div>
 
           {/* Version Lineage */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-2xs">
+          <div className="rounded-xl border border-salesos-border bg-salesos-surface p-6 shadow-2xs">
             <DraftVersionHistory
               versions={draft.versions || []}
               currentVersionNumber={draft.current_version_number}

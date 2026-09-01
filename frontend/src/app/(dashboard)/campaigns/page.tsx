@@ -64,8 +64,8 @@ export default function CampaignsPage() {
  <div className="space-y-6">
  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
  <div>
- <h1 className="text-2xl font-bold tracking-tight text-slate-900">Campaigns</h1>
- <p className="mt-1 text-sm text-slate-500">
+ <h1 className="text-2xl font-bold tracking-tight text-salesos-text">Campaigns</h1>
+ <p className="mt-1 text-sm text-salesos-text-secondary">
  Manage outbound ICP definitions, target segments, and campaign lifecycle.
  </p>
  </div>
@@ -76,7 +76,7 @@ export default function CampaignsPage() {
  </Button>
  </div>
 
- <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-3">
+ <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-salesos-border pb-3">
  <div className="flex items-center gap-1 overflow-x-auto">
  {STATUS_TABS.map((tab) => {
  const isActive = statusFilter === tab.value;
@@ -88,7 +88,7 @@ export default function CampaignsPage() {
  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
  isActive
  ?"bg-slate-900 text-white"
- :"text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+ :"text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text"
  }`}
  >
  {tab.label}
@@ -98,38 +98,38 @@ export default function CampaignsPage() {
  </div>
 
  <div className="relative w-full sm:w-64">
- <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"/>
+ <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-salesos-text-secondary/60"/>
  <input
  type="text"
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  placeholder="Search campaigns..."
- className="w-full rounded-md border border-slate-300 pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="w-full rounded-md border border-salesos-border pl-8 pr-3 py-1.5 text-xs text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
  </div>
 
  {loading ? (
- <div className="flex h-48 w-full items-center justify-center rounded-xl border bg-white p-6 shadow-sm">
- <div className="flex items-center gap-2 text-sm text-slate-500">
+ <div className="flex h-48 w-full items-center justify-center rounded-xl border bg-salesos-surface p-6 shadow-sm">
+ <div className="flex items-center gap-2 text-sm text-salesos-text-secondary">
  <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent"/>
  <span>Loading campaigns...</span>
  </div>
  </div>
  ) : error ? (
- <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-6 text-center shadow-sm">
- <p className="text-sm font-medium text-red-600">{error}</p>
+ <div className="flex flex-col items-center justify-center rounded-xl border bg-salesos-surface p-6 text-center shadow-sm">
+ <p className="text-sm font-medium text-salesos-danger">{error}</p>
  <Button variant="outline"size="sm"onClick={loadCampaigns} className="mt-3">
  Retry
  </Button>
  </div>
  ) : filteredCampaigns.length === 0 ? (
- <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
- <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+ <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-salesos-border bg-salesos-surface p-12 text-center shadow-sm">
+ <div className="flex h-12 w-12 items-center justify-center rounded-full bg-salesos-surface-muted text-salesos-text-secondary">
  <Megaphone className="h-6 w-6"/>
  </div>
- <h3 className="mt-4 text-sm font-bold text-slate-900">No campaigns found</h3>
- <p className="mt-1 text-xs text-slate-500">
+ <h3 className="mt-4 text-sm font-bold text-salesos-text">No campaigns found</h3>
+ <p className="mt-1 text-xs text-salesos-text-secondary">
  {searchQuery
  ?"No campaign matched your search."
  :"Get started by creating your first outbound sales campaign."}
@@ -146,28 +146,28 @@ export default function CampaignsPage() {
  <Link
  key={campaign.id}
  href={`/campaigns/${campaign.id}`}
- className="group flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-md"
+ className="group flex flex-col justify-between rounded-xl border border-salesos-border bg-salesos-surface p-5 shadow-xs transition-all hover:border-salesos-border hover:shadow-md"
  >
  <div>
  <div className="flex items-start justify-between gap-2">
- <h3 className="text-base font-bold text-slate-900 group-hover:text-slate-700">
+ <h3 className="text-base font-bold text-salesos-text group-hover:text-salesos-text-secondary">
  {campaign.name}
  </h3>
  <CampaignStatusBadge status={campaign.status} />
  </div>
  {campaign.target_segment && (
- <p className="mt-1 text-xs font-medium text-slate-500">
+ <p className="mt-1 text-xs font-medium text-salesos-text-secondary">
  Target: {campaign.target_segment}
  </p>
  )}
  {campaign.description && (
- <p className="mt-2 text-xs text-slate-600 line-clamp-2">
+ <p className="mt-2 text-xs text-salesos-text-secondary line-clamp-2">
  {campaign.description}
  </p>
  )}
  </div>
 
- <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-400">
+ <div className="mt-4 flex items-center justify-between border-t border-salesos-border pt-3 text-[11px] text-salesos-text-secondary/60">
  <span>View Brief & Actions →</span>
  </div>
  </Link>

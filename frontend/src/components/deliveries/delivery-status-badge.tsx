@@ -17,16 +17,16 @@ export function DeliveryStatusBadge({ status, className =""}: DeliveryStatusBadg
  );
  case"delivered":
  return (
- <span className={`inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 ${className}`}>
- <CheckCircle2 className="h-3 w-3 text-emerald-600"/>
+ <span className={`inline-flex items-center gap-1 rounded-full bg-salesos-success/10 px-2.5 py-0.5 text-xs font-semibold text-salesos-success border border-salesos-success/20 ${className}`}>
+ <CheckCircle2 className="h-3 w-3 text-salesos-success"/>
  <span>Delivered</span>
  </span>
  );
  case"running":
  case"queued":
  return (
- <span className={`inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200 ${className}`}>
- <Clock className="h-3 w-3 text-amber-600"/>
+ <span className={`inline-flex items-center gap-1 rounded-full bg-salesos-warning/10 px-2.5 py-0.5 text-xs font-semibold text-salesos-warning border border-amber-200 ${className}`}>
+ <Clock className="h-3 w-3 text-salesos-warning"/>
  <span className="capitalize">{status}</span>
  </span>
  );
@@ -40,21 +40,21 @@ export function DeliveryStatusBadge({ status, className =""}: DeliveryStatusBadg
  );
  case"failed":
  return (
- <span className={`inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700 border border-rose-200 ${className}`}>
- <XCircle className="h-3 w-3 text-rose-600"/>
+ <span className={`inline-flex items-center gap-1 rounded-full bg-salesos-danger/10 px-2.5 py-0.5 text-xs font-semibold text-salesos-danger border border-salesos-danger/20 ${className}`}>
+ <XCircle className="h-3 w-3 text-salesos-danger"/>
  <span>Failed</span>
  </span>
  );
  case"cancelled":
  return (
- <span className={`inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 border border-slate-200 ${className}`}>
- <ShieldAlert className="h-3 w-3 text-slate-500"/>
+ <span className={`inline-flex items-center gap-1 rounded-full bg-salesos-surface-muted px-2.5 py-0.5 text-xs font-semibold text-salesos-text-secondary border border-salesos-border ${className}`}>
+ <ShieldAlert className="h-3 w-3 text-salesos-text-secondary"/>
  <span>Cancelled</span>
  </span>
  );
  default:
  return (
- <span className={`inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 ${className}`}>
+ <span className={`inline-flex items-center gap-1 rounded-full bg-salesos-surface-muted px-2.5 py-0.5 text-xs font-semibold text-salesos-text-secondary ${className}`}>
  <span className="capitalize">{status}</span>
  </span>
  );

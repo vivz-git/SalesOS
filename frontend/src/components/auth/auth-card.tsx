@@ -9,13 +9,13 @@ interface AuthCardProps {
 
 export function AuthCard({ title, description, children }: AuthCardProps) {
  return (
- <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
+ <main className="grid min-h-screen place-items-center bg-salesos-surface-muted p-6">
  <div className="w-full max-w-sm">
  {/* Brand header */}
  <div className="mb-6 flex justify-center">
  <Link
  href="/"
- className="flex items-center gap-2 font-bold text-slate-900"
+ className="flex items-center gap-2 font-bold text-salesos-text"
  >
  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-xs font-black text-white">
  OS
@@ -25,11 +25,11 @@ export function AuthCard({ title, description, children }: AuthCardProps) {
  </div>
 
  {/* Card */}
- <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+ <div className="rounded-xl border border-salesos-border bg-salesos-surface p-6 shadow-sm">
  <div className="mb-5 text-center">
- <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
+ <h1 className="text-xl font-semibold text-salesos-text">{title}</h1>
  {description && (
- <p className="mt-1 text-sm text-slate-500">{description}</p>
+ <p className="mt-1 text-sm text-salesos-text-secondary">{description}</p>
  )}
  </div>
  {children}

@@ -97,8 +97,8 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
 
   if (loading) {
     return (
-      <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-salesos-surface p-6 shadow-sm">
+        <div className="flex items-center gap-2 text-sm text-salesos-text-secondary">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
           <span>Loading campaign details...</span>
         </div>
@@ -111,14 +111,14 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
       <div className="space-y-4">
         <Link
           href="/campaigns"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Campaigns</span>
         </Link>
 
-        <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-8 text-center shadow-sm">
-          <p className="text-sm font-semibold text-red-600">{error || "Campaign not found."}</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border bg-salesos-surface p-8 text-center shadow-sm">
+          <p className="text-sm font-semibold text-salesos-danger">{error || "Campaign not found."}</p>
           <Button variant="outline" size="sm" onClick={() => router.push("/campaigns")} className="mt-4">
             Return to Campaigns List
           </Button>
@@ -132,22 +132,22 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
       <div className="flex items-center justify-between">
         <Link
           href="/campaigns"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Campaigns</span>
         </Link>
       </div>
 
-      <div className="rounded-xl border bg-white p-6 shadow-sm space-y-6">
+      <div className="rounded-xl border bg-salesos-surface p-6 shadow-sm space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{campaign.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-salesos-text">{campaign.name}</h1>
               <CampaignStatusBadge status={campaign.status} />
             </div>
             {campaign.target_segment && (
-              <p className="mt-1 text-sm font-medium text-slate-500">
+              <p className="mt-1 text-sm font-medium text-salesos-text-secondary">
                 Target Segment: {campaign.target_segment}
               </p>
             )}
@@ -170,7 +170,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
                 size="sm"
                 onClick={() => handleStatusAction(activateCampaign)}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-accent-foreground"
+                className="flex items-center gap-1.5 bg-salesos-brand hover:bg-salesos-brand-hover text-white"
               >
                 <PlayCircle className="h-3.5 w-3.5" />
                 <span>Activate</span>
@@ -183,7 +183,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
                 size="sm"
                 onClick={() => handleStatusAction(pauseCampaign)}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-amber-700 border-amber-300 hover:bg-amber-50"
+                className="flex items-center gap-1.5 text-salesos-warning border-amber-300 hover:bg-salesos-warning/10"
               >
                 <PauseCircle className="h-3.5 w-3.5" />
                 <span>Pause</span>
@@ -196,7 +196,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
                 size="sm"
                 onClick={() => handleStatusAction(archiveCampaign)}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-red-600 border-red-200 hover:bg-red-50"
+                className="flex items-center gap-1.5 text-salesos-danger border-salesos-danger/20 hover:bg-salesos-danger/10"
               >
                 <Archive className="h-3.5 w-3.5" />
                 <span>Archive</span>
@@ -207,7 +207,7 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
                 size="sm"
                 onClick={() => handleStatusAction(restoreCampaign)}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-slate-700"
+                className="flex items-center gap-1.5 text-salesos-text-secondary"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Restore Draft</span>
@@ -218,32 +218,32 @@ export default function CampaignDetailsPage({ params }: CampaignDetailsProps) {
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-salesos-text-secondary uppercase tracking-wider">
               Description & Notes
             </h2>
-            <div className="rounded-lg border bg-slate-50 p-4 text-sm text-slate-700 min-h-24">
+            <div className="rounded-lg border bg-salesos-surface-muted p-4 text-sm text-salesos-text-secondary min-h-24">
               {campaign.description || "No campaign description provided."}
             </div>
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <h2 className="text-xs font-semibold text-salesos-text-secondary uppercase tracking-wider">
               ICP & Messaging Brief
             </h2>
-            <div className="rounded-lg border bg-slate-50 p-4 text-sm text-slate-700 min-h-24">
+            <div className="rounded-lg border bg-salesos-surface-muted p-4 text-sm text-salesos-text-secondary min-h-24">
               {campaign.icp_definition || "No ICP definition provided."}
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-            <CheckCircle className="h-4 w-4 text-slate-500" />
+        <div className="rounded-lg border border-salesos-border bg-salesos-surface p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-salesos-text-secondary">
+            <CheckCircle className="h-4 w-4 text-salesos-text-secondary" />
             <span>Governed Execution Boundary</span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">
-            Campaign ID: <code className="rounded bg-slate-100 px-1 py-0.5">{campaign.id}</code> • Status:{" "}
-            <span className="font-semibold capitalize text-slate-900">{campaign.status}</span>. External outreach dispatch is protected by human approval gates.
+          <p className="mt-1 text-xs text-salesos-text-secondary">
+            Campaign ID: <code className="rounded bg-salesos-surface-muted px-1 py-0.5">{campaign.id}</code> • Status:{" "}
+            <span className="font-semibold capitalize text-salesos-text">{campaign.status}</span>. External outreach dispatch is protected by human approval gates.
           </p>
         </div>
 

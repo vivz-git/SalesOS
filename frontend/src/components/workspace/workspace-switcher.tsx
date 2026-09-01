@@ -37,7 +37,7 @@ export function WorkspaceSwitcher() {
  <div className="flex items-center gap-2">
  <select
  aria-label="Select workspace"
- className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm focus:border-slate-500 focus:outline-none"
+ className="rounded-md border border-salesos-border bg-salesos-surface px-3 py-1.5 text-sm font-medium text-salesos-text shadow-sm focus:border-salesos-focus focus:outline-none"
  value={activeWorkspace?.id ||""}
  onChange={handleSelect}
  >
@@ -51,11 +51,11 @@ export function WorkspaceSwitcher() {
 
  {isCreating && (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
- <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
- <h2 className="text-lg font-semibold text-slate-900">Create New Workspace</h2>
+ <div className="w-full max-w-md rounded-lg bg-salesos-surface p-6 shadow-xl">
+ <h2 className="text-lg font-semibold text-salesos-text">Create New Workspace</h2>
  <form onSubmit={handleCreateSubmit} className="mt-4 grid gap-4">
  <div>
- <label className="block text-sm font-medium text-slate-700">
+ <label className="block text-sm font-medium text-salesos-text-secondary">
  Workspace Name
  </label>
  <input
@@ -67,7 +67,7 @@ export function WorkspaceSwitcher() {
  className="mt-1 w-full rounded-md border p-2 text-sm"
  />
  </div>
- {error && <p className="text-xs text-red-600"role="alert">{error}</p>}
+ {error && <p className="text-xs text-salesos-danger"role="alert">{error}</p>}
  <div className="flex justify-end gap-2">
  <Button
  type="button"

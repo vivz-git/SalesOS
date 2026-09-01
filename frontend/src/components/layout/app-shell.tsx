@@ -14,8 +14,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
  if (loading) {
  return (
- <main className="grid min-h-screen place-items-center bg-slate-50 p-6">
- <div className="flex items-center gap-2 text-sm text-slate-500">
+ <main className="grid min-h-screen place-items-center bg-salesos-surface-muted p-6">
+ <div className="flex items-center gap-2 text-sm text-salesos-text-secondary">
  <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent"/>
  <span>Loading SalesOS workspace...</span>
  </div>
@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
  }
 
  return (
- <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+ <div className="flex min-h-screen bg-salesos-surface-muted font-sans text-salesos-text">
  <Sidebar
  collapsed={collapsed}
  onToggleCollapse={() => setCollapsed((prev) => !prev)}
@@ -43,8 +43,8 @@ export function AppShell({ children }: { children: ReactNode }) {
  {activeWorkspace ? (
  children
  ) : (
- <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
- <p className="text-sm text-slate-600">Please select or create a workspace.</p>
+ <div className="rounded-lg border border-salesos-border bg-salesos-surface p-6 shadow-sm">
+ <p className="text-sm text-salesos-text-secondary">Please select or create a workspace.</p>
  </div>
  )}
  </main>

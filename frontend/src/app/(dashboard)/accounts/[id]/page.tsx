@@ -112,8 +112,8 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
 
   if (loading) {
     return (
-      <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-salesos-surface p-6 shadow-sm">
+        <div className="flex items-center gap-2 text-sm text-salesos-text-secondary">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
           <span>Loading company profile...</span>
         </div>
@@ -126,14 +126,14 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
       <div className="space-y-4">
         <Link
           href="/prospects"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Prospects</span>
         </Link>
 
-        <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-8 text-center shadow-sm">
-          <p className="text-sm font-semibold text-red-600">{error || "Account not found."}</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border bg-salesos-surface p-8 text-center shadow-sm">
+          <p className="text-sm font-semibold text-salesos-danger">{error || "Account not found."}</p>
           <Button variant="outline" size="sm" onClick={() => router.push("/accounts")} className="mt-4">
             Return to Prospects
           </Button>
@@ -147,18 +147,18 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
       <div className="flex items-center justify-between">
         <Link
           href="/prospects"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Prospects</span>
         </Link>
       </div>
 
-      <div className="rounded-xl border bg-white p-6 shadow-sm space-y-6">
+      <div className="rounded-xl border bg-salesos-surface p-6 shadow-sm space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">{account.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-salesos-text">{account.name}</h1>
               <AccountStatusBadge status={account.status} />
             </div>
             {account.domain && (
@@ -166,9 +166,9 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
                 href={`https://${account.domain}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline"
+                className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-salesos-brand hover:underline"
               >
-                <Globe className="h-4 w-4 text-indigo-500" />
+                <Globe className="h-4 w-4 text-salesos-brand" />
                 <span>{account.domain}</span>
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
@@ -193,7 +193,7 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
                 size="sm"
                 onClick={handleArchive}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-red-600 border-red-200 hover:bg-red-50"
+                className="flex items-center gap-1.5 text-salesos-danger border-salesos-danger/20 hover:bg-salesos-danger/10"
               >
                 <Archive className="h-3.5 w-3.5" />
                 <span>Archive</span>
@@ -204,7 +204,7 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
                 size="sm"
                 onClick={handleRestore}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-slate-700"
+                className="flex items-center gap-1.5 text-salesos-text-secondary"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Restore Account</span>
@@ -215,30 +215,30 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Company Details */}
-          <div className="rounded-lg border bg-slate-50 p-5 space-y-3">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="rounded-lg border bg-salesos-surface-muted p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-salesos-text-secondary uppercase tracking-wider">
               Company Attributes
             </h2>
 
             <div className="grid grid-cols-2 gap-4 text-xs">
               <div>
-                <span className="font-semibold text-slate-500 block">Industry</span>
-                <span className="text-slate-900 font-medium">
+                <span className="font-semibold text-salesos-text-secondary block">Industry</span>
+                <span className="text-salesos-text font-medium">
                   {account.industry || "Not specified"}
                 </span>
               </div>
 
               <div>
-                <span className="font-semibold text-slate-500 block">Company Size</span>
-                <span className="text-slate-900 font-medium">
+                <span className="font-semibold text-salesos-text-secondary block">Company Size</span>
+                <span className="text-salesos-text font-medium">
                   {account.employee_count ? `${account.employee_count} employees` : "Not specified"}
                 </span>
               </div>
 
               <div className="col-span-2">
-                <span className="font-semibold text-slate-500 block">Location</span>
-                <span className="text-slate-900 font-medium flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                <span className="font-semibold text-salesos-text-secondary block">Location</span>
+                <span className="text-salesos-text font-medium flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5 text-salesos-text-secondary/60" />
                   {[account.city, account.state, account.country].filter(Boolean).join(", ") ||
                     "Location not specified"}
                 </span>
@@ -247,34 +247,34 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
           </div>
 
           {/* Assigned Campaign */}
-          <div className="rounded-lg border bg-slate-50 p-5 space-y-3">
-            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <div className="rounded-lg border bg-salesos-surface-muted p-5 space-y-3">
+            <h2 className="text-xs font-semibold text-salesos-text-secondary uppercase tracking-wider">
               Campaign Association
             </h2>
 
             {campaign ? (
               <Link
                 href={`/campaigns/${campaign.id}`}
-                className="group block rounded-md border border-slate-200 bg-white p-3 shadow-xs hover:border-slate-300"
+                className="group block rounded-md border border-salesos-border bg-salesos-surface p-3 shadow-xs hover:border-salesos-border"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Megaphone className="h-4 w-4 text-slate-600 group-hover:text-slate-900" />
-                    <span className="text-sm font-bold text-slate-900 group-hover:text-slate-700">
+                    <Megaphone className="h-4 w-4 text-salesos-text-secondary group-hover:text-salesos-text" />
+                    <span className="text-sm font-bold text-salesos-text group-hover:text-salesos-text-secondary">
                       {campaign.name}
                     </span>
                   </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-salesos-text-secondary/60">
                     Status: {campaign.status}
                   </span>
                 </div>
                 {campaign.target_segment && (
-                  <p className="mt-1 text-xs text-slate-500">{campaign.target_segment}</p>
+                  <p className="mt-1 text-xs text-salesos-text-secondary">{campaign.target_segment}</p>
                 )}
               </Link>
             ) : (
-              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-slate-300 p-4 text-center">
-                <p className="text-xs font-medium text-slate-500">No campaign currently assigned.</p>
+              <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-salesos-border p-4 text-center">
+                <p className="text-xs font-medium text-salesos-text-secondary">No campaign currently assigned.</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -288,14 +288,14 @@ export default function AccountDetailsPage({ params }: AccountDetailsProps) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-            <Building2 className="h-4 w-4 text-slate-500" />
+        <div className="rounded-lg border border-salesos-border bg-salesos-surface p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-salesos-text-secondary">
+            <Building2 className="h-4 w-4 text-salesos-text-secondary" />
             <span>Target Account Profile</span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">
-            Account ID: <code className="rounded bg-slate-100 px-1 py-0.5">{account.id}</code> • Workspace:{" "}
-            <span className="font-semibold text-slate-900">{activeWorkspace?.name}</span>. Target company context is preserved across campaign pipelines.
+          <p className="mt-1 text-xs text-salesos-text-secondary">
+            Account ID: <code className="rounded bg-salesos-surface-muted px-1 py-0.5">{account.id}</code> • Workspace:{" "}
+            <span className="font-semibold text-salesos-text">{activeWorkspace?.name}</span>. Target company context is preserved across campaign pipelines.
           </p>
         </div>
       </div>

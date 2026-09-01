@@ -63,7 +63,7 @@ export function GenerateDraftButton({
       </Button>
 
       {error && (
-        <span className="flex items-center gap-1 text-[11px] font-medium text-rose-600">
+        <span className="flex items-center gap-1 text-[11px] font-medium text-salesos-danger">
           <AlertCircle className="h-3 w-3 shrink-0" />
           {error}
         </span>

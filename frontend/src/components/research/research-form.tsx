@@ -68,13 +68,13 @@ export function ResearchForm({ onSubmit, onClose, title }: ResearchFormProps) {
 
  return (
  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
- <div className="w-full max-w-lg rounded-xl border bg-white p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
+ <div className="w-full max-w-lg rounded-xl border bg-salesos-surface p-6 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto">
  <div className="flex items-center justify-between border-b pb-3">
- <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+ <h2 className="text-lg font-bold text-salesos-text">{title}</h2>
  <button
  type="button"
  onClick={onClose}
- className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+ className="rounded-md p-1 text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text"
  aria-label="Close modal"
  >
  <X className="h-5 w-5"/>
@@ -82,14 +82,14 @@ export function ResearchForm({ onSubmit, onClose, title }: ResearchFormProps) {
  </div>
 
  {error && (
- <div className="rounded-md bg-red-50 p-3 text-xs font-medium text-red-700">
+ <div className="rounded-md bg-salesos-danger/10 p-3 text-xs font-medium text-salesos-danger">
  {error}
  </div>
  )}
 
  <form onSubmit={handleSubmit} className="space-y-4">
  <div>
- <label htmlFor="brief-account"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="brief-account"className="block text-xs font-semibold text-salesos-text-secondary">
  Target Company Account <span className="text-red-500">*</span>
  </label>
  <select
@@ -97,7 +97,7 @@ export function ResearchForm({ onSubmit, onClose, title }: ResearchFormProps) {
  required
  value={accountId}
  onChange={(e) => setAccountId(e.target.value)}
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="">Select Target Account</option>
  {accounts.map((a) => (
@@ -109,14 +109,14 @@ export function ResearchForm({ onSubmit, onClose, title }: ResearchFormProps) {
  </div>
 
  <div>
- <label htmlFor="brief-contact"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="brief-contact"className="block text-xs font-semibold text-salesos-text-secondary">
  Decision Maker Contact (Optional)
  </label>
  <select
  id="brief-contact"
  value={contactId}
  onChange={(e) => setContactId(e.target.value)}
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="">No Contact Selected</option>
  {contacts.map((c) => (
@@ -128,7 +128,7 @@ export function ResearchForm({ onSubmit, onClose, title }: ResearchFormProps) {
  </div>
 
  <div>
- <label htmlFor="brief-summary"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="brief-summary"className="block text-xs font-semibold text-salesos-text-secondary">
  Executive Summary / Objective
  </label>
  <textarea
@@ -137,12 +137,12 @@ export function ResearchForm({ onSubmit, onClose, title }: ResearchFormProps) {
  value={summary}
  onChange={(e) => setSummary(e.target.value)}
  placeholder="Outline research scope, goals, or preliminary intelligence notes..."
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 
  <div>
- <label htmlFor="brief-findings"className="block text-xs font-semibold text-slate-700">
+ <label htmlFor="brief-findings"className="block text-xs font-semibold text-salesos-text-secondary">
  Initial Key Findings (One per line)
  </label>
  <textarea
@@ -151,7 +151,7 @@ export function ResearchForm({ onSubmit, onClose, title }: ResearchFormProps) {
  value={keyFindingsText}
  onChange={(e) => setKeyFindingsText(e.target.value)}
  placeholder="e.g. Expanding engineering department in Q3&#10;Recent Series B funding announcement"
- className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="mt-1 block w-full rounded-md border border-salesos-border px-3 py-2 text-sm text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
 

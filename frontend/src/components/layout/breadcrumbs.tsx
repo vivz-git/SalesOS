@@ -20,10 +20,10 @@ export function Breadcrumbs() {
  const segments = pathname.split("/").filter(Boolean);
 
  return (
- <nav aria-label="Breadcrumb"className="flex items-center gap-1 text-xs text-slate-500">
+ <nav aria-label="Breadcrumb"className="flex items-center gap-1 text-xs text-salesos-text-secondary">
  <Link
  href="/"
- className="flex items-center gap-1 hover:text-slate-900 transition-colors"
+ className="flex items-center gap-1 hover:text-salesos-text transition-colors"
  >
  <Home className="h-3.5 w-3.5"/>
  <span>Home</span>
@@ -38,13 +38,13 @@ export function Breadcrumbs() {
 
  return (
  <div key={href} className="flex items-center gap-1">
- <ChevronRight className="h-3.5 w-3.5 text-slate-400"/>
+ <ChevronRight className="h-3.5 w-3.5 text-salesos-text-secondary/60"/>
  {isLast ? (
- <span className="font-medium text-slate-900"aria-current="page">
+ <span className="font-medium text-salesos-text"aria-current="page">
  {displayName}
  </span>
  ) : (
- <Link href={href} className="hover:text-slate-900 transition-colors">
+ <Link href={href} className="hover:text-salesos-text transition-colors">
  {displayName}
  </Link>
  )}

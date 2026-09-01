@@ -96,8 +96,8 @@ export default function ResearchPage() {
  <div className="space-y-6">
  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
  <div>
- <h1 className="text-2xl font-bold tracking-tight text-slate-900">Research Briefs</h1>
- <p className="mt-1 text-sm text-slate-500">
+ <h1 className="text-2xl font-bold tracking-tight text-salesos-text">Research Briefs</h1>
+ <p className="mt-1 text-sm text-salesos-text-secondary">
  Account intelligence, decision-maker briefs, confidence evaluations, and source provenance.
  </p>
  </div>
@@ -108,7 +108,7 @@ export default function ResearchPage() {
  </Button>
  </div>
 
- <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-3">
+ <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-salesos-border pb-3">
  <div className="flex items-center gap-1 overflow-x-auto">
  {STATUS_TABS.map((tab) => {
  const isActive = statusFilter === tab.value;
@@ -123,7 +123,7 @@ export default function ResearchPage() {
  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
  isActive
  ?"bg-slate-900 text-white"
- :"text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+ :"text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text"
  }`}
  >
  {tab.label}
@@ -139,7 +139,7 @@ export default function ResearchPage() {
  setAccountFilter(e.target.value);
  setPage(1);
  }}
- className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="rounded-md border border-salesos-border px-3 py-1.5 text-xs text-salesos-text focus:border-salesos-focus focus:outline-none"
  >
  <option value="">All Accounts</option>
  {accounts.map((a) => (
@@ -150,7 +150,7 @@ export default function ResearchPage() {
  </select>
 
  <div className="relative w-full sm:w-56">
- <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"/>
+ <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-salesos-text-secondary/60"/>
  <input
  type="text"
  value={searchQuery}
@@ -159,33 +159,33 @@ export default function ResearchPage() {
  setPage(1);
  }}
  placeholder="Search briefs..."
- className="w-full rounded-md border border-slate-300 pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:border-slate-900 focus:outline-none"
+ className="w-full rounded-md border border-salesos-border pl-8 pr-3 py-1.5 text-xs text-salesos-text focus:border-salesos-focus focus:outline-none"
  />
  </div>
  </div>
  </div>
 
  {loading ? (
- <div className="flex h-48 w-full items-center justify-center rounded-xl border bg-white p-6 shadow-sm">
- <div className="flex items-center gap-2 text-sm text-slate-500">
+ <div className="flex h-48 w-full items-center justify-center rounded-xl border bg-salesos-surface p-6 shadow-sm">
+ <div className="flex items-center gap-2 text-sm text-salesos-text-secondary">
  <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent"/>
  <span>Loading research briefs...</span>
  </div>
  </div>
  ) : error ? (
- <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-6 text-center shadow-sm">
- <p className="text-sm font-medium text-red-600">{error}</p>
+ <div className="flex flex-col items-center justify-center rounded-xl border bg-salesos-surface p-6 text-center shadow-sm">
+ <p className="text-sm font-medium text-salesos-danger">{error}</p>
  <Button variant="outline"size="sm"onClick={loadBriefs} className="mt-3">
  Retry
  </Button>
  </div>
  ) : filteredBriefs.length === 0 ? (
- <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm">
- <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+ <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-salesos-border bg-salesos-surface p-12 text-center shadow-sm">
+ <div className="flex h-12 w-12 items-center justify-center rounded-full bg-salesos-surface-muted text-salesos-text-secondary">
  <FileSearch className="h-6 w-6"/>
  </div>
- <h3 className="mt-4 text-sm font-bold text-slate-900">No research briefs found</h3>
- <p className="mt-1 text-xs text-slate-500">
+ <h3 className="mt-4 text-sm font-bold text-salesos-text">No research briefs found</h3>
+ <p className="mt-1 text-xs text-salesos-text-secondary">
  {searchQuery || accountFilter
  ?"No brief matched your search or account filter."
  :"Get started by creating your first company research brief."}
@@ -204,33 +204,33 @@ export default function ResearchPage() {
  <Link
  key={brief.id}
  href={`/research/${brief.id}`}
- className="group flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-md"
+ className="group flex flex-col justify-between rounded-xl border border-salesos-border bg-salesos-surface p-5 shadow-xs transition-all hover:border-salesos-border hover:shadow-md"
  >
  <div>
  <div className="flex items-start justify-between gap-2">
- <h3 className="text-base font-bold text-slate-900 group-hover:text-slate-700">
+ <h3 className="text-base font-bold text-salesos-text group-hover:text-salesos-text-secondary">
  {targetAccount ? targetAccount.name :"Target Account Brief"}
  </h3>
  <ResearchStatusBadge status={brief.status} />
  </div>
 
  {brief.summary && (
- <p className="mt-2 text-xs text-slate-600 line-clamp-2">
+ <p className="mt-2 text-xs text-salesos-text-secondary line-clamp-2">
  {brief.summary}
  </p>
  )}
 
  {brief.confidence_score !== null && (
  <div className="mt-3 flex items-center gap-1.5 text-xs">
- <span className="font-semibold text-slate-500">Confidence:</span>
- <span className="font-bold text-emerald-700">
+ <span className="font-semibold text-salesos-text-secondary">Confidence:</span>
+ <span className="font-bold text-salesos-success">
  {Math.round(brief.confidence_score * 100)}%
  </span>
  </div>
  )}
  </div>
 
- <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-400">
+ <div className="mt-4 flex items-center justify-between border-t border-salesos-border pt-3 text-[11px] text-salesos-text-secondary/60">
  <span>View Findings & Provenance →</span>
  </div>
  </Link>
@@ -240,9 +240,9 @@ export default function ResearchPage() {
  )}
 
  {/* Pagination Controls */}
- <div className="flex items-center justify-between border-t border-slate-200 pt-4">
- <span className="text-xs text-slate-500">
- Showing page <span className="font-semibold text-slate-900">{page}</span>
+ <div className="flex items-center justify-between border-t border-salesos-border pt-4">
+ <span className="text-xs text-salesos-text-secondary">
+ Showing page <span className="font-semibold text-salesos-text">{page}</span>
  </span>
  <div className="flex items-center gap-2">
  <Button

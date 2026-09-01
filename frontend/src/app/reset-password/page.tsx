@@ -80,12 +80,12 @@ export default function ResetPasswordPage() {
  description="Your password reset link has expired or is invalid."
  >
  <div className="flex flex-col items-center gap-3 py-2 text-center">
- <p className="text-sm text-slate-500">
+ <p className="text-sm text-salesos-text-secondary">
  Request a new link and try again.
  </p>
  <Link
  href="/forgot-password"
- className="text-sm font-medium text-slate-900 hover:underline"
+ className="text-sm font-medium text-salesos-text hover:underline"
  >
  Request new reset link
  </Link>
@@ -118,7 +118,7 @@ export default function ResetPasswordPage() {
  <div className="grid gap-1">
  <label
  htmlFor="password"
- className="text-sm font-medium text-slate-700"
+ className="text-sm font-medium text-salesos-text-secondary"
  >
  New password
  </label>
@@ -138,7 +138,7 @@ export default function ResetPasswordPage() {
  <div className="grid gap-1">
  <label
  htmlFor="confirm-password"
- className="text-sm font-medium text-slate-700"
+ className="text-sm font-medium text-salesos-text-secondary"
  >
  Confirm password
  </label>
@@ -155,7 +155,7 @@ export default function ResetPasswordPage() {
  </div>
 
  {error && (
- <p className="text-sm text-red-600"role="alert">
+ <p className="text-sm text-salesos-danger"role="alert">
  {error}
  </p>
  )}

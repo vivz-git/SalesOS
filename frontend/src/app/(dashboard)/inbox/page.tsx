@@ -21,13 +21,13 @@ function InboxContent() {
 
  return (
  <>
- <div className="flex border-b border-slate-200">
+ <div className="flex border-b border-salesos-border">
  <button
  onClick={() => setActiveTab("replies")}
  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
  activeTab ==="replies"
- ?"border-indigo-600 text-indigo-700"
- :"border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+ ?"border-salesos-brand text-salesos-brand"
+ :"border-transparent text-salesos-text-secondary hover:text-salesos-text-secondary hover:border-salesos-border"
  }`}
  >
  <MessageSquare className="h-4 w-4"/>
@@ -37,8 +37,8 @@ function InboxContent() {
  onClick={() => setActiveTab("sent")}
  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
  activeTab ==="sent"
- ?"border-indigo-600 text-indigo-700"
- :"border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+ ?"border-salesos-brand text-salesos-brand"
+ :"border-transparent text-salesos-text-secondary hover:text-salesos-text-secondary hover:border-salesos-border"
  }`}
  >
  <Send className="h-4 w-4"/>
@@ -58,16 +58,16 @@ export default function InboxPage() {
  <div className="mx-auto max-w-6xl space-y-6 p-6">
  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
  <div>
- <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+ <h1 className="text-2xl font-bold tracking-tight text-salesos-text">
  Inbox
  </h1>
- <p className="mt-1 text-sm text-slate-500">
+ <p className="mt-1 text-sm text-salesos-text-secondary">
  Replies from prospects and emails you&apos;ve sent.
  </p>
  </div>
  </div>
 
- <Suspense fallback={<div className="p-4 text-xs text-slate-500">Loading inbox...</div>}>
+ <Suspense fallback={<div className="p-4 text-xs text-salesos-text-secondary">Loading inbox...</div>}>
  <InboxContent />
  </Suspense>
  </div>

@@ -19,7 +19,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
  type={show ?"text":"password"}
  disabled={disabled}
  className={cn(
-"w-full rounded-md border border-slate-200 px-3 py-2 pr-10 text-sm outline-none placeholder:text-slate-400 disabled:opacity-50",
+"w-full rounded-md border border-salesos-border px-3 py-2 pr-10 text-sm outline-none placeholder:text-salesos-text-secondary/60 disabled:opacity-50",
  className,
  )}
  />
@@ -28,7 +28,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
  onClick={() => setShow((s) => !s)}
  disabled={disabled}
  aria-label={show ?"Hide password":"Show password"}
- className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-700 disabled:pointer-events-none"
+ className="absolute inset-y-0 right-0 flex items-center pr-3 text-salesos-text-secondary/60 hover:text-salesos-text-secondary disabled:pointer-events-none"
  >
  {show ? (
  <EyeOff className="h-4 w-4"aria-hidden="true"/>

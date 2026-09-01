@@ -95,8 +95,8 @@ export default function ResearchDetailsPage({ params }: ResearchDetailsProps) {
 
   if (loading) {
     return (
-      <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex h-64 w-full items-center justify-center rounded-xl border bg-salesos-surface p-6 shadow-sm">
+        <div className="flex items-center gap-2 text-sm text-salesos-text-secondary">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
           <span>Loading intelligence brief...</span>
         </div>
@@ -109,14 +109,14 @@ export default function ResearchDetailsPage({ params }: ResearchDetailsProps) {
       <div className="space-y-4">
         <Link
           href="/research"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Research Briefs</span>
         </Link>
 
-        <div className="flex flex-col items-center justify-center rounded-xl border bg-white p-8 text-center shadow-sm">
-          <p className="text-sm font-semibold text-red-600">{error || "Research brief not found."}</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border bg-salesos-surface p-8 text-center shadow-sm">
+          <p className="text-sm font-semibold text-salesos-danger">{error || "Research brief not found."}</p>
           <Button variant="outline" size="sm" onClick={() => router.push("/research")} className="mt-4">
             Return to Briefs Directory
           </Button>
@@ -130,24 +130,24 @@ export default function ResearchDetailsPage({ params }: ResearchDetailsProps) {
       <div className="flex items-center justify-between">
         <Link
           href="/research"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-salesos-text-secondary hover:text-salesos-text"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Research Briefs</span>
         </Link>
       </div>
 
-      <div className="rounded-xl border bg-white p-6 shadow-sm space-y-6">
+      <div className="rounded-xl border bg-salesos-surface p-6 shadow-sm space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              <h1 className="text-2xl font-bold tracking-tight text-salesos-text">
                 {account ? `${account.name} Research Brief` : "Company Research Brief"}
               </h1>
               <ResearchStatusBadge status={brief.status} />
             </div>
             {contact && (
-              <p className="mt-1 text-xs font-semibold text-slate-500">
+              <p className="mt-1 text-xs font-semibold text-salesos-text-secondary">
                 Decision Maker Focus: {contact.first_name} {contact.last_name} ({contact.title || "Target Contact"})
               </p>
             )}
@@ -157,7 +157,7 @@ export default function ResearchDetailsPage({ params }: ResearchDetailsProps) {
             <Button
               onClick={handleTriggerJob}
               disabled={actionLoading || brief.status === "in_progress"}
-              className="flex items-center gap-1.5 bg-accent hover:bg-accent-hover text-white"
+              className="flex items-center gap-1.5 bg-salesos-brand hover:bg-salesos-brand-hover text-white"
             >
               <PlayCircle className="h-4 w-4" />
               <span>{actionLoading ? "Enqueuing..." : "Run Research Pipeline"}</span>
@@ -166,7 +166,7 @@ export default function ResearchDetailsPage({ params }: ResearchDetailsProps) {
         </div>
 
         {activeJob && (
-          <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4 text-xs text-indigo-900 flex items-center justify-between">
+          <div className="rounded-lg border border-salesos-brand/20 bg-salesos-brand-subtle p-4 text-xs text-salesos-brand flex items-center justify-between">
             <div>
               <span className="font-bold block">Background Job Enqueued:</span>
               <span>Job ID: {activeJob.id} • Status: {activeJob.status}</span>
@@ -180,26 +180,26 @@ export default function ResearchDetailsPage({ params }: ResearchDetailsProps) {
           {account && (
             <Link
               href={`/accounts/${account.id}`}
-              className="group flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3 hover:border-slate-300"
+              className="group flex items-center justify-between rounded-lg border border-salesos-border bg-salesos-surface-muted p-3 hover:border-salesos-border"
             >
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-900">
-                <Building2 className="h-4 w-4 text-slate-500 group-hover:text-slate-900" />
+              <div className="flex items-center gap-2 text-xs font-semibold text-salesos-text">
+                <Building2 className="h-4 w-4 text-salesos-text-secondary group-hover:text-salesos-text" />
                 <span>{account.name}</span>
               </div>
-              <span className="text-[11px] text-slate-400">View Account →</span>
+              <span className="text-[11px] text-salesos-text-secondary/60">View Account →</span>
             </Link>
           )}
 
           {contact && (
             <Link
               href={`/contacts/${contact.id}`}
-              className="group flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3 hover:border-slate-300"
+              className="group flex items-center justify-between rounded-lg border border-salesos-border bg-salesos-surface-muted p-3 hover:border-salesos-border"
             >
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-900">
-                <User className="h-4 w-4 text-slate-500 group-hover:text-slate-900" />
+              <div className="flex items-center gap-2 text-xs font-semibold text-salesos-text">
+                <User className="h-4 w-4 text-salesos-text-secondary group-hover:text-salesos-text" />
                 <span>{contact.first_name} {contact.last_name}</span>
               </div>
-              <span className="text-[11px] text-slate-400">View Decision Maker →</span>
+              <span className="text-[11px] text-salesos-text-secondary/60">View Decision Maker →</span>
             </Link>
           )}
         </div>
@@ -209,14 +209,14 @@ export default function ResearchDetailsPage({ params }: ResearchDetailsProps) {
 
         <SourceViewer sources={sources} />
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-            <FileSearch className="h-4 w-4 text-slate-500" />
+        <div className="rounded-lg border border-salesos-border bg-salesos-surface p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-salesos-text-secondary">
+            <FileSearch className="h-4 w-4 text-salesos-text-secondary" />
             <span>Audit-Ready Provenance Record</span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">
-            Brief ID: <code className="rounded bg-slate-100 px-1 py-0.5">{brief.id}</code> • Workspace:{" "}
-            <span className="font-semibold text-slate-900">{activeWorkspace?.name}</span>. Research evidence is append-only for auditability.
+          <p className="mt-1 text-xs text-salesos-text-secondary">
+            Brief ID: <code className="rounded bg-salesos-surface-muted px-1 py-0.5">{brief.id}</code> • Workspace:{" "}
+            <span className="font-semibold text-salesos-text">{activeWorkspace?.name}</span>. Research evidence is append-only for auditability.
           </p>
         </div>
       </div>

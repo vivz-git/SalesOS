@@ -71,7 +71,7 @@ function LoginForm() {
  <div className="grid gap-1">
  <label
  htmlFor="email"
- className="text-sm font-medium text-slate-700"
+ className="text-sm font-medium text-salesos-text-secondary"
  >
  Email
  </label>
@@ -83,7 +83,7 @@ function LoginForm() {
  autoComplete="email"
  disabled={loading}
  placeholder="you@company.com"
- className="rounded-md border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-slate-400 disabled:opacity-50"
+ className="rounded-md border border-salesos-border px-3 py-2 text-sm outline-none placeholder:text-salesos-text-secondary/60 disabled:opacity-50"
  />
  </div>
 
@@ -91,13 +91,13 @@ function LoginForm() {
  <div className="flex items-center justify-between">
  <label
  htmlFor="password"
- className="text-sm font-medium text-slate-700"
+ className="text-sm font-medium text-salesos-text-secondary"
  >
  Password
  </label>
  <Link
  href="/forgot-password"
- className="text-xs text-slate-500 hover:text-slate-900"
+ className="text-xs text-salesos-text-secondary hover:text-salesos-text"
  >
  Forgot password?
  </Link>
@@ -113,7 +113,7 @@ function LoginForm() {
  </div>
 
  {error && (
- <p className="text-sm text-red-600"role="alert">
+ <p className="text-sm text-salesos-danger"role="alert">
  {error}
  </p>
  )}
@@ -130,11 +130,11 @@ function LoginForm() {
  </Button>
  </form>
 
- <p className="mt-4 text-center text-sm text-slate-500">
+ <p className="mt-4 text-center text-sm text-salesos-text-secondary">
  Don&apos;t have an account?{""}
  <Link
  href="/signup"
- className="font-medium text-slate-900 hover:underline"
+ className="font-medium text-salesos-text hover:underline"
  >
  Create one
  </Link>
@@ -147,7 +147,7 @@ export default function LoginPage() {
  return (
  <Suspense
  fallback={
- <div className="flex min-h-screen items-center justify-center bg-slate-50">
+ <div className="flex min-h-screen items-center justify-center bg-salesos-surface-muted">
  <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-900 border-t-transparent"/>
  </div>
  }

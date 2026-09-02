@@ -12,8 +12,8 @@ interface TopbarProps {
 
 export function Topbar({ onToggleMobileSidebar }: TopbarProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-2 border-b border-salesos-border bg-salesos-surface px-4 shadow-sm md:px-6">
-      <div className="flex min-w-0 items-center gap-3">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between gap-3 border-b border-salesos-border bg-salesos-surface px-4 shadow-sm sm:gap-4 md:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-3 mr-2 sm:mr-4">
         <button
           type="button"
           onClick={onToggleMobileSidebar}
@@ -23,7 +23,7 @@ export function Topbar({ onToggleMobileSidebar }: TopbarProps) {
           <Menu className="h-5 w-5" />
         </button>
 
-        <div className="hidden min-w-0 sm:block">
+        <div className="hidden min-w-0 flex-1 sm:block">
           <Breadcrumbs />
         </div>
       </div>

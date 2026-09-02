@@ -94,7 +94,7 @@ export function Breadcrumbs() {
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-salesos-text-secondary/60" />
             {isLast ? (
               <span
-                className="truncate font-medium text-salesos-text max-w-[100px] sm:max-w-[140px] md:max-w-[200px] lg:max-w-[280px] xl:max-w-none"
+                className="truncate font-medium text-salesos-text max-w-[120px] md:max-w-[160px] lg:max-w-[320px] xl:max-w-none"
                 aria-current="page"
                 title={displayName}
               >

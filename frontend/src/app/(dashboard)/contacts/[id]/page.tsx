@@ -188,9 +188,9 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
       </div>
 
       <div className="rounded-xl border bg-salesos-surface p-6 shadow-sm space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
-          <div>
-            <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b pb-5">
+          <div className="min-w-0 space-y-1">
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold tracking-tight text-salesos-text">
                 {contact.first_name} {contact.last_name}
               </h1>
@@ -200,63 +200,67 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
                   Primary Contact
                 </span>
               )}
-              <ContactStatusBadge status={contact.status} />
             </div>
 
             {contact.title && (
-              <p className="mt-1 text-sm font-medium text-salesos-text-secondary">
+              <p className="text-sm font-medium text-salesos-text-secondary">
                 {contact.title} {contact.department ? `• ${contact.department}` : ""}
               </p>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:items-end lg:flex-col shrink-0">
+            <div className="self-start sm:self-auto lg:self-end">
+              <ContactStatusBadge status={contact.status} />
+            </div>
 
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleGenerateDraft}
-              disabled={actionLoading}
-              className="flex items-center gap-1.5 bg-salesos-brand hover:bg-salesos-brand-hover text-white"
-            >
-              <Mail className="h-3.5 w-3.5" />
-              <span>Generate Personalized Email</span>
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleGenerateDraft}
+                disabled={actionLoading}
+                className="flex items-center gap-1.5 bg-salesos-brand hover:bg-salesos-brand-hover text-white shadow-sm"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                <span>Generate Personalized Email</span>
+              </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-              disabled={actionLoading}
-              className="flex items-center gap-1.5"
-            >
-              <Edit className="h-3.5 w-3.5" />
-              <span>Edit Contact</span>
-            </Button>
-
-            {contact.status !== "archived" ? (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleArchive}
+                onClick={() => setIsEditing(true)}
                 disabled={actionLoading}
-                className="flex items-center gap-1.5 text-salesos-danger border-salesos-danger/20 hover:bg-salesos-danger/10"
+                className="flex items-center gap-1.5"
               >
-                <Archive className="h-3.5 w-3.5" />
-                <span>Archive</span>
+                <Edit className="h-3.5 w-3.5" />
+                <span>Edit Contact</span>
               </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRestore}
-                disabled={actionLoading}
-                className="flex items-center gap-1.5 text-salesos-text-secondary"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                <span>Restore Contact</span>
-              </Button>
-            )}
+
+              {contact.status !== "archived" ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleArchive}
+                  disabled={actionLoading}
+                  className="flex items-center gap-1.5 text-salesos-danger border-salesos-danger/20 hover:bg-salesos-danger/10"
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                  <span>Archive</span>
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRestore}
+                  disabled={actionLoading}
+                  className="flex items-center gap-1.5 text-salesos-text-secondary hover:bg-salesos-surface-muted"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>Restore Contact</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 

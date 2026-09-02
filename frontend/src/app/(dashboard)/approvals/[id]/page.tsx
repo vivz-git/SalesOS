@@ -176,10 +176,10 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
 
       {/* Main Header Banner */}
       <div className="rounded-lg border border-salesos-border bg-salesos-surface p-6 shadow-sm space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0 space-y-1.5">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold tracking-tight text-salesos-text">
+              <h1 className="text-xl font-bold tracking-tight text-salesos-text break-words">
                 {draft.current_subject || "(Untitled Subject)"}
               </h1>
               <DraftStatusBadge status={draft.status as DraftStatus} />
@@ -187,7 +187,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
                 Version v{draft.current_version_number}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-[13px] text-salesos-text-secondary flex-wrap">
+            <div className="flex items-center gap-x-4 gap-y-1 text-[13px] text-salesos-text-secondary flex-wrap">
               <span>Contact: <strong className="text-salesos-text">{contactName}</strong> ({contactTitle || "No Title"})</span>
               <span>Account: <strong className="text-salesos-text">{accountName || "N/A"}</strong></span>
               <span>Campaign: <strong className="text-salesos-text">{campaignName}</strong></span>
@@ -195,13 +195,13 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
           </div>
 
           {/* Decision Toolbar */}
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
+          <div className="flex items-center gap-2 flex-wrap pt-1 lg:pt-0 shrink-0">
             {isReadyForReview && (
               <>
                 <button
                   type="button"
                   onClick={() => setModalAction("approve-and-send")}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-salesos-brand px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-salesos-brand-hover shadow-sm transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-salesos-brand px-3.5 py-2 text-xs font-semibold text-white hover:bg-salesos-brand-hover shadow-sm transition-colors cursor-pointer"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Approve & Send</span>
@@ -209,7 +209,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
                 <button
                   type="button"
                   onClick={() => setModalAction("approve")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-salesos-border bg-salesos-surface px-3.5 py-1.5 text-xs font-semibold text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text shadow-sm transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-salesos-border bg-salesos-surface px-3 py-2 text-xs font-medium text-salesos-text-secondary hover:bg-salesos-surface-muted hover:text-salesos-text shadow-2xs transition-colors cursor-pointer"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   <span>Approve Only</span>
@@ -217,7 +217,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
                 <button
                   type="button"
                   onClick={() => setModalAction("reject")}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-salesos-danger/20 bg-salesos-danger/10 px-3.5 py-1.5 text-xs font-semibold text-salesos-danger hover:bg-rose-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-salesos-danger/20 bg-salesos-danger/10 px-3 py-2 text-xs font-medium text-salesos-danger hover:bg-rose-100 transition-colors cursor-pointer"
                 >
                   <XCircle className="h-3.5 w-3.5" />
                   <span>Reject</span>
@@ -229,7 +229,7 @@ export default function ApprovalDetailPage({ params }: ApprovalDetailPageProps) 
               <button
                 type="button"
                 onClick={() => setModalAction("return-to-draft")}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-salesos-warning/10 px-3 py-1.5 text-xs font-semibold text-salesos-warning hover:bg-amber-100 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-salesos-warning/10 px-3 py-2 text-xs font-medium text-salesos-warning hover:bg-amber-100 transition-colors cursor-pointer"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 <span>Return to Draft</span>

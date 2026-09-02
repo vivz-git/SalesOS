@@ -11,7 +11,7 @@ const ROUTE_NAME_MAP: Record<string, string> = {
   accounts: "Accounts",
   contacts: "Prospects",
   prospects: "Prospects",
-  approvals: "Approval Queue",
+  approvals: "Approvals",
   conversations: "Conversations",
   inbox: "Inbox",
   reports: "Reports",
@@ -94,7 +94,7 @@ export function Breadcrumbs() {
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-salesos-text-secondary/60" />
             {isLast ? (
               <span
-                className="truncate font-medium text-salesos-text max-w-[120px] sm:max-w-[160px] md:max-w-[220px]"
+                className="truncate font-medium text-salesos-text max-w-[100px] sm:max-w-[140px] md:max-w-[200px] lg:max-w-[280px] xl:max-w-none"
                 aria-current="page"
                 title={displayName}
               >

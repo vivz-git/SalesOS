@@ -51,4 +51,14 @@ describe("Breadcrumbs Component", () => {
     expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
     expect(screen.queryByText("d3b07384-d113-4632-a548-067f975cf643")).not.toBeInTheDocument();
   });
+
+  it("hides raw approval draft UUID and displays Review", () => {
+    mockPathname = "/approvals/b8c38827-0245-42cf-9b37-2900742f5341";
+    render(<Breadcrumbs />);
+
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Approvals")).toBeInTheDocument();
+    expect(screen.getByText("Review")).toBeInTheDocument();
+    expect(screen.queryByText("b8c38827-0245-42cf-9b37-2900742f5341")).not.toBeInTheDocument();
+  });
 });

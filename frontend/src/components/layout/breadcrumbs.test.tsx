@@ -1,21 +1,54 @@
-import { render, screen } from"@testing-library/react";
-import { describe, expect, it, vi } from"vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
-import { Breadcrumbs } from"./breadcrumbs";
+import { Breadcrumbs } from "./breadcrumbs";
+
+let mockPathname = "/campaigns";
+let mockOverride: string | null = null;
 
 vi.mock("@/lib/breadcrumb-store", () => ({
-  useBreadcrumbOverride: () => null,
+  useBreadcrumbOverride: () => mockOverride,
 }));
 
 vi.mock("next/navigation", () => ({
- usePathname: () =>"/campaigns",
+  usePathname: () => mockPathname,
 }));
 
 describe("Breadcrumbs Component", () => {
- it("renders home and current route segment accurately", () => {
- render(<Breadcrumbs />);
+  beforeEach(() => {
+    mockPathname = "/campaigns";
+    mockOverride = null;
+  });
 
- expect(screen.getByText("Home")).toBeInTheDocument();
- expect(screen.getByText("Campaigns")).toBeInTheDocument();
- });
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("renders home and current route segment accurately", () => {
+    render(<Breadcrumbs />);
+
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Campaigns")).toBeInTheDocument();
+  });
+
+  it("hides raw conversation UUID and displays Thread", () => {
+    mockPathname = "/conversations/9202bba44f6f4ef49e38b5d274e3af83";
+    render(<Breadcrumbs />);
+
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Conversations")).toBeInTheDocument();
+    expect(screen.getByText("Thread")).toBeInTheDocument();
+    expect(screen.queryByText("9202bba44f6f4ef49e38b5d274e3af83")).not.toBeInTheDocument();
+  });
+
+  it("displays prospect name instead of contact UUID when override is set", () => {
+    mockPathname = "/contacts/d3b07384-d113-4632-a548-067f975cf643";
+    mockOverride = "Alex Buyer";
+    render(<Breadcrumbs />);
+
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.getByText("Prospects")).toBeInTheDocument();
+    expect(screen.getByText("Alex Buyer")).toBeInTheDocument();
+    expect(screen.queryByText("d3b07384-d113-4632-a548-067f975cf643")).not.toBeInTheDocument();
+  });
 });

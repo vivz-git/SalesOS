@@ -12,5 +12,14 @@ export function SignOutButton() {
  router.replace("/login");
  router.refresh();
  }
- return <Button onClick={signOut} variant="outline">Sign out</Button>;
+  return (
+    <Button
+      onClick={signOut}
+      variant="outline"
+      size="sm"
+      className="shrink-0 whitespace-nowrap text-xs font-medium"
+    >
+      Sign out
+    </Button>
+  );
 }

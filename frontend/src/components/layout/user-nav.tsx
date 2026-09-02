@@ -45,22 +45,24 @@ export function UserNav() {
  fetchIdentity();
  }, [activeWorkspace]);
 
- return (
- <div className="flex items-center gap-3">
- {identity ? (
- <div className="flex items-center gap-2 text-xs">
- <div className="flex h-7 w-7 items-center justify-center rounded-full bg-salesos-surface-muted text-salesos-text-secondary">
- <User className="h-4 w-4"/>
- </div>
- <div className="hidden flex-col sm:flex">
- <span className="font-medium text-salesos-text">{identity.email}</span>
- <span className="text-[10px] font-semibold text-salesos-text-secondary uppercase tracking-wider">
- Role: {identity.role}
- </span>
- </div>
- </div>
- ) : null}
- <SignOutButton />
- </div>
- );
+  return (
+    <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+      {identity ? (
+        <div className="flex min-w-0 items-center gap-2 text-xs">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-salesos-surface-muted text-salesos-text-secondary">
+            <User className="h-4 w-4" />
+          </div>
+          <div className="hidden flex-col min-w-0 sm:flex">
+            <span className="truncate font-medium text-salesos-text max-w-[130px] md:max-w-[180px] lg:max-w-none">
+              {identity.email}
+            </span>
+            <span className="truncate text-[10px] font-semibold text-salesos-text-secondary uppercase tracking-wider">
+              Role: {identity.role}
+            </span>
+          </div>
+        </div>
+      ) : null}
+      <SignOutButton />
+    </div>
+  );
 }

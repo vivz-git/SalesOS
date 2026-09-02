@@ -33,6 +33,7 @@ import {
 } from "@/lib/api/contacts";
 import { useWorkspace } from "@/lib/workspace-context";
 import { createOutreachDraft, generateOutreachDraft } from "@/lib/api/outreach";
+import { breadcrumbStore } from "@/lib/breadcrumb-store";
 
 interface ContactDetailsProps {
   params: Promise<{ id: string }>;
@@ -49,6 +50,16 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    if (contact) {
+      const fullName = `${contact.first_name || ""} ${contact.last_name || ""}`.trim();
+      breadcrumbStore.setLabel(fullName || contact.email || "Prospect");
+    }
+    return () => {
+      breadcrumbStore.setLabel(null);
+    };
+  }, [contact]);
 
   const loadContact = useCallback(async () => {
     if (!activeWorkspace || !id) return;

@@ -34,10 +34,10 @@ export function WorkspaceSwitcher() {
  }
 
  return (
- <div className="flex items-center gap-2">
+ <div className="flex shrink-0 items-center gap-2">
  <select
  aria-label="Select workspace"
- className="rounded-md border border-salesos-border bg-salesos-surface px-3 py-1.5 text-sm font-medium text-salesos-text shadow-sm focus:border-salesos-focus focus:outline-none"
+ className="h-8 max-w-[120px] sm:max-w-[160px] md:max-w-[200px] lg:max-w-[240px] truncate rounded-md border border-salesos-border bg-salesos-surface px-2.5 py-1 text-xs sm:text-sm font-medium text-salesos-text shadow-2xs focus:border-salesos-focus focus:outline-none"
  value={activeWorkspace?.id ||""}
  onChange={handleSelect}
  >

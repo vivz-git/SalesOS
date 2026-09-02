@@ -37,8 +37,9 @@ export function Breadcrumbs() {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="flex min-w-0 items-center gap-1 text-xs text-salesos-text-secondary"
+      className="flex min-w-0 items-center gap-1 text-xs text-salesos-text-secondary overflow-hidden"
     >
+      {/* Home — always shrink-0; short and must never be truncated */}
       <Link
         href="/"
         className="flex shrink-0 items-center gap-1 hover:text-salesos-text transition-colors"
@@ -65,13 +66,13 @@ export function Breadcrumbs() {
             } else if (parentSegment === "approvals") {
               displayName = overrideLabel || "Review";
             } else if (parentSegment === "campaigns") {
-              displayName = overrideLabel || "Campaign Detail";
+              displayName = overrideLabel || "Campaign";
             } else if (parentSegment === "accounts") {
-              displayName = overrideLabel || "Account Detail";
+              displayName = overrideLabel || "Account";
             } else if (parentSegment === "deliveries") {
-              displayName = overrideLabel || "Delivery Detail";
+              displayName = overrideLabel || "Delivery";
             } else if (parentSegment === "research") {
-              displayName = overrideLabel || "Research Detail";
+              displayName = overrideLabel || "Research";
             } else {
               displayName = overrideLabel || "Details";
             }
@@ -90,20 +91,24 @@ export function Breadcrumbs() {
         }
 
         return (
-          <div key={href + index} className="flex min-w-0 items-center gap-1">
+          <div key={href + index} className="flex min-w-0 shrink items-center gap-1">
+            {/* Separator: always visible, never shrinks */}
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-salesos-text-secondary/60" />
             {isLast ? (
+              /* Final segment: truncates with ellipsis, surrenders space first */
               <span
-                className="truncate font-medium text-salesos-text max-w-[120px] md:max-w-[160px] lg:max-w-[320px] xl:max-w-none"
+                className="min-w-0 truncate font-medium text-salesos-text max-w-[90px] sm:max-w-[130px] md:max-w-[180px] lg:max-w-[260px] xl:max-w-[360px]"
                 aria-current="page"
                 title={displayName}
               >
                 {displayName}
               </span>
             ) : (
+              /* Intermediate segments: bounded, shrinkable, truncate if needed */
               <Link
                 href={href}
-                className="shrink-0 hover:text-salesos-text transition-colors"
+                className="block min-w-0 shrink truncate hover:text-salesos-text transition-colors max-w-[70px] sm:max-w-[90px] md:max-w-[110px] lg:max-w-[140px] xl:max-w-[160px]"
+                title={displayName}
               >
                 {displayName}
               </Link>

@@ -4,7 +4,7 @@ SalesOS is a **multi-tenant B2B sales platform** that uses AI to take outbound w
 
 Instead of switching between a CRM, research tools, AI writing tools, approval screens, and email infrastructure, SalesOS brings the core workflow into one place — with **human approval before anything is sent**.
 
-**Live:** https://sales-os-frontend-black.vercel.app
+**Live:** [https://sales-os-frontend-black.vercel.app](https://sales-os-frontend-black.vercel.app)
 
 ## What it does
 
@@ -14,18 +14,18 @@ SalesOS follows a simple workflow:
 
 ### Core features
 
-- **Multi-tenant workspaces** with workspace-scoped data access
-- **Accounts and contacts** for managing prospects
-- **Campaigns and sequences** for outbound planning
-- **AI research** for companies and decision-makers
-- **AI-generated personalized outreach** based on prospect context
-- **Human approval workflow** before email delivery
-- **Email delivery tracking** with Resend
-- **Inbound reply handling and intent classification**
-- **HubSpot CRM integration**
-- **Reports** for outreach activity and performance
-- **Google OAuth and email/password authentication**
-- **Background workers** for research and outreach jobs
+* **Multi-tenant workspaces** with workspace-scoped data access
+* **Accounts and contacts** for managing prospects
+* **Campaigns and sequences** for outbound planning
+* **AI research** for companies and decision-makers
+* **AI-generated personalized outreach** based on prospect context
+* **Human approval workflow** before email delivery
+* **Email delivery tracking** with Resend
+* **Inbound reply handling and intent classification**
+* **HubSpot CRM integration**
+* **Reports** for outreach activity and performance
+* **Google OAuth and email/password authentication**
+* **Background workers** for research and outreach jobs
 
 ## Why SalesOS?
 
@@ -35,25 +35,25 @@ The goal is to automate the repetitive parts of sales work while keeping the use
 
 For example:
 
+```text
 Add Prospect
-↓
+    ↓
 Research
-↓
+    ↓
 Generate Personalized Email
-↓
+    ↓
 Human Review
-↓
+    ↓
 Approve & Send
-↓
+    ↓
 Track Delivery
-↓
+    ↓
 Receive Reply
-↓
+    ↓
 Classify Intent
+```
 
 The AI can **prepare** the work, but it does not get the final authority to send an email on its own.
-
-## Architecture
 
 ## Architecture
 
@@ -78,30 +78,33 @@ The AI can **prepare** the work, but it does not get the final authority to send
        │ PostgreSQL │   │ AI Workers │   │ Resend      │
        │    + RLS   │   │            │   │ HubSpot     │
        └────────────┘   └────────────┘   └─────────────┘
+```
+
+**Workflow:** Prospect → Research → AI Outreach → Human Approval → Delivery → Reply Classification
 
 ## Tech Stack
 
-**Frontend:** Next.js, React, TypeScript, Tailwind CSS
+**Frontend:** Next.js, React, TypeScript, Tailwind CSS, shadcn/ui, Lucide
 
 **Backend:** FastAPI, Python
 
 **Database & Auth:** Supabase, PostgreSQL, Row Level Security
 
-**AI & Workflows:** LangGraph, LLM-based research and outreach generation
+**AI & Workflows:** LangGraph, LLM-based research and outreach generation , Groq(Llama 3.3 70B)
 
 **Integrations:** Resend, HubSpot
 
-**Deployment:** Vercel, Railway
+**Deployment:** Vercel (frontend), Railway (backend)
 
 ## Engineering Highlights
 
-- Human-in-the-loop approval before external email delivery
-- Multi-tenant workspace isolation
-- Background processing for AI research and outreach workflows
-- Versioned outreach drafts and approval states
-- Idempotent email delivery flow
-- Automated frontend and backend testing
-- Responsive production UI
+* Human-in-the-loop approval before external email delivery
+* Multi-tenant workspace isolation
+* Background processing for AI research and outreach workflows
+* Versioned outreach drafts and approval states
+* Idempotent email delivery flow
+* Automated frontend and backend testing
+* Responsive production UI designed around the core sales workflow
 
 ## Project Goal
 

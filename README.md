@@ -55,17 +55,29 @@ The AI can **prepare** the work, but it does not get the final authority to send
 
 ## Architecture
 
-Next.js Frontend → Vercel
-↓
-Supabase Auth
-↓
-FastAPI API → Railway
-↓
-Supabase PostgreSQL + RLS
-↓
-AI / Workers → LangGraph
-↓
-Resend + HubSpot
+## Architecture
+
+```text
+                    ┌─────────────────────┐
+                    │   Next.js Frontend  │
+                    │       Vercel        │
+                    └──────────┬──────────┘
+                               │
+                         Supabase Auth
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │     FastAPI API     │
+                    │       Railway       │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+       ┌────────────┐   ┌────────────┐   ┌─────────────┐
+       │ Supabase   │   │ LangGraph  │   │ Integrations│
+       │ PostgreSQL │   │ AI Workers │   │ Resend      │
+       │    + RLS   │   │            │   │ HubSpot     │
+       └────────────┘   └────────────┘   └─────────────┘
 
 ## Tech Stack
 

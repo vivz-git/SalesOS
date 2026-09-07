@@ -28,6 +28,12 @@ Thumbs.db
 supabase/.temp/
 supabase/.branches/
 
+# Local Claude Code agent/skill state
+.agents/
+
+# Graphify code-graph tool output (generated, local-only)
+graphify-out/
+
 # Local development/debug scripts
 backend/run_tests.py
 backend/test_conn.py

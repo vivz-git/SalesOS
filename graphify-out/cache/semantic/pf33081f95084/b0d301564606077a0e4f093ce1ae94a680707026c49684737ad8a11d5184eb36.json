@@ -1,1 +1,0 @@
-{"nodes": [{"id": "hubspot_adapter", "label": "HubSpot Integration Adapter", "file_type": "concept", "source_file": "backend/app/integrations/README.md"}, {"id": "resend_adapter", "label": "Resend Integration Adapter", "file_type": "concept", "source_file": "backend/app/integrations/README.md"}], "edges": [], "hyperedges": []}

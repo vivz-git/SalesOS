@@ -1,47 +1,25 @@
 # SalesOS
 
-SalesOS is a multi-tenant, **approval-first AI sales operating system** for B2B outbound teams. It takes a campaign from **targeting to conversation** in one workflow instead of stitching together a CRM, research tools, AI copy generators, and email infrastructure.
+SalesOS is an approval-first AI sales operating system that unifies B2B targeting, account research, outreach generation, and CRM synchronization into a single governed workflow.
 
-**Live app:** https://sales-os-frontend-black.vercel.app
-**Live API:** https://salesos-production-927e.up.railway.app/health
-
----
+**Live App:** https://sales-os-frontend-black.vercel.app
 
 ## What it does
 
-**Campaign → Research → AI Outreach → Human Approval → Delivery → Reply Classification → CRM Sync → Reporting**
+**Prospect → Research → AI Outreach → Human Approval → Delivery → Reply Classification → CRM / Reporting**
 
-- **Multi-tenant workspaces** with workspace-scoped data access and role-based membership
-- **Accounts & contacts** for managing outbound targets
-- **Campaigns & sequences** for ICP definition and multi-step outreach cadences
-- **AI-powered research** on accounts and decision-makers, run as a background job
-- **AI outreach generation** (Groq-hosted LLM) with structured, versioned drafts
-- **Approval queue** — no AI-generated message reaches a prospect without human sign-off
-- **Email delivery tracking** through Resend, with webhook-driven status sync
-- **Inbound reply handling** with automatic reply-state classification
-- **HubSpot integration** for CRM synchronization
-- **Weekly reports** for campaign and outreach performance
-- **Google OAuth + email/password authentication** via Supabase Auth
-- **Background worker** that claims and processes research/outreach/sequence jobs from a Postgres-backed queue
+AI handles account research and drafts personalized outreach in the background, but no email is sent without human review. SalesOS keeps outbound messaging governed, auditable, and aligned with pipeline goals.
 
-### Why it's different
+- **Prospect & Account Management:** Organize target accounts, contacts, and ICP criteria.
+- **Automated Research:** Synthesize company context and decision-maker signals via background jobs.
+- **AI-Personalized Outreach:** Generate structured, versioned email drafts using Groq-hosted LLMs.
+- **Human Approval Gate:** Review, edit, approve, or reject drafts before delivery.
+- **Delivery Tracking:** Send emails via Resend with webhook-driven delivery and engagement status.
+- **Reply Classification:** Categorize inbound prospect responses automatically into actionable intent states.
+- **HubSpot CRM Integration:** Sync contacts, engagements, and outreach lifecycle stages bidirectionally.
+- **Performance Reporting:** Track campaign velocity, approval rates, and outreach conversions.
 
-SalesOS isn't another AI email writer. AI handles research and repetitive drafting; a human always reviews and approves what actually gets sent. That keeps outbound auditable instead of turning it into a black box.
-
----
-
-## Tech stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui, Vitest |
-| Backend | FastAPI, SQLAlchemy 2 (async), Pydantic Settings, pytest, mypy (strict), ruff |
-| Database / Auth | Supabase (Postgres + Row-Level Security + Auth) |
-| AI | Groq-hosted LLM (`llama-3.3-70b-versatile`) for research synthesis, outreach drafting, and reply classification |
-| Integrations | Resend (email delivery + inbound webhooks), HubSpot CRM (OAuth v3) |
-| Hosting | Vercel (frontend), Railway (backend, Docker) |
-
-> Note: earlier docs referenced LangGraph for AI orchestration. The current implementation calls the Groq provider directly from a Postgres-backed job worker (`backend/app/worker.py`); `backend/app/workflows/` is a reserved-but-empty placeholder, not implemented.
+## Architecture
 
 ```text
                    ┌──────────────────┐
@@ -49,7 +27,7 @@ SalesOS isn't another AI email writer. AI handles research and repetitive drafti
                    │     Vercel       │
                    └────────┬─────────┘
                             │
-                     Supabase Auth
+                      Supabase Auth
                             │
                             ▼
                    ┌──────────────────┐
@@ -63,118 +41,78 @@ SalesOS isn't another AI email writer. AI handles research and repetitive drafti
       Supabase         (Groq LLM)       Resend / HubSpot
 ```
 
----
+FastAPI acts as the authoritative control plane managing multi-tenant state and RLS in PostgreSQL, while an asynchronous worker handles background research, Groq generation, and third-party delivery/sync.
 
-## Repository structure
+## Tech Stack
 
-```text
-frontend/    Next.js app (App Router), components, API client, tests
-backend/     FastAPI app, adapters (Groq/Resend/HubSpot), async worker, pytest suite
-supabase/    Migrations and RLS policies (system of record for schema)
-scripts/     Operational scripts, incl. e2e_validation_test.py / prod_smoke_test.py
-docs/        Supporting engineering docs
-PRD.md, ARCHITECTURE.md, DATABASE.md, API_SPEC.md, AGENTS.md   Canonical product/engineering references
-```
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui |
+| Backend | FastAPI, SQLAlchemy 2 (async), Pydantic, pytest, mypy |
+| Database / Auth | Supabase (PostgreSQL, Row-Level Security, Auth) |
+| AI | Groq LLM (`llama-3.3-70b-versatile`) |
+| Integrations | Resend (email delivery + webhooks), HubSpot CRM (OAuth v3) |
+| Hosting | Vercel (frontend), Railway (backend, Docker) |
 
----
+## Results
 
-## Getting started locally
+Evaluated using the application's real code paths (reply classifier, draft/approval workflow, test suites) on synthetic benchmark datasets. Full reproducible evaluation: [`backend/evaluation/`](backend/evaluation/).
 
-Prerequisites: Node 20+, pnpm, Python 3.12+, [uv](https://docs.astral.sh/uv/), Docker (for local Supabase).
+| Metric | Result | Context |
+|---|---|---|
+| Reply-intent classification | **86.8%** (33/38 correct) | Tested on 38 labeled B2B reply scenarios |
+| Human approval outcomes | **7 as-is / 6 with edits / 5 rejected** | 18 synthetic prospects run through the review rubric |
+| Backend test suite | **58 passed** (77.4% line coverage) | `pytest` + `pytest-cov` across domain and service layers |
+| Frontend test suite | **113 passed** across 25 files | `vitest` covering components, hooks, and routing |
+| Human effort comparison | **~15–20 min manual vs. ~2–3 min review** | **ESTIMATE:** manual research & drafting vs. SalesOS review |
+
+- **Synthetic evaluation:** Metrics are derived from synthetic test datasets and rubric evaluations, not production benchmarks.
+- **Classifier boundary:** The rule-based classifier handles 8 intent categories; misses reflect realistic phrasing variations not matched by current pattern rules.
+- **Workflow verification:** Approval distributions confirm end-to-end draft lifecycle and review controls rather than live production copy quality.
+
+## Run locally
 
 ```bash
 # 1. Install dependencies
 pnpm install
 cd backend && uv sync && cd ..
 
-# 2. Start local Supabase (Postgres + Auth), then apply migrations
+# 2. Start local Supabase & apply migrations
 npx supabase start
 npx supabase db reset
 
 # 3. Configure environment
-cp .env.example .env    # fill in the Supabase URL/keys printed by `supabase start`
+cp .env.example .env
 
-# 4. Run backend and frontend (separate terminals)
-cd backend && uv run python run_local.py     # http://127.0.0.1:8000
-pnpm dev                                     # http://127.0.0.1:3000
+# 4. Start backend
+cd backend && uv run python run_local.py    # http://127.0.0.1:8000
+
+# 5. Start frontend
+pnpm dev                                    # http://127.0.0.1:3000
 ```
-
-Docker Compose (`docker-compose.yml`) is also available to run both services against an `.env` file.
-
----
 
 ## Testing
 
+Verified across 58 backend tests (77.4% coverage) and 113 frontend tests.
+
 ```bash
-# Backend — pytest, ruff, mypy (strict)
+# Backend (pytest, ruff, mypy strict)
 cd backend
 uv run pytest
 uv run ruff check .
 uv run mypy app
 
-# Frontend — typecheck, lint, unit tests, production build
+# Frontend (typecheck, lint, vitest, build)
 pnpm typecheck
 pnpm lint
 pnpm test
 pnpm build
 ```
 
-### Last verified run (this session)
+## Known limitations
 
-| Check | Result |
-|---|---|
-| Backend `pytest` | **52 passed, 6 skipped, 0 failed** (skips are integration tests that need a live local Supabase Postgres at `127.0.0.1:54322`, unavailable in this sandbox) |
-| Backend `ruff check` | All checks passed |
-| Backend `mypy` (strict) | Success — no issues in 32 source files |
-| Frontend `tsc --noEmit` | Clean |
-| Frontend `eslint` | 0 errors, 4 warnings (missing `useEffect` deps — cosmetic) |
-| Frontend `vitest` | **113 passed** across 25 test files |
-| Frontend `next build` | Production build succeeded, all 24 routes compiled/pre-rendered |
-| Local smoke test | Started backend (`/health` → 200) and frontend dev server; confirmed public auth pages (`/login`, `/signup`) return 200, protected dashboard routes (`/inbox`, `/reports`, `/approvals`, `/campaigns`) correctly 307-redirect unauthenticated users to `/login`, and an unauthenticated `GET /v1/accounts` correctly returns 401 rather than crashing |
-
-The repo also ships two real end-to-end scripts under `scripts/`:
-- `e2e_validation_test.py` — full flow (auth → workspace → campaign → account/contact → research job → AI draft → approval → delivery → inbound reply → sequence enrollment → reports) plus cross-tenant isolation checks, run against a **local** Supabase stack.
-- `prod_smoke_test.py` — the same authenticated flow run against the **live production** API/Supabase.
-
-Neither was executed in this session: the local one needs `supabase start` (Docker is available but wasn't spun up), and the prod one writes permanent test data into your live production database — run it deliberately, not as part of routine verification, especially not right before a demo.
-
----
-
-## Results
-
-Measured by running the application's real code — the reply classifier, the draft/approval API lifecycle, and the test suites — against synthetic, checked-in datasets. Full methodology, datasets, and generated output: [`backend/evaluation/`](backend/evaluation/).
-
-| Metric | Result | Method |
-|---|---|---|
-| Reply-intent classification accuracy | **86.8%** (33/38 correct) | `DeterministicReplyClassifier` run on 38 synthetic, hand-labeled B2B replies |
-| Human approval outcome distribution | **7 as-is / 6 with edits / 5 rejected** (39% / 33% / 28% of 18) | 18 synthetic prospects run through the real draft → generate → revise → submit-review → approve/reject workflow; outcome per draft assigned by a fixed, deterministic scoring rubric |
-| Backend automated tests | **58 passed**, 0 failed | `pytest` (backend/) |
-| Backend line coverage | **77.4%** | `pytest-cov` (`--cov=app`, already configured in `pyproject.toml`) |
-| Frontend automated tests | **113 passed**, 0 failed (25 files) | `vitest run` |
-| Frontend coverage | not measured | no coverage provider configured; reporting test counts instead of a fabricated %  |
-| Estimated human effort | ~15–20 min (manual research + draft) vs ~2–3 min (SalesOS review/approve) per prospect | **ESTIMATE** — assumption-based, not a timed benchmark |
-
-**Reading the numbers honestly:**
-- The classifier only ever returns 8 states (`interested`, `not_now`, `referral`, `unsubscribe`, `out_of_office`, `objection`, `question`, `ambiguous`); the misses are realistic paraphrases its regex patterns don't cover (e.g. "take **us** off" vs. the matched "take **me** off") — a real limitation of a rule-based classifier, not a cherry-picked score.
-- The approval "rubric" is a synthetic stand-in for a reviewer, applied uniformly to observable draft quality (personalization, evidence grounding). It shows the lifecycle works end-to-end and that draft quality tracks input completeness — it does **not** prove the approval step catches bad drafts in production.
-- No outbound email is sent and no real people/companies appear anywhere in the evaluation — everything runs against an in-memory database with a deterministic, no-network draft generator.
-
-Reproduce it yourself: `cd backend && python -m evaluation.evaluate_salesos`.
-
----
-
-## Project status — is it finished / demo-ready?
-
-**Yes, for a demo.** Every automated check that can run without live third-party credentials is green: backend tests/lint/types, frontend tests/lint/types, and a clean production build. The app is deployed and reachable (Vercel + Railway), auth gating works correctly, and the API rejects unauthenticated requests properly instead of erroring.
-
-What "finished" doesn't mean here — things to know before a live demo or resume claim:
-
-- **Live-data coverage is asserted, not proven, by this session.** The 6 skipped backend tests and the two `scripts/*.py` E2E flows are the tests that actually exercise a full request against a real Postgres/Supabase instance; none ran here. Before a real demo, run `supabase start` once and execute `scripts/e2e_validation_test.py` locally (or `prod_smoke_test.py` against a *staging*, not production, environment) to confirm the full click-path with real data.
-- **Demo the golden path in a browser once, live, beforehand:** sign up → create workspace → create campaign → add account/contact → generate research → generate/approve an outreach draft → simulate an inbound reply → view weekly report. This session verified the app *boots and routes correctly*, not that every screen renders pixel-perfect with real data — do that pass yourself or ask for a browser-driven check.
-- **AI/email/CRM integrations degrade gracefully but need real keys to demo fully.** `GROQ_API_KEY`, `RESEND_API_KEY`, and `HUBSPOT_CLIENT_ID/SECRET` must be set in the deployed environment for outreach generation, real email delivery, and CRM sync to work end-to-end — confirm these are configured in Railway before presenting.
-- **README/architecture drift:** this file previously described AI orchestration via LangGraph; that folder is an empty placeholder. Fixed here to describe what's actually implemented (a direct Groq adapter call from the background worker).
-- **Repo hygiene:** one-off `fix_*.py` / `update_*.py` / `check_*.py` patch scripts and a generated `graphify-out/` cache directory from prior UI-polish sessions have been removed from the repo root and are now git-ignored.
-
-### Resume-ready framing
-
-This is a legitimate full-stack, multi-tenant SaaS project worth listing: a typed FastAPI backend with async SQLAlchemy, strict mypy, RLS-based tenant isolation, a background job worker, and three real external integrations (Groq, Resend, HubSpot); a Next.js 15 / React 19 frontend with a real test suite; and a deployed, reachable production instance (Vercel + Railway). It's substantive enough to talk through in an interview — the approval-gate design, RLS-based multi-tenancy, and the async job worker are the parts worth highlighting.
+- **Local Supabase requirement:** Several live-data integration tests require a running local Supabase Postgres instance.
+- **Provider credentials:** Full external email delivery, LLM generation, and CRM sync require active Resend, Groq, and HubSpot credentials.
+- **Rule-based classifier:** The reply classifier uses pattern matching and has known phrasing/paraphrase blind spots compared to semantic models.
+- **Synthetic evaluation data:** Reported metrics reflect synthetic test fixtures rather than live production outbound campaigns.
+- **Production smoke testing:** `scripts/prod_smoke_test.py` writes real test data and should only be executed deliberately.

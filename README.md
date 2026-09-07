@@ -140,6 +140,29 @@ Neither was executed in this session: the local one needs `supabase start` (Dock
 
 ---
 
+## Results
+
+Measured by running the application's real code — the reply classifier, the draft/approval API lifecycle, and the test suites — against synthetic, checked-in datasets. Full methodology, datasets, and generated output: [`backend/evaluation/`](backend/evaluation/).
+
+| Metric | Result | Method |
+|---|---|---|
+| Reply-intent classification accuracy | **86.8%** (33/38 correct) | `DeterministicReplyClassifier` run on 38 synthetic, hand-labeled B2B replies |
+| Human approval outcome distribution | **7 as-is / 6 with edits / 5 rejected** (39% / 33% / 28% of 18) | 18 synthetic prospects run through the real draft → generate → revise → submit-review → approve/reject workflow; outcome per draft assigned by a fixed, deterministic scoring rubric |
+| Backend automated tests | **58 passed**, 0 failed | `pytest` (backend/) |
+| Backend line coverage | **77.4%** | `pytest-cov` (`--cov=app`, already configured in `pyproject.toml`) |
+| Frontend automated tests | **113 passed**, 0 failed (25 files) | `vitest run` |
+| Frontend coverage | not measured | no coverage provider configured; reporting test counts instead of a fabricated %  |
+| Estimated human effort | ~15–20 min (manual research + draft) vs ~2–3 min (SalesOS review/approve) per prospect | **ESTIMATE** — assumption-based, not a timed benchmark |
+
+**Reading the numbers honestly:**
+- The classifier only ever returns 8 states (`interested`, `not_now`, `referral`, `unsubscribe`, `out_of_office`, `objection`, `question`, `ambiguous`); the misses are realistic paraphrases its regex patterns don't cover (e.g. "take **us** off" vs. the matched "take **me** off") — a real limitation of a rule-based classifier, not a cherry-picked score.
+- The approval "rubric" is a synthetic stand-in for a reviewer, applied uniformly to observable draft quality (personalization, evidence grounding). It shows the lifecycle works end-to-end and that draft quality tracks input completeness — it does **not** prove the approval step catches bad drafts in production.
+- No outbound email is sent and no real people/companies appear anywhere in the evaluation — everything runs against an in-memory database with a deterministic, no-network draft generator.
+
+Reproduce it yourself: `cd backend && python -m evaluation.evaluate_salesos`.
+
+---
+
 ## Project status — is it finished / demo-ready?
 
 **Yes, for a demo.** Every automated check that can run without live third-party credentials is green: backend tests/lint/types, frontend tests/lint/types, and a clean production build. The app is deployed and reachable (Vercel + Railway), auth gating works correctly, and the API rejects unauthenticated requests properly instead of erroring.

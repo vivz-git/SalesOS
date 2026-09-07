@@ -1,0 +1,730 @@
+{
+  "schema_version": 1,
+  "reply_intent_classification": {
+    "dataset_size": 38,
+    "correct": 33,
+    "incorrect": 5,
+    "accuracy": 0.8684,
+    "label_set": [
+      "interested",
+      "not_now",
+      "referral",
+      "unsubscribe",
+      "out_of_office",
+      "objection",
+      "question",
+      "ambiguous"
+    ],
+    "per_class_metrics": {
+      "interested": {
+        "support": 6,
+        "predicted_count": 5,
+        "true_positive": 5,
+        "precision": 1.0,
+        "recall": 0.8333
+      },
+      "not_now": {
+        "support": 5,
+        "predicted_count": 4,
+        "true_positive": 4,
+        "precision": 1.0,
+        "recall": 0.8
+      },
+      "referral": {
+        "support": 5,
+        "predicted_count": 4,
+        "true_positive": 4,
+        "precision": 1.0,
+        "recall": 0.8
+      },
+      "unsubscribe": {
+        "support": 5,
+        "predicted_count": 4,
+        "true_positive": 4,
+        "precision": 1.0,
+        "recall": 0.8
+      },
+      "out_of_office": {
+        "support": 4,
+        "predicted_count": 4,
+        "true_positive": 4,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "objection": {
+        "support": 5,
+        "predicted_count": 4,
+        "true_positive": 4,
+        "precision": 1.0,
+        "recall": 0.8
+      },
+      "question": {
+        "support": 4,
+        "predicted_count": 4,
+        "true_positive": 4,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "ambiguous": {
+        "support": 4,
+        "predicted_count": 9,
+        "true_positive": 4,
+        "precision": 0.4444,
+        "recall": 1.0
+      }
+    },
+    "confusion_matrix": {
+      "interested": {
+        "interested": 5,
+        "ambiguous": 1
+      },
+      "not_now": {
+        "not_now": 4,
+        "ambiguous": 1
+      },
+      "referral": {
+        "referral": 4,
+        "ambiguous": 1
+      },
+      "unsubscribe": {
+        "unsubscribe": 4,
+        "ambiguous": 1
+      },
+      "out_of_office": {
+        "out_of_office": 4
+      },
+      "objection": {
+        "objection": 4,
+        "ambiguous": 1
+      },
+      "question": {
+        "question": 4
+      },
+      "ambiguous": {
+        "ambiguous": 4
+      }
+    },
+    "cases": [
+      {
+        "id": "RI-001",
+        "true_label": "interested",
+        "predicted_label": "interested",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-002",
+        "true_label": "interested",
+        "predicted_label": "interested",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-003",
+        "true_label": "interested",
+        "predicted_label": "interested",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-004",
+        "true_label": "interested",
+        "predicted_label": "interested",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-005",
+        "true_label": "interested",
+        "predicted_label": "interested",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-006",
+        "true_label": "not_now",
+        "predicted_label": "not_now",
+        "correct": true,
+        "confidence_score": 0.8
+      },
+      {
+        "id": "RI-007",
+        "true_label": "not_now",
+        "predicted_label": "not_now",
+        "correct": true,
+        "confidence_score": 0.8
+      },
+      {
+        "id": "RI-008",
+        "true_label": "not_now",
+        "predicted_label": "not_now",
+        "correct": true,
+        "confidence_score": 0.8
+      },
+      {
+        "id": "RI-009",
+        "true_label": "not_now",
+        "predicted_label": "not_now",
+        "correct": true,
+        "confidence_score": 0.8
+      },
+      {
+        "id": "RI-010",
+        "true_label": "referral",
+        "predicted_label": "referral",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-011",
+        "true_label": "referral",
+        "predicted_label": "referral",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-012",
+        "true_label": "referral",
+        "predicted_label": "referral",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-013",
+        "true_label": "referral",
+        "predicted_label": "referral",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-014",
+        "true_label": "unsubscribe",
+        "predicted_label": "unsubscribe",
+        "correct": true,
+        "confidence_score": 0.95
+      },
+      {
+        "id": "RI-015",
+        "true_label": "unsubscribe",
+        "predicted_label": "unsubscribe",
+        "correct": true,
+        "confidence_score": 0.95
+      },
+      {
+        "id": "RI-016",
+        "true_label": "unsubscribe",
+        "predicted_label": "unsubscribe",
+        "correct": true,
+        "confidence_score": 0.95
+      },
+      {
+        "id": "RI-017",
+        "true_label": "unsubscribe",
+        "predicted_label": "unsubscribe",
+        "correct": true,
+        "confidence_score": 0.95
+      },
+      {
+        "id": "RI-018",
+        "true_label": "out_of_office",
+        "predicted_label": "out_of_office",
+        "correct": true,
+        "confidence_score": 0.9
+      },
+      {
+        "id": "RI-019",
+        "true_label": "out_of_office",
+        "predicted_label": "out_of_office",
+        "correct": true,
+        "confidence_score": 0.9
+      },
+      {
+        "id": "RI-020",
+        "true_label": "out_of_office",
+        "predicted_label": "out_of_office",
+        "correct": true,
+        "confidence_score": 0.9
+      },
+      {
+        "id": "RI-021",
+        "true_label": "out_of_office",
+        "predicted_label": "out_of_office",
+        "correct": true,
+        "confidence_score": 0.9
+      },
+      {
+        "id": "RI-022",
+        "true_label": "objection",
+        "predicted_label": "objection",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-023",
+        "true_label": "objection",
+        "predicted_label": "objection",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-024",
+        "true_label": "objection",
+        "predicted_label": "objection",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-025",
+        "true_label": "objection",
+        "predicted_label": "objection",
+        "correct": true,
+        "confidence_score": 0.85
+      },
+      {
+        "id": "RI-026",
+        "true_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "confidence_score": 0.8
+      },
+      {
+        "id": "RI-027",
+        "true_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "confidence_score": 0.8
+      },
+      {
+        "id": "RI-028",
+        "true_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "confidence_score": 0.8
+      },
+      {
+        "id": "RI-029",
+        "true_label": "question",
+        "predicted_label": "question",
+        "correct": true,
+        "confidence_score": 0.8
+      },
+      {
+        "id": "RI-030",
+        "true_label": "ambiguous",
+        "predicted_label": "ambiguous",
+        "correct": true,
+        "confidence_score": 0.4
+      },
+      {
+        "id": "RI-031",
+        "true_label": "ambiguous",
+        "predicted_label": "ambiguous",
+        "correct": true,
+        "confidence_score": 0.4
+      },
+      {
+        "id": "RI-032",
+        "true_label": "ambiguous",
+        "predicted_label": "ambiguous",
+        "correct": true,
+        "confidence_score": 0.4
+      },
+      {
+        "id": "RI-033",
+        "true_label": "ambiguous",
+        "predicted_label": "ambiguous",
+        "correct": true,
+        "confidence_score": 0.4
+      },
+      {
+        "id": "RI-034",
+        "true_label": "not_now",
+        "predicted_label": "ambiguous",
+        "correct": false,
+        "confidence_score": 0.4
+      },
+      {
+        "id": "RI-035",
+        "true_label": "interested",
+        "predicted_label": "ambiguous",
+        "correct": false,
+        "confidence_score": 0.4
+      },
+      {
+        "id": "RI-036",
+        "true_label": "unsubscribe",
+        "predicted_label": "ambiguous",
+        "correct": false,
+        "confidence_score": 0.4
+      },
+      {
+        "id": "RI-037",
+        "true_label": "objection",
+        "predicted_label": "ambiguous",
+        "correct": false,
+        "confidence_score": 0.4
+      },
+      {
+        "id": "RI-038",
+        "true_label": "referral",
+        "predicted_label": "ambiguous",
+        "correct": false,
+        "confidence_score": 0.4
+      }
+    ],
+    "method": "app.adapters.reply_classifier.DeterministicReplyClassifier.classify() run directly against evaluation/datasets/reply_intent_cases.json (synthetic, hand-labeled). No LLM or external API involved; fully deterministic and reproducible."
+  },
+  "approval_outcomes": {
+    "dataset_size": 18,
+    "approved_as_is": 7,
+    "approved_with_edits": 6,
+    "rejected": 5,
+    "approved_as_is_pct": 38.9,
+    "approved_with_edits_pct": 33.3,
+    "rejected_pct": 27.8,
+    "records": [
+      {
+        "prospect_id": "AP-01",
+        "tier": "rich",
+        "account_name": "Meridian Cloud Systems",
+        "rubric_score": 4,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": true
+        },
+        "outcome": "approved_as_is",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-02",
+        "tier": "rich",
+        "account_name": "Northbridge Analytics",
+        "rubric_score": 4,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": true
+        },
+        "outcome": "approved_as_is",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-03",
+        "tier": "rich",
+        "account_name": "Cascadia Robotics",
+        "rubric_score": 4,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": true
+        },
+        "outcome": "approved_as_is",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-04",
+        "tier": "rich",
+        "account_name": "Lumen Health Partners",
+        "rubric_score": 4,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": true
+        },
+        "outcome": "approved_as_is",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-05",
+        "tier": "rich",
+        "account_name": "Ironclad Logistics",
+        "rubric_score": 4,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": true
+        },
+        "outcome": "approved_as_is",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-06",
+        "tier": "rich",
+        "account_name": "Solstice Fintech",
+        "rubric_score": 4,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": true
+        },
+        "outcome": "approved_as_is",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-07",
+        "tier": "rich",
+        "account_name": "Vantage Biotech Labs",
+        "rubric_score": 4,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": true
+        },
+        "outcome": "approved_as_is",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-08",
+        "tier": "partial",
+        "account_name": "Harborline Freight",
+        "rubric_score": 3,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": false
+        },
+        "outcome": "approved_with_edits",
+        "ai_generated_version": 2,
+        "final_version": 3,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-09",
+        "tier": "partial",
+        "account_name": "Pinehollow Manufacturing",
+        "rubric_score": 3,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": false
+        },
+        "outcome": "approved_with_edits",
+        "ai_generated_version": 2,
+        "final_version": 3,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-10",
+        "tier": "partial",
+        "account_name": "Brightfield Insurance Group",
+        "rubric_score": 3,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": false
+        },
+        "outcome": "approved_with_edits",
+        "ai_generated_version": 2,
+        "final_version": 3,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-11",
+        "tier": "partial",
+        "account_name": "Wavecrest Media",
+        "rubric_score": 3,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": false
+        },
+        "outcome": "approved_with_edits",
+        "ai_generated_version": 2,
+        "final_version": 3,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-12",
+        "tier": "partial",
+        "account_name": "Kestrel Aerospace",
+        "rubric_score": 3,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": false
+        },
+        "outcome": "approved_with_edits",
+        "ai_generated_version": 2,
+        "final_version": 3,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-13",
+        "tier": "partial",
+        "account_name": "Redstone Materials",
+        "rubric_score": 3,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": true,
+          "segment_specific": true,
+          "evidence_grounded": false
+        },
+        "outcome": "approved_with_edits",
+        "ai_generated_version": 2,
+        "final_version": 3,
+        "final_draft_status": "approved"
+      },
+      {
+        "prospect_id": "AP-14",
+        "tier": "minimal",
+        "account_name": "Glenrock Retail Group",
+        "rubric_score": 1,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": false,
+          "segment_specific": false,
+          "evidence_grounded": false
+        },
+        "outcome": "rejected",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "rejected"
+      },
+      {
+        "prospect_id": "AP-15",
+        "tier": "minimal",
+        "account_name": "Anchorpoint Utilities",
+        "rubric_score": 1,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": false,
+          "segment_specific": false,
+          "evidence_grounded": false
+        },
+        "outcome": "rejected",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "rejected"
+      },
+      {
+        "prospect_id": "AP-16",
+        "tier": "minimal",
+        "account_name": null,
+        "rubric_score": 0,
+        "rubric_checks": {
+          "named_account": false,
+          "role_specific": false,
+          "segment_specific": false,
+          "evidence_grounded": false
+        },
+        "outcome": "rejected",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "rejected"
+      },
+      {
+        "prospect_id": "AP-17",
+        "tier": "minimal",
+        "account_name": null,
+        "rubric_score": 0,
+        "rubric_checks": {
+          "named_account": false,
+          "role_specific": false,
+          "segment_specific": false,
+          "evidence_grounded": false
+        },
+        "outcome": "rejected",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "rejected"
+      },
+      {
+        "prospect_id": "AP-18",
+        "tier": "minimal",
+        "account_name": "Thistledown Apparel",
+        "rubric_score": 1,
+        "rubric_checks": {
+          "named_account": true,
+          "role_specific": false,
+          "segment_specific": false,
+          "evidence_grounded": false
+        },
+        "outcome": "rejected",
+        "ai_generated_version": 2,
+        "final_version": 2,
+        "final_draft_status": "rejected"
+      }
+    ],
+    "rubric": {
+      "checks": [
+        "named_account",
+        "role_specific",
+        "segment_specific",
+        "evidence_grounded"
+      ],
+      "outcome_thresholds": {
+        "approved_as_is": "score == 4",
+        "approved_with_edits": "score in {2,3}",
+        "rejected": "score in {0,1}"
+      }
+    },
+    "method": "Real FastAPI draft lifecycle (create -> generate -> [revise] -> submit-review -> approve/reject) run against an in-memory SQLite database via httpx ASGITransport, using a deterministic no-network LLM provider mock (same pattern as tests/test_e2e_workflow.py). Outcome per draft is assigned by a fixed, deterministic scoring rubric (score_draft) applied to the generated content -- a synthetic stand-in for human review, not a measurement of real human judgment. No outbound email is sent; /v1/deliveries is never called.",
+    "caveat": "This distribution shows what the synthetic rubric decided for this synthetic dataset. It does not demonstrate that SalesOS's human approval step 'catches bad drafts' in production -- it demonstrates that the draft generation and approval lifecycle behaves correctly end-to-end, and that draft quality (and therefore this rubric's outcome) tracks how complete the input research/context is."
+  },
+  "tests_and_coverage": {
+    "backend": {
+      "passed": 58,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "total": 58,
+      "exit_code": 0,
+      "coverage_percent": 77.4,
+      "coverage_source": "pytest-cov (already configured in backend/pyproject.toml addopts)",
+      "method": "pytest -q --cov=app --cov-report=term-missing --cov-report=json --junitxml=... (run from backend/); counts parsed from the JUnit XML and coverage JSON reports, not from stdout."
+    },
+    "frontend": {
+      "passed": 113,
+      "failed": 0,
+      "total": 113,
+      "test_suite_count": 51,
+      "test_file_count": 25,
+      "exit_code": 0,
+      "coverage_percent": null,
+      "coverage_available": false,
+      "coverage_note": "No coverage provider (e.g. @vitest/coverage-v8) is installed or configured in frontend/vitest.config.ts or package.json/pnpm-lock.yaml. Introducing one was out of scope for this evaluation, so frontend results report test counts only, not a coverage percentage.",
+      "method": "node_modules/.bin/vitest run --reporter=json --outputFile=... from frontend/; counts parsed from vitest's JSON report, not from stdout."
+    }
+  },
+  "estimated_time_savings": {
+    "type": "ESTIMATE",
+    "manual_minutes_range": [
+      15,
+      20
+    ],
+    "manual_description": "Manually researching a prospect and drafting personalized outreach by hand.",
+    "salesos_minutes_range": [
+      2,
+      3
+    ],
+    "salesos_description": "Human review/edit/approval time per AI-generated draft in SalesOS's approval queue.",
+    "note": "These are assumption-based reference points, not a measured benchmark from a timed user study. No percentage or multiplier claim is derived from them; the README presents the two ranges side by side."
+  }
+}

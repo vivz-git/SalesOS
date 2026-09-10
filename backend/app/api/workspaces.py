@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import UTC, datetime
 from typing import cast
@@ -10,6 +11,8 @@ from app.auth import AuthUser, Principal, _clients, get_current_principal, get_c
 from app.core.config import Settings, get_settings
 
 router = APIRouter(prefix="/v1", tags=["workspaces"])
+
+logger = logging.getLogger(__name__)
 
 
 class Workspace(BaseModel):
@@ -51,6 +54,19 @@ def create_workspace(
 
     try:
         admin_client.table("workspaces").insert(workspace_data).execute()
+    except Exception as error:
+        logger.error(
+            "Failed to insert workspace %s ('%s') for user %s: %s",
+            workspace_id,
+            slug,
+            user.user_id,
+            error,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="workspace_creation_failed"
+        ) from error
+
+    try:
         admin_client.table("memberships").insert(
             {
                 "id": str(uuid4()),
@@ -62,6 +78,22 @@ def create_workspace(
             }
         ).execute()
     except Exception as error:
+        logger.error(
+            "Failed to insert owner membership for workspace %s, user %s: %s",
+            workspace_id,
+            user.user_id,
+            error,
+        )
+        # The workspace row was created but has no owner membership yet - remove it
+        # so the caller can safely retry instead of hitting a slug conflict.
+        try:
+            admin_client.table("workspaces").delete().eq("id", str(workspace_id)).execute()
+        except Exception as cleanup_error:
+            logger.error(
+                "Failed to roll back orphaned workspace %s after membership insert failure: %s",
+                workspace_id,
+                cleanup_error,
+            )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="workspace_creation_failed"
         ) from error

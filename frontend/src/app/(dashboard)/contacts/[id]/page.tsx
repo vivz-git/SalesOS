@@ -266,6 +266,7 @@ export default function ContactDetailsPage({ params }: ContactDetailsProps) {
 
         <ContactResearchSection
           contactId={contact.id}
+          accountId={contact.account_id}
           onGenerate={handleGenerateDraft}
           isGenerating={actionLoading}
         />

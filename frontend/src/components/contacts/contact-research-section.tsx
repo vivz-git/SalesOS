@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useState, useCallback } from"react";
-import { fetchResearchBriefs, type ResearchBrief } from"@/lib/api/research";
+import {
+ createResearchBrief,
+ fetchResearchBriefs,
+ triggerResearchJob,
+ type ResearchBrief,
+} from"@/lib/api/research";
 import { useWorkspace } from"@/lib/workspace-context";
 import { Button } from"@/components/ui/button";
-import { AlertCircle, BrainCircuit, CheckCircle2, FileText, Loader2, Sparkles, XCircle } from"lucide-react";
+import { AlertCircle, BrainCircuit, CheckCircle2, FileText, Loader2, Search, Sparkles, XCircle } from"lucide-react";
 
 interface ContactResearchSectionProps {
  contactId: string;
+ accountId?: string | null;
  onGenerate?: () => void;
  isGenerating?: boolean;
 }
 
 export function ContactResearchSection({
  contactId,
+ accountId,
  onGenerate,
  isGenerating = false,
 }: ContactResearchSectionProps) {
@@ -21,6 +28,7 @@ export function ContactResearchSection({
  const [briefs, setBriefs] = useState<ResearchBrief[]>([]);
  const [loading, setLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
+ const [isTriggering, setIsTriggering] = useState(false);
 
  const loadResearch = useCallback(async (isInitial = false) => {
  if (!activeWorkspace) return;
@@ -56,6 +64,36 @@ export function ContactResearchSection({
  }, 3000);
  return () => clearInterval(interval);
  }, [isResearching, loadResearch]);
+
+ const canResearch = hasResearch || !!accountId;
+
+ async function handleResearch() {
+ if (!activeWorkspace || isTriggering || isResearching) return;
+ try {
+ setIsTriggering(true);
+ setError(null);
+ // Reuse the existing brief when there is one; the app supports re-running a
+ // brief's pipeline, so never create a duplicate brief for this contact.
+ let briefId = brief?.id;
+ if (!briefId) {
+ if (!accountId) {
+ setError("Assign a target company account to this contact before running research.");
+ return;
+ }
+ const created = await createResearchBrief(activeWorkspace.id, {
+ account_id: accountId,
+ contact_id: contactId,
+ });
+ briefId = created.id;
+ }
+ await triggerResearchJob(activeWorkspace.id, briefId);
+ await loadResearch(false);
+ } catch (err: unknown) {
+ setError(err instanceof Error ? err.message :"Job execution trigger failed.");
+ } finally {
+ setIsTriggering(false);
+ }
+ }
 
  if (loading) {
  return (
@@ -147,10 +185,35 @@ export function ContactResearchSection({
  )}
 
  <div className="pt-2 border-t mt-4 flex justify-end">
+ <div className="flex w-full max-w-xl flex-col gap-3 sm:flex-row">
+ <Button
+ onClick={handleResearch}
+ disabled={isResearching || isTriggering || isGenerating || !canResearch}
+ title={
+ canResearch
+ ? undefined
+ :"Assign a target company account to this contact before running research."
+ }
+ variant="outline"
+ className="flex-1 flex items-center gap-2"
+ >
+ {isTriggering || isResearching ? (
+ <>
+ <Loader2 className="h-4 w-4 animate-spin"/>
+ <span>Researching...</span>
+ </>
+ ) : (
+ <>
+ <Search className="h-4 w-4"/>
+ <span>Research Prospect</span>
+ </>
+ )}
+ </Button>
+
  <Button
  onClick={onGenerate}
  disabled={isResearching || isGenerating}
- className="flex items-center gap-2 bg-salesos-brand hover:bg-salesos-brand-hover text-white"
+ className="flex-1 flex items-center gap-2 bg-salesos-brand hover:bg-salesos-brand-hover text-white"
  >
  {isGenerating ? (
  <>
@@ -164,6 +227,7 @@ export function ContactResearchSection({
  </>
  )}
  </Button>
+ </div>
  </div>
  </div>
  );
